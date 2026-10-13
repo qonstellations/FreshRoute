@@ -61,18 +61,19 @@ def _model_data(sc: Scenario):
     return arcs, b, unship
 
 
-def _lookups(sc: Scenario):
+def _lookups(sc: Scenario, override: dict | None = None):
     t = sc.tables
     veh = t["vehicles"].set_index("vehicle_id")
     lanes = t["lanes"].set_index(["origin", "dest_id", "mode"])
     dest = t["destinations"].set_index("dest_id")
     target = t["demand"].set_index(["dest_id", "commodity", "day"]).demand_kg_p50.to_dict()
+    target.update(override or {})  # demand_cap_override (section 14.3): {(d, c, day): kg}
     return veh, lanes, dest, target
 
 
-def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap):
+def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None):
     """Returns ((x, n) | None, info); None when there is no usable incumbent."""
-    veh, lanes, dest, target = _lookups(sc)
+    veh, lanes, dest, target = _lookups(sc, override)
     prob = pulp.LpProblem("freshroute_alloc", pulp.LpMaximize)
     x = [prob.add_variable(f"x{i}", 0, None, cat="Continuous") for i in range(len(arcs))]
     vdt = sorted({(a.vehicle_id, a.dest_id, a.dispatch_day) for a in arcs.itertuples()})
@@ -111,10 +112,10 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap):
     stats = prob.solve(pulp.HiGHS(msg=False, timeLimit=time_limit_s, gapRel=gap))
     info = {"status": str(stats.status), "solve_seconds": time.perf_counter() - t0}
     try:  # HiGHS's own gap; pulp's stats.gap_rel is None for HiGHS
-        gap = float(prob.solverModel.getInfo().mip_gap)
+        g = float(prob.solverModel.getInfo().mip_gap)
     except Exception:  # noqa: BLE001
-        gap = 0.0 if stats.status == pulp.LpSolveStatus.Optimal else math.nan
-    info["mip_gap"] = gap if math.isfinite(gap) else None
+        g = 0.0 if stats.status == pulp.LpSolveStatus.Optimal else math.nan
+    info["mip_gap"] = g if math.isfinite(g) else None
     if stats.status not in _OK:
         return None, info
     try:
@@ -131,9 +132,9 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap):
     return (xv, nv), info
 
 
-def _greedy(sc: Scenario, arcs, batches):
+def _greedy(sc: Scenario, arcs, batches, override: dict | None = None):
     """FEFO-greedy over feasible arcs honouring C2-C5 (earliest-expiry batch first)."""
-    veh, _, dest, target = _lookups(sc)
+    veh, _, dest, target = _lookups(sc, override)
     tgt = {k: v * (1 + OVERSHIP_SLACK) for k, v in target.items()}
     recv: dict = {}
     load: dict = {}  # (v,d,day) -> kg left on already-opened trips
@@ -218,11 +219,13 @@ class MilpPolicy(Policy):
     def plan(self, scenario: Scenario, ctx: dict | None = None) -> Plan:
         ctx = ctx or {}
         arcs, batches, unship = _model_data(scenario)
+        ov = ctx.get("demand_cap_override")
         sol, info = _solve(scenario, arcs, batches, unship,
-                           ctx.get("time_limit_s", MILP_TIME_LIMIT_S), ctx.get("gap", MIP_REL_GAP))
+                           ctx.get("time_limit_s", MILP_TIME_LIMIT_S), ctx.get("gap", MIP_REL_GAP),
+                           override=ov)
         info["fallback_used"] = sol is None
         if sol is None:
             info.update(slack_usage={}, mip_gap=None)
         # AGENTS.md rule 6: never crash. ponytail: greedy ignores C6 and replan residuals.
-        x, n = _greedy(scenario, arcs, batches) if sol is None else sol
+        x, n = _greedy(scenario, arcs, batches, ov) if sol is None else sol
         return _build_plan(scenario, arcs, x, n, info, self.name)

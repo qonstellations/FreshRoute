@@ -102,3 +102,32 @@ def test_no_incumbent_falls_back(monkeypatch):
     plan = MilpPolicy().plan(s)
     assert plan.solver["fallback_used"] is True and len(plan.plan) > 0
     assert plan.solver["slack_usage"] == {} and plan.solver["mip_gap"] is None
+
+
+def _kg_by_key(plan, s):
+    com = s.tables["batches"].set_index("batch_id").commodity
+    p = plan.plan.assign(c=plan.plan.batch_id.map(com))
+    return p.groupby(["dest_id", "c", "arrival_day"]).kg.sum()
+
+
+def test_demand_cap_override(monkeypatch):
+    s = sc()
+    key = _kg_by_key(MilpPolicy().plan(s), s).idxmax()
+    ctx = {"demand_cap_override": {key: 0.0}}
+    assert _kg_by_key(MilpPolicy().plan(s, ctx), s).get(key, 0.0) <= TOL
+    monkeypatch.setattr(milp, "_solve", lambda *a, **k: (None, {"status": "forced"}))
+    assert _kg_by_key(MilpPolicy().plan(s, ctx), s).get(key, 0.0) <= TOL  # greedy honours it
+
+
+def test_plan_trips_export():
+    s = sc()
+    plan = MilpPolicy().plan(s)
+    p, tr = plan.plan, plan.trips
+    assert tr.trip_id.is_unique and set(p.trip_id) == set(tr.trip_id)
+    assert (tr.kg_total <= tr.capacity_kg + TOL).all()
+    per_trip = p.groupby("trip_id").kg.sum()
+    assert ((per_trip - tr.set_index("trip_id").kg_total[per_trip.index]).abs() < TOL).all()
+    ranks = sorted(p.priority_rank.unique())
+    assert ranks == list(range(1, len(ranks) + 1)) and p.priority_rank.is_monotonic_increasing
+    score = p.drop_duplicates("priority_rank").priority_score
+    assert (score.diff().dropna() <= TOL).all()
