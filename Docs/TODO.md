@@ -120,7 +120,7 @@ Order matters: **validator and metrics before the optimizer.**
 **P2**
 - [x] **C-05** · 0.75 h — `policies/fefo.py` (FEFO-greedy over feasible arcs, same demand caps) and `policies/last_day_50.py`.
 - [ ] **C-06** · 1.0 h — `policies/organizer_baseline.py` implemented exactly from the organizers' doc + export of plans in the organizers' submission format. *Blocked: no organizer doc yet (S-01); until then `ladder.json` has `official_baseline: null` and the waterfall baseline is `fefo`.*
-- [ ] **C-07** · 1.25 h — `ladder.py`: `fifo → fefo → milp → milp_markdown` through the same simulator, `ladder.json`, `waterfall.json` with the **reconciliation test** (±₹0.01).
+- [x] **C-07** · 1.25 h — `ladder.py`: `fifo → fefo → milp → milp_markdown` through the same simulator, `ladder.json`, `waterfall.json` with the **reconciliation test** (±₹0.01).
 - [ ] **C-08** · 0.5 h — `run_manifest.json` + **determinism test** (same seed ⇒ identical `metrics.json`).
 - [ ] **C-09** · 0.5 h — Perf harness: generate a 10× scenario and time plan solves (feeds U-02 and the performance budget).
 

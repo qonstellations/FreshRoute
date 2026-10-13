@@ -7,7 +7,7 @@ FreshRoute is a hub-level decision tool for perishable produce. Given batches wi
 - **Spine:** shelf-life feasibility pre-filter → allocation MILP (HiGHS) → disclosed tiered markdown rule, scored by one seeded simulator and checked by an independent validator.
 - **A+ add-ons (each behind a flag):** Monte Carlo stress test with P10–P90 bands, event-driven replan with a diff view, newsvendor demand target. An LLM narrator is stretch only; it never decides.
 
-> **Status:** Phases 0–1 built (skeleton, validator, simulator, metrics, feasibility, FIFO, generator, MILP). Phase 2 in progress: full MILP objective + C6 balance, FEFO / last_day_50 baselines, scoreboard tab, reason-card templates, dispatch-sheet skeleton, `milp_markdown` and generator calibration done; C-06 blocked on the organizer doc. Sections marked *TBD* are filled by the tasks named next to them.
+> **Status:** Phases 0–1 built (skeleton, validator, simulator, metrics, feasibility, FIFO, generator, MILP). Phase 2 in progress: full MILP objective + C6 balance, FEFO / last_day_50 baselines, scoreboard tab, reason-card templates, dispatch-sheet skeleton, `milp_markdown`, generator calibration and the attribution ladder/waterfall (`freshroute ladder`) done; C-06 blocked on the organizer doc. Sections marked *TBD* are filled by the tasks named next to them.
 > **Data:** practice scenarios are **synthetic** and always labelled so. Real-world loss statistics are context, not model inputs.
 
 ## Documentation
