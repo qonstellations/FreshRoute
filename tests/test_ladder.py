@@ -56,8 +56,11 @@ def test_g2_net_and_violations(seed, tmp_path, monkeypatch):
     assert k["milp"]["violations"] == 0 and k["milp_markdown"]["violations"] == 0
 
 
-@pytest.mark.xfail(strict=False, reason="G2 spoilage gap under investigation (C-04)")
-@pytest.mark.parametrize("seed", [1, 2, 3])
+@pytest.mark.parametrize("seed", [
+    # seed 1: milp sells the 428.86 kg of long-life onion FEFO leaves as carry-over (not
+    # spoiled, A-06); its 1 % handling loss is the whole +4.29 kg gap. Not a model defect.
+    pytest.param(1, marks=pytest.mark.xfail(strict=False, reason="handling loss on extra sales")),
+    2, 3])
 def test_g2_spoilage(seed, tmp_path, monkeypatch):
     k = _g2_kpis(seed, tmp_path, monkeypatch)
     assert k["milp"]["spoilage_kg"] <= k["fefo"]["spoilage_kg"] + FLOAT_TOL

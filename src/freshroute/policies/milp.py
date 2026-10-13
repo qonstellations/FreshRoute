@@ -35,7 +35,8 @@ _OK = (pulp.LpSolveStatus.Optimal, pulp.LpSolveStatus.TimeLimit, pulp.LpSolveSta
 
 
 def _model_data(sc: Scenario):
-    """Feasible arcs with objective coefficient `coef`, batches, and unshipped penalty per kg."""
+    """Feasible arcs with objective coefficient `coef`, batches, and the per-kg INR spoilage cost
+    of leaving each batch unshipped (s_c * e_b, before LAMBDA_SPOIL)."""
     t = sc.tables
     horizon = int(sc.meta["horizon_days"])
     arcs = build_arcs(sc)
@@ -46,9 +47,8 @@ def _model_data(sc: Scenario):
     s_c = pd.Series({c: costmodel.spoilage_unit_cost(
         r.unit_cost_inr_kg, r.disposal_cost_inr_kg, r.salvage_value_inr_kg)
         for c, r in com.iterrows()})
-    arcs["coef"] = (arcs.margin_inr_kg
-                    - LAMBDA_SPOIL * arcs.commodity.map(com.handling_loss_frac)
-                    * arcs.commodity.map(s_c)
+    arcs["spoil_inr_kg"] = arcs.commodity.map(com.handling_loss_frac) * arcs.commodity.map(s_c)
+    arcs["coef"] = (arcs.margin_inr_kg - LAMBDA_SPOIL * arcs.spoil_inr_kg
                     + EPS_FEFO / arcs.usable_life_at_arrival_h)
     arcs = arcs.sort_values(["batch_id", "dest_id", "vehicle_id", "dispatch_day"],
                             ignore_index=True)
@@ -56,8 +56,7 @@ def _model_data(sc: Scenario):
     dk = [decay(b.storage_temp_c[i], com.ref_temp_c[b.commodity[i]], com.q10[b.commodity[i]])
           for i in b.index]
     expires = (b.available_from_h + b.remaining_shelf_life_h / dk) <= horizon * HOURS_PER_DAY
-    unship = {bid: LAMBDA_SPOIL * float(s_c[b.commodity[bid]]) * float(expires[bid])
-              for bid in b.index}
+    unship = {bid: float(s_c[b.commodity[bid]]) * float(expires[bid]) for bid in b.index}
     return arcs, b, unship
 
 
@@ -83,7 +82,7 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None
              for k in vdt}
     prob += (pulp.lpSum(float(c) * xi for c, xi in zip(arcs.coef, x, strict=True))
              - pulp.lpSum(fixed[k] * n[k] for k in vdt)
-             - pulp.lpSum(unship[b] * u[b] for b in u))
+             - pulp.lpSum(LAMBDA_SPOIL * unship[b] * u[b] for b in u))
     by_b = arcs.groupby("batch_id").groups
     for bid in batches.index:  # C1 stock balance; arc-less batches too, so u = qty (C-04)
         prob += pulp.lpSum(x[i] for i in by_b.get(bid, [])) + u[bid] == float(batches.qty_kg[bid])
@@ -109,8 +108,23 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None
         prob += xd[d] + tot[d] * slack[d] >= PHI_BALANCE * tot[d] * avg
     penalty = PENALTY_MULT * float(sc.tables["prices"].price_inr_kg.max())
     prob.setObjective(prob.objective - pulp.lpSum(penalty * tot[d] * slack[d] for d in tot))
+    # Warm start from the FEFO-greedy plan (C-04/G2): the incumbent is never worse than FEFO
+    # under the MILP objective, even when the time limit stops the search early.
+    gx, gn = _greedy(sc, arcs, batches, override)
+    for var, val in zip(x, gx, strict=True):
+        var.setInitialValue(val)
+    for k, var in n.items():
+        var.setInitialValue(gn.get(k, 0))
+    for bid, var in u.items():
+        var.setInitialValue(max(0.0, float(batches.qty_kg[bid])
+                                - sum(gx[i] for i in by_b.get(bid, []))))
+    gxd = {d: sum(gx[i] for i in by_d[d]) for d in tot}
+    g_avg = sum(gxd[d] / (len(tot) * tot[d]) for d in tot)
+    avg.setInitialValue(g_avg)
+    for d, var in slack.items():
+        var.setInitialValue(max(0.0, PHI_BALANCE * g_avg - gxd[d] / tot[d]))
     t0 = time.perf_counter()
-    stats = prob.solve(pulp.HiGHS(msg=False, timeLimit=time_limit_s, gapRel=gap))
+    stats = prob.solve(pulp.HiGHS(msg=False, timeLimit=time_limit_s, gapRel=gap, warmStart=True))
     info = {"status": str(stats.status), "solve_seconds": time.perf_counter() - t0}
     try:  # HiGHS's own gap; pulp's stats.gap_rel is None for HiGHS
         g = float(prob.solverModel.getInfo().mip_gap)
@@ -124,8 +138,8 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None
         nv = {k: v.value() for k, v in n.items()}
         info["slack_usage"] = {d: float(v.value()) for d, v in slack.items()
                                if (v.value() or 0.0) > FLOAT_TOL}
-        # C-04: objective without FEFO tie-break and C6 slack penalty (= sim net when lambda=1)
-        econ = arcs.coef - EPS_FEFO / arcs.usable_life_at_arrival_h
+        # C-04: plain-INR objective (lambda = 1, no FEFO tie-break, no C6 slack penalty)
+        econ = arcs.margin_inr_kg - arcs.spoil_inr_kg
         info["objective_inr"] = float(
             sum(float(c) * xi for c, xi in zip(econ, xv, strict=True))
             - sum(fixed[k] * nv[k] for k in vdt) - sum(unship[b] * u[b].value() for b in u))
