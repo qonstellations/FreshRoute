@@ -76,3 +76,29 @@ def test_fefo_tiebreak_small():
         arcs, _, _ = milp._model_data(load_scenario(path))
         tie = (config.EPS_FEFO / arcs.usable_life_at_arrival_h).max()
         assert tie < 0.01 * arcs.margin_inr_kg.abs().min(), path
+
+
+def test_solver_info_and_c6():
+    s = sc()
+    plan = MilpPolicy().plan(s)
+    assert plan.solver["mip_gap"] <= config.MIP_REL_GAP + TOL
+    assert isinstance(plan.solver["slack_usage"], dict)
+    com = s.tables["batches"].set_index("batch_id").commodity
+    arcs, _, _ = milp._model_data(s)
+    dem = s.tables["demand"].set_index(["dest_id", "commodity", "day"]).demand_kg_p50
+    tot = {}
+    for d, c, a in set(zip(arcs.dest_id, arcs.commodity, arcs.arrival_day, strict=True)):
+        tot[d] = tot.get(d, 0.0) + dem.get((d, c, a), 0.0)
+    p = plan.plan.assign(c=plan.plan.batch_id.map(com))
+    fill = {d: p[p.dest_id == d].kg.sum() / t for d, t in tot.items() if t > TOL}
+    avg = sum(fill.values()) / len(fill)
+    for d, f in fill.items():
+        assert f + plan.solver["slack_usage"].get(d, 0.0) >= config.PHI_BALANCE * avg - 1e-4
+
+
+def test_no_incumbent_falls_back(monkeypatch):
+    s = sc()
+    monkeypatch.setattr(milp, "_solve", lambda *a, **k: (None, {"status": "TimeLimit"}))
+    plan = MilpPolicy().plan(s)
+    assert plan.solver["fallback_used"] is True and len(plan.plan) > 0
+    assert plan.solver["slack_usage"] == {} and plan.solver["mip_gap"] is None

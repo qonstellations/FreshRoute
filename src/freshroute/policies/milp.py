@@ -1,9 +1,11 @@
-"""Allocation MILP, PuLP -> HiGHS (ARCHITECTURE.md section 9). Variables x, n, u; C1-C5.
+"""Allocation MILP, PuLP -> HiGHS (ARCHITECTURE.md section 9). Variables x, n, u, slack; C1-C6.
 
 Objective per section 9.2: arc coef = margin_inr_kg (p(1-h) - c_var - hc_d, feasibility)
 - lambda*h*s + eps/usable_life; minus fixed trip cost; minus lambda*s*e_b on unshipped kg.
 Coefficients come from feasibility arcs, scenario tables, costmodel and config only. This
-module never reports net INR.
+module never reports net INR. C6 (section 9.4) is soft: fill_d + slack_d >= PHI * avg_fill,
+multiplied through by T_d, where T_d sums targets over (d, c, arrival_day) keys some feasible
+arc reaches, so an unreachable destination cannot force slack.
 """
 from __future__ import annotations
 
@@ -21,6 +23,8 @@ from freshroute.config import (
     MILP_TIME_LIMIT_S,
     MIP_REL_GAP,
     OVERSHIP_SLACK,
+    PENALTY_MULT,
+    PHI_BALANCE,
 )
 from freshroute.feasibility import HOURS_PER_DAY, build_arcs
 from freshroute.io import Scenario
@@ -88,17 +92,36 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap):
                  <= int(veh.max_trips_day[v]))
     for (d, _a), idx in arcs.groupby(["dest_id", "arrival_day"]).groups.items():  # C4 (D-05)
         prob += pulp.lpSum(x[i] for i in idx) <= float(dest.receive_cap_kg_day[d])
+    tot: dict = {}  # T_d over reachable (d, c, a) keys
     for (d, c, a), idx in arcs.groupby(["dest_id", "commodity", "arrival_day"]).groups.items():
-        prob += pulp.lpSum(x[i] for i in idx) <= (  # C5 demand cap by arrival day (D-05)
-            float(target.get((d, c, a), 0.0)) * (1 + OVERSHIP_SLACK))
+        tgt = float(target.get((d, c, a), 0.0))
+        tot[d] = tot.get(d, 0.0) + tgt
+        prob += pulp.lpSum(x[i] for i in idx) <= tgt * (1 + OVERSHIP_SLACK)  # C5 (D-05)
+    tot = {d: v for d, v in sorted(tot.items()) if v > FLOAT_TOL}
+    by_d = arcs.groupby("dest_id").groups
+    xd = {d: pulp.lpSum(x[i] for i in by_d[d]) for d in tot}
+    avg = prob.add_variable("avg_fill", 0, None, cat="Continuous")  # one row, keeps C6 sparse
+    prob += avg == pulp.lpSum((1 / (len(tot) * tot[d])) * xd[d] for d in tot)
+    slack = {d: prob.add_variable(f"s_{d}", 0, None, cat="Continuous") for d in tot}
+    for d in tot:  # C6 soft fill balance, times T_d
+        prob += xd[d] + tot[d] * slack[d] >= PHI_BALANCE * tot[d] * avg
+    penalty = PENALTY_MULT * float(sc.tables["prices"].price_inr_kg.max())
+    prob.setObjective(prob.objective - pulp.lpSum(penalty * tot[d] * slack[d] for d in tot))
     t0 = time.perf_counter()
     stats = prob.solve(pulp.HiGHS(msg=False, timeLimit=time_limit_s, gapRel=gap))
     info = {"status": str(stats.status), "solve_seconds": time.perf_counter() - t0}
+    try:  # HiGHS's own gap; pulp's stats.gap_rel is None for HiGHS
+        gap = float(prob.solverModel.getInfo().mip_gap)
+    except Exception:  # noqa: BLE001
+        gap = 0.0 if stats.status == pulp.LpSolveStatus.Optimal else math.nan
+    info["mip_gap"] = gap if math.isfinite(gap) else None
     if stats.status not in _OK:
         return None, info
     try:
         xv = [v.value() for v in x]
         nv = {k: v.value() for k, v in n.items()}
+        info["slack_usage"] = {d: float(v.value()) for d, v in slack.items()
+                               if (v.value() or 0.0) > FLOAT_TOL}
     except Exception:  # noqa: BLE001  no incumbent
         return None, info
     if any(v is None or math.isnan(v) for v in xv):
@@ -197,7 +220,9 @@ class MilpPolicy(Policy):
         arcs, batches, unship = _model_data(scenario)
         sol, info = _solve(scenario, arcs, batches, unship,
                            ctx.get("time_limit_s", MILP_TIME_LIMIT_S), ctx.get("gap", MIP_REL_GAP))
-        info.update(fallback_used=sol is None, slack_usage={})
+        info["fallback_used"] = sol is None
+        if sol is None:
+            info.update(slack_usage={}, mip_gap=None)
         # AGENTS.md rule 6: never crash. ponytail: greedy ignores C6 and replan residuals.
         x, n = _greedy(scenario, arcs, batches) if sol is None else sol
         return _build_plan(scenario, arcs, x, n, info, self.name)
