@@ -84,8 +84,9 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None
     prob += (pulp.lpSum(float(c) * xi for c, xi in zip(arcs.coef, x, strict=True))
              - pulp.lpSum(fixed[k] * n[k] for k in vdt)
              - pulp.lpSum(unship[b] * u[b] for b in u))
-    for bid, idx in arcs.groupby("batch_id").groups.items():  # C1 stock balance
-        prob += pulp.lpSum(x[i] for i in idx) + u[bid] == float(batches.qty_kg[bid])
+    by_b = arcs.groupby("batch_id").groups
+    for bid in batches.index:  # C1 stock balance; arc-less batches too, so u = qty (C-04)
+        prob += pulp.lpSum(x[i] for i in by_b.get(bid, [])) + u[bid] == float(batches.qty_kg[bid])
     for (v, d, day), idx in arcs.groupby(["vehicle_id", "dest_id", "dispatch_day"]).groups.items():
         prob += pulp.lpSum(x[i] for i in idx) <= float(veh.capacity_kg[v]) * n[(v, d, day)]  # C2
     for v, day in sorted({(k[0], k[2]) for k in vdt}):  # C3 trips per day
@@ -123,6 +124,11 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None
         nv = {k: v.value() for k, v in n.items()}
         info["slack_usage"] = {d: float(v.value()) for d, v in slack.items()
                                if (v.value() or 0.0) > FLOAT_TOL}
+        # C-04: objective without FEFO tie-break and C6 slack penalty (= sim net when lambda=1)
+        econ = arcs.coef - EPS_FEFO / arcs.usable_life_at_arrival_h
+        info["objective_inr"] = float(
+            sum(float(c) * xi for c, xi in zip(econ, xv, strict=True))
+            - sum(fixed[k] * nv[k] for k in vdt) - sum(unship[b] * u[b].value() for b in u))
     except Exception:  # noqa: BLE001  no incumbent
         return None, info
     if any(v is None or math.isnan(v) for v in xv):
