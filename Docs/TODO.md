@@ -115,7 +115,7 @@ Order matters: **validator and metrics before the optimizer.**
 - [x] **C-01** · 1.5 h — Full MILP objective per `ARCHITECTURE.md` §9.2 (revenue, variable transport, fixed trip cost, destination handling, λ·spoilage, FEFO tie-break, unshipped-expiry penalty).
 - [x] **C-02** · 1.0 h — Soft constraints + penalty slacks, 30 s limit returning the incumbent, **fallback to FEFO-greedy** if no incumbent, slack usage and `fallback_used` in the manifest.
 - [x] **C-03** · 1.0 h — Plan/trips export (`plan.csv`, `trips.csv`, first-fit trip loading), priority score and ordering, C6 balance constraint, and the **`demand_cap_override` hook** for the newsvendor.
-- [ ] **C-04** · 0.5 h — **MILP ↔ simulator consistency test** (overship 0, markdown off, p50 realization ⇒ simulator net equals MILP objective without tie-break/slack terms).
+- [x] **C-04** · 0.5 h — **MILP ↔ simulator consistency test** (overship 0, markdown off, p50 realization ⇒ simulator net equals MILP objective without tie-break/slack terms).
 
 **P2**
 - [x] **C-05** · 0.75 h — `policies/fefo.py` (FEFO-greedy over feasible arcs, same demand caps) and `policies/last_day_50.py`.
