@@ -17,6 +17,7 @@ Decision log for FreshRoute. `D-xx` = decision (this file); `A-xx` = assumption 
 | D-11 | No statsforecast in the 20 h build | 48 h-plan stretch item; demand quantiles come from p10/p50/p90 columns | Accepted |
 | D-12 | 3-person team merges the research doc's 4-role plan: UI + product/pitch + AI = P3 | Team size | Accepted |
 | D-13 | 20 h timeline with feature freeze at H17 | Research doc's 24 h plan freezes 3 h before the end; same buffer here | Accepted |
+| D-14 | Confirm D-02: PuLP 4.0.0 -> HiGHS (`pulp.HiGHS(timeLimit=, gapRel=)`) is used; `scipy.optimize.milp` (`options` `time_limit`, `mip_rel_gap`) stays the fallback; time-limit and gap options verified | `tests/test_solver_smoke.py`: both APIs give equal objectives on a toy MILP; on a hard 60x5 knapsack a 0.05 s limit returns in ~0.06 s (PuLP status `TimeLimit`, scipy status 1) and a 0.5 gap solves to Optimal. D-02 unchanged. PuLP 4.0 API differs from 3.x: build variables with `prob.add_variable(name, lb, ub, cat=)` (`LpVariable(cat=)` and `LpStatus` are gone); `solve()` returns a stats object, read `.status` against `pulp.LpSolveStatus` | Accepted |
 
 ## Open decisions (resolve at H0, `Docs/TODO.md` S-01/S-02)
 
