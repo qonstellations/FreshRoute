@@ -496,6 +496,18 @@ Anything marked **confirm** must be checked against the organizers' documents at
 | A-20 | Practice prices calibrated from Agmarknet modal ₹/quintal ÷ 100; Agmarknet and post-harvest-loss figures are context, never model inputs claimed as "real" batch data | team |
 | A-21 | Practice data is calibrated so FIFO market-stage spoilage lands near NABCONS tomato ≈ 3.25 % and onion ≈ 1.96 % (sanity check only; those are market-stage % of production incl. godowns/wholesale/retail/transport) | team |
 | A-22 | Markdown tier boundaries: `risk` exactly 0.30 → 20 % tier and exactly 0.50 → 20 % tier (the research ranges "0.10–0.30 / 0.30–0.50" overlap at the boundaries) | team |
+| A-23 | A shipment arriving after the horizon counts as origin-side stock (expired or carry-over by its expiry vs `24·H`), which keeps mass balance (F-06) | team |
+| A-24 | A lot with no discount row for a day has 0 % discount; a day with no price row uses the last earlier price, else 0 (F-06) | team |
+| A-25 | Lot expiry uses the plan's `arrival_h` + `usable_life_at_arrival_h` (base realization); travel/RSL perturbation is not implemented until stress testing (F-06) | team |
+| A-26 | Fulfillment denominator is every demand-table row, including destinations that received nothing (F-06) | team |
+| A-27 | `build_arcs` rejection precedence: `NO_LANE`, `NOT_AVAILABLE`, `RAIL_SLOT`, `WINDOW`, `SHELF_LIFE`, `BEYOND_HORIZON`; a rail slot after the end of dispatch day t is `RAIL_SLOT`, not a delayed dispatch; batch/vehicle origin mismatch is `NO_LANE`; window checks are inclusive within `FLOAT_TOL` (F-02) | team |
+| A-28 | `realization` for `build_arcs` is a dict `{"rsl_h": {batch_id: h}, "travel_h": {(origin, dest, mode): h}}`; for `simulate` it is `{"demand_kg": {(dest, commodity, day): kg}}`. Stress testing (AD-xx) must confirm or replace both (F-02, F-06) | team |
+| A-29 | Usable life is not clamped at 0; `wait_h` decays at store temperature and `handling_h` is consumed 1:1 (F-01) | team |
+| A-30 | Practice data uses a static price table (no Agmarknet snapshot, PRE-02 missed), 0.4–1.0 × base shelf life per batch, demand p10/p90 = 0.75 / 1.3 × p50, delivery windows spanning the whole horizon, one rail lane per hub with no rail vehicle, fake Bengaluru coordinates. A-20 does not apply to it until PRE-02 is done (F-08) | team |
+| A-31 | The FIFO baseline ships only on feasible arcs (the naive variant that ignores shelf life and windows gave SHELF_LIFE violations on `tiny_3batch`); this differs from §12 and affects the ladder FIFO→FEFO step. **Confirm.** FIFO and MILP runs carry no markdown (F-07) | team |
+| A-32 | Validator recomputes `arrival_h` from dispatch and lane `travel_h_p50`; has no code for beyond-horizon arrivals; derives trips from `trip_id`; cannot import `config.py`, so `OVERSHIP_SLACK` is passed in by the caller and `PCT` conversion for `discount_pct` is local (F-04) | team |
+| A-33 | MILP: trip `dispatch_h` is the max of its lines' dispatch hours; a TimeLimit result with all-zero `x` is treated as "no incumbent" and falls to the FEFO-greedy; a missing demand row is a target of 0; origin-expiry test is `available_from_h + rsl_h < 24·H` (F-03) | team |
+| A-34 | Markdown: lot stock for risk is `kg` net of handling loss, FEFO residual demand per day; the cap is `min(max_discount_frac, 1 − salvage/price)`; a monotone-forced discount may fall below the salvage floor when a later price is lower (known gap) (F-09) | team |
 
 ---
 

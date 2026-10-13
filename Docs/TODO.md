@@ -91,19 +91,19 @@ Goal: by H2 everyone can run `make setup && make test && make run-stub && make a
 Order matters: **validator and metrics before the optimizer.**
 
 **P1**
-- [ ] **F-01** · 0.75 h — `shelflife.py` (decay, usable life) + tests incl. the worked example: usable life 87 / 69 / 13 h, third arc rejected.
-- [ ] **F-02** · 1.0 h — `feasibility.py`: full `arcs` table (feasible + rejected with `reject_reason`) for absolute and daily window modes, rail slots, availability, horizon. Tests per reject reason.
-- [ ] **F-03** · 1.25 h — MILP skeleton on `tiny_3batch`: variables `x, n, u`, constraints C1–C5, HiGHS with time limit; returns a `Plan`.
+- [x] **F-01** · 0.75 h — `shelflife.py` (decay, usable life) + tests incl. the worked example: usable life 87 / 69 / 13 h, third arc rejected.
+- [x] **F-02** · 1.0 h — `feasibility.py`: full `arcs` table (feasible + rejected with `reject_reason`) for absolute and daily window modes, rail slots, availability, horizon. Tests per reject reason.
+- [x] **F-03** · 1.25 h — MILP skeleton on `tiny_3batch`: variables `x, n, u`, constraints C1–C5, HiGHS with time limit; returns a `Plan`.
 
 **P2**
-- [ ] **F-04** · 1.25 h — Hand-compute the **expected outputs** of the `tiny_3batch` fixture (inputs exist from S-03; compute by hand, with P1 checking the arithmetic) + the **independent `validator/`** (all hard-violation codes) + injected-violation tests + AST import-independence test.
-- [ ] **F-05** · 0.5 h — `costmodel.py` and `metrics.py` with the §5.7 invariants (mass balance, revenue/net identities) as tests.
-- [ ] **F-06** · 0.75 h — `simulator.py` per `ARCHITECTURE.md` §13 + hand-checked fixture result.
-- [ ] **F-07** · 0.5 h — `policies/fifo.py` (FIFO-nearest) + `freshroute run --policy fifo` printing the 4 KPIs.
+- [x] **F-04** · 1.25 h — Hand-compute the **expected outputs** of the `tiny_3batch` fixture (inputs exist from S-03; compute by hand, with P1 checking the arithmetic) + the **independent `validator/`** (all hard-violation codes) + injected-violation tests + AST import-independence test.
+- [x] **F-05** · 0.5 h — `costmodel.py` and `metrics.py` with the §5.7 invariants (mass balance, revenue/net identities) as tests.
+- [x] **F-06** · 0.75 h — `simulator.py` per `ARCHITECTURE.md` §13 + hand-checked fixture result.
+- [x] **F-07** · 0.5 h — `policies/fifo.py` (FIFO-nearest) + `freshroute run --policy fifo` printing the 4 KPIs.
 
 **P3**
-- [ ] **F-08** · 2.0 h — **If organizer data exists:** `adapters/organizer.py` (1.5 h) + a small generator for edge/stress scenarios (0.5 h). **If not:** the full generator for all 8 tables (+ `geo.csv`), seeded, with the commodity mix and starting points in `DATABASE.md` §3.1. Output: a practice scenario with ~200 batches / 8 destinations / 3 days / 3 vehicles scale, plus a small one. (If PRE-02 was missed, use the static price table here.)
-- [ ] **F-09** · 1.0 h — `discount.py` as a pure function + tests on tier boundaries (`risk` 0.09 → 0 %, 0.10 → 10 %, 0.29 → 10 %, 0.30 → 20 %, 0.50 → 20 %, 0.51 → 35 %; boundary convention is assumption A-22), the 24 h time trigger (35 % stays 35 %), max-discount cap, salvage floor, worth-it test, monotonicity.
+- [x] **F-08** · 2.0 h — **If organizer data exists:** `adapters/organizer.py` (1.5 h) + a small generator for edge/stress scenarios (0.5 h). **If not:** the full generator for all 8 tables (+ `geo.csv`), seeded, with the commodity mix and starting points in `DATABASE.md` §3.1. Output: a practice scenario with ~200 batches / 8 destinations / 3 days / 3 vehicles scale, plus a small one. (If PRE-02 was missed, use the static price table here.)
+- [x] **F-09** · 1.0 h — `discount.py` as a pure function + tests on tier boundaries (`risk` 0.09 → 0 %, 0.10 → 10 %, 0.29 → 10 %, 0.30 → 20 %, 0.50 → 20 %, 0.51 → 35 %; boundary convention is assumption A-22), the 24 h time trigger (35 % stays 35 %), max-discount cap, salvage floor, worth-it test, monotonicity.
 
 **Gate G1 (H5):** validator + metrics tests green on the hand-computed fixture · `freshroute run --policy fifo` prints spoilage, fulfillment, net ₹, violations · feasibility table works on the practice scenario · generator/adapter emits all tables and loads without errors.
 
