@@ -125,8 +125,8 @@ Order matters: **validator and metrics before the optimizer.**
 - [ ] **C-09** · 0.5 h — Perf harness: generate a 10× scenario and time plan solves (feeds U-02 and the performance budget).
 
 **P3**
-- [ ] **C-10** · 1.0 h — Calibrate the generator so the FIFO baseline's market-stage spoilage lands near NABCONS tomato ≈ 3.25 % and onion ≈ 1.96 % (sanity check — A-21), so the baseline is plausible, not a strawman.
-- [ ] **C-11** · 0.75 h — Wire the **`milp_markdown`** pipeline: plan → `discount.py` → `discounts.csv` → simulator (with P1/P2).
+- [x] **C-10** · 1.0 h — Calibrate the generator so the FIFO baseline's market-stage spoilage lands near NABCONS tomato ≈ 3.25 % and onion ≈ 1.96 % (sanity check — A-21), so the baseline is plausible, not a strawman.
+- [x] **C-11** · 0.75 h — Wire the **`milp_markdown`** pipeline: plan → `discount.py` → `discounts.csv` → simulator (with P1/P2).
 - [x] **C-12** · 1.5 h — Scoreboard: 4 KPI tiles (spoilage kg and %, fulfillment %, net ₹, violations baseline n vs ours), min fill rate, validator panel, "synthetic data" banner — all read from `outputs/`.
 - [x] **C-13** · 0.75 h — Reason-card text templates + dispatch-sheet skeleton.
 

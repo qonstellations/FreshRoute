@@ -512,6 +512,7 @@ Anything marked **confirm** must be checked against the organizers' documents at
 | A-34 | Markdown: lot stock for risk is `kg` net of handling loss, FEFO residual demand per day; the cap is `min(max_discount_frac, 1 − salvage/price)`; a monotone-forced discount may fall below the salvage floor when a later price is lower (known gap) (F-09) | team |
 | A-35 | MILP C6: `T_d = Σ target` over only the `(d, c, arrival_day)` keys some feasible arc reaches; `avg_fill` = mean over destinations with `T_d > 0`; slack `s_d` is in fill-fraction units, penalised at `PENALTY_MULT × max price × T_d` (= 10 × max price per kg). On `practice` C6 binds: the solve hits the 30 s limit (gap 3.85 %, proven optimal in ~54 s; ~₹79k objective cost of balance). The FEFO-greedy fallback ignores C6 (C-02) | team |
 | A-36 | `last_day_50` runs no worth-it test: it writes discounts.csv rows only for lot-days whose remaining life is ≤ 24 h, with `risk`/`tier_base_pct`/`delta_revenue_inr` = 0, discount `min(50, max_discount_pct, salvage cap)`; if a price fell inside the window the salvage floor would win over monotonicity (not seen on current scenarios) (C-05) | team |
+| A-37 | `milp_markdown` discounts are near-inert while the MILP ships ≤ p50 demand (1 of 551 discount rows non-zero on `practice`; KPIs equal `milp`): lots carry almost no surplus for the worth-it test to sell. `build_discounts` keeps lot stock fixed across days, so it can mark down a lot that already sold out; the simulator ignores that row (known gap) (C-11) | team |
 
 ---
 
