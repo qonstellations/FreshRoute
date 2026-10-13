@@ -21,7 +21,7 @@ from freshroute.discount import COLUMNS as DISCOUNT_COLUMNS
 from freshroute.io import load_scenario
 from freshroute.simulator import simulate
 
-POLICIES = ("fifo", "fefo", "last_day_50", "milp")
+POLICIES = ("fifo", "fefo", "last_day_50", "milp", "milp_markdown")
 
 
 def _policy(name: str):
@@ -37,6 +37,9 @@ def _policy(name: str):
     if name == "milp":
         from freshroute.policies.milp import MilpPolicy
         return MilpPolicy()
+    if name == "milp_markdown":
+        from freshroute.policies.milp import MilpMarkdownPolicy
+        return MilpMarkdownPolicy()
     raise SystemExit(f"unknown policy {name!r}; available: {', '.join(POLICIES)}")
 
 

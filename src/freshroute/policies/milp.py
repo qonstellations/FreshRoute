@@ -229,3 +229,17 @@ class MilpPolicy(Policy):
         # AGENTS.md rule 6: never crash. ponytail: greedy ignores C6 and replan residuals.
         x, n = _greedy(scenario, arcs, batches, ov) if sol is None else sol
         return _build_plan(scenario, arcs, x, n, info, self.name)
+
+
+class MilpMarkdownPolicy(MilpPolicy):
+    """milp_markdown (ARCHITECTURE.md sections 10, 12): MILP plan + tiered markdown (C-11)."""
+
+    name = "milp_markdown"
+
+    def plan(self, scenario: Scenario, ctx: dict | None = None) -> Plan:
+        from freshroute.discount import build_discounts
+
+        p = super().plan(scenario, ctx)
+        p.plan["policy"] = self.name
+        p.discounts = build_discounts(scenario, p.plan)
+        return p
