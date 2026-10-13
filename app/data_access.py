@@ -27,3 +27,39 @@ def load_metrics(run_id: str | None = None, outputs: Path = OUTPUTS) -> tuple[di
     if run_id is None:
         return json.loads(FIXTURE.read_text(encoding="utf-8")), True
     return json.loads((outputs / run_id / "metrics.json").read_text(encoding="utf-8")), False
+
+
+def _read_json(path: Path) -> dict | None:
+    return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
+
+
+def load_validation(run_id: str | None, outputs: Path = OUTPUTS) -> dict | None:
+    """validation.json (DATABASE §5.8) for a run, or None."""
+    return _read_json(outputs / run_id / "validation.json") if run_id else None
+
+
+def load_manifest(run_id: str | None, outputs: Path = OUTPUTS) -> dict | None:
+    """run_manifest.json (DATABASE §5.1) for a run, or None."""
+    return _read_json(outputs / run_id / "run_manifest.json") if run_id else None
+
+
+def load_ladder(scenario: str, seed: int, outputs: Path = OUTPUTS) -> dict | None:
+    """ladder.json (DATABASE §5.11) at outputs/<scenario>__ladder__s<seed>/, or None."""
+    return _read_json(outputs / f"{scenario}__ladder__s{seed}" / "ladder.json")
+
+
+def load_baseline(scenario: str, seed: int, outputs: Path = OUTPUTS) -> dict | None:
+    """Baseline as {"policy", "kpis", "source"}, or None when nothing is on disk.
+
+    Order: ladder official_baseline (when not null) -> ladder "fefo" entry ->
+    sibling run <scenario>__fefo__s<seed>/metrics.json.
+    """
+    ladder = load_ladder(scenario, seed, outputs)
+    if ladder:
+        if ladder.get("official_baseline"):
+            return {**ladder["official_baseline"], "source": "ladder"}
+        for e in ladder.get("ladder", []):
+            if e.get("policy") == "fefo":
+                return {**e, "source": "ladder"}
+    m = _read_json(outputs / f"{scenario}__fefo__s{seed}" / "metrics.json")
+    return {"policy": "fefo", "kpis": m["kpis"], "source": "run"} if m else None
