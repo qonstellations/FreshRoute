@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "run_id": "EXAMPLE-SYNTHETIC",
+  "scenario": "synthetic_example",
+  "policy": "milp",
+  "seed": 42,
+  "realization": "base",
+  "kpis": {
+    "spoilage_kg": 600.0, "spoilage_pct": 6.0,
+    "demand_fulfillment_pct": 87.0, "min_dest_fill_pct": 82.0,
+    "net_inr": 327000.0, "violations": 0
+  },
+  "spoilage_breakdown_kg": {"handling_loss": 100.0, "delivered_unsold_expired": 300.0, "origin_expired": 200.0},
+  "economics_inr": {
+    "gross_revenue_at_list": 435000.0, "discount_cost": 15000.0, "revenue": 420000.0,
+    "transport": 60000.0, "handling": 9000.0, "spoilage_cost": 24000.0, "net": 327000.0
+  },
+  "volumes_kg": {
+    "total_supply": 10000.0, "shipped": 9500.0, "unshipped": 500.0, "sold": 8700.0,
+    "carryover": {"destination": 400.0, "origin": 300.0, "total": 700.0}
+  },
+  "trips": {"count": 4, "avg_utilization_pct": 78.0},
+  "per_destination": [
+    {"dest_id": "D1", "fill_pct": 90.0, "sold_kg": 5200.0, "spoiled_kg": 250.0},
+    {"dest_id": "D2", "fill_pct": 82.0, "sold_kg": 3500.0, "spoiled_kg": 150.0}
+  ],
+  "per_commodity": [
+    {"commodity": "tomato", "spoilage_kg": 350.0, "spoilage_pct": 7.0, "sold_kg": 5000.0},
+    {"commodity": "banana", "spoilage_kg": 250.0, "spoilage_pct": 5.0, "sold_kg": 3700.0}
+  ]
+}

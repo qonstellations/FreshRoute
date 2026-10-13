@@ -47,3 +47,12 @@ To be copied from `make demo` output only. No projected numbers appear here.
 ## Sources
 
 Verified, secondhand and vendor-reported claims are labelled in `Docs/TODO.md` §10 and `Docs/RESEARCH-v1.md` §H.
+
+## Quickstart (stub)
+
+```bash
+pip install -r requirements.txt   # see Makefile
+make setup && make test
+make run-stub    # freshroute run --scenario tests/fixtures/tiny_3batch --policy milp --seed 42
+make app         # Streamlit dashboard (shows tests/fixtures/metrics_example.json when outputs/ is empty)
+```
