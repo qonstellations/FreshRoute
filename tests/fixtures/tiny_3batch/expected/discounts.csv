@@ -1,0 +1,1 @@
+lot_id,dest_id,commodity,batch_id,day,stock_kg,risk,tier_base_pct,tier_after_time_trigger_pct,discount_pct,capped_by,applied,forced_by_monotone,delta_revenue_inr

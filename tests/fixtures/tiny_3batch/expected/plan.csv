@@ -1,0 +1,5 @@
+shipment_id,batch_id,dest_id,vehicle_id,trip_id,mode,dispatch_day,dispatch_h,arrival_h,arrival_day,kg,usable_life_at_arrival_h,slack_h,margin_inr_kg,priority_rank,priority_score,is_frozen,policy
+S0001,B1,D1,V1,T-V1-D1-0-1,reefer,0,5,17,0,400,87,63,27,2,137.93103448275863,false,hand
+S0002,B3,D1,V1,T-V1-D1-0-1,reefer,0,5,17,0,300,387,363,17,3,15.503875968992247,false,hand
+S0003,B2,D2,V1,T-V1-D2-0-1,reefer,0,5,23,0,350,44,20,28,1,254.54545454545453,false,hand
+S0004,B3,D2,V1,T-V1-D2-0-1,reefer,0,5,23,0,250,384,360,18,4,14.322916666666666,false,hand

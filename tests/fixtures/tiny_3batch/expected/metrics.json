@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "note": "Hand-computed, see README.md. Base realization, no markdown (empty discounts.csv).",
+  "kpis": {
+    "spoilage_kg": 174.25,
+    "spoilage_pct": 7.576086956521739,
+    "demand_fulfillment_pct": 32.71153846153846,
+    "min_dest_fill_pct": 32.708333333333336,
+    "net_inr": 22593.0,
+    "violations": 0
+  },
+  "spoilage_breakdown_kg": {"handling_loss": 24.25, "delivered_unsold_expired": 0.0, "origin_expired": 150.0},
+  "economics_inr": {
+    "gross_revenue_at_list": 34005.0, "discount_cost": 0.0, "revenue": 34005.0,
+    "transport": 7400.0, "handling": 1600.0, "spoilage_cost": 2412.0, "net": 22593.0
+  },
+  "volumes_kg": {
+    "total_supply": 2300.0, "shipped": 1300.0, "unshipped": 1000.0, "sold": 1275.75,
+    "carryover": {"destination": 0.0, "origin": 850.0, "total": 850.0}
+  },
+  "trips": {"count": 2, "avg_utilization_pct": 32.5},
+  "per_destination": [
+    {"dest_id": "D1", "fill_pct": 32.714285714285715, "sold_kg": 687.0, "spoiled_kg": 13.0},
+    {"dest_id": "D2", "fill_pct": 32.708333333333336, "sold_kg": 588.75, "spoiled_kg": 11.25}
+  ],
+  "per_commodity": [
+    {"commodity": "onion", "spoilage_kg": 5.5, "spoilage_pct": 0.6875, "sold_kg": 544.5},
+    {"commodity": "tomato", "spoilage_kg": 168.75, "spoilage_pct": 11.25, "sold_kg": 731.25}
+  ]
+}
