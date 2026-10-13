@@ -1,0 +1,4 @@
+vehicle_id,origin,mode,capacity_kg,available_from_h,max_trips_day
+V1,HUB1,reefer,4000.0,0.0,2
+V2,HUB2,ambient,3000.0,0.0,2
+V3,HUB1,reefer,4000.0,0.0,2
