@@ -1,7 +1,9 @@
 """Allocation MILP, PuLP -> HiGHS (ARCHITECTURE.md section 9). Variables x, n, u; C1-C5.
 
+Objective per section 9.2: arc coef = margin_inr_kg (p(1-h) - c_var - hc_d, feasibility)
+- lambda*h*s + eps/usable_life; minus fixed trip cost; minus lambda*s*e_b on unshipped kg.
 Coefficients come from feasibility arcs, scenario tables, costmodel and config only. This
-module never reports net INR. C6 (fill balance) and slacks are not implemented yet (F-03).
+module never reports net INR.
 """
 from __future__ import annotations
 
@@ -23,6 +25,7 @@ from freshroute.config import (
 from freshroute.feasibility import HOURS_PER_DAY, build_arcs
 from freshroute.io import Scenario
 from freshroute.policies.base import PLAN_COLUMNS, TRIP_COLUMNS, Plan, Policy
+from freshroute.shelflife import decay
 
 _OK = (pulp.LpSolveStatus.Optimal, pulp.LpSolveStatus.TimeLimit, pulp.LpSolveStatus.GapLimit)
 
@@ -45,8 +48,10 @@ def _model_data(sc: Scenario):
                     + EPS_FEFO / arcs.usable_life_at_arrival_h)
     arcs = arcs.sort_values(["batch_id", "dest_id", "vehicle_id", "dispatch_day"],
                             ignore_index=True)
-    # e_b = 1 if unshipped stock would expire at origin within the horizon
-    expires = (b.available_from_h + b.remaining_shelf_life_h) < horizon * HOURS_PER_DAY
+    # e_b = 1 if unshipped stock would expire at origin within the horizon (section 13 step 3)
+    dk = [decay(b.storage_temp_c[i], com.ref_temp_c[b.commodity[i]], com.q10[b.commodity[i]])
+          for i in b.index]
+    expires = (b.available_from_h + b.remaining_shelf_life_h / dk) <= horizon * HOURS_PER_DAY
     unship = {bid: LAMBDA_SPOIL * float(s_c[b.commodity[bid]]) * float(expires[bid])
               for bid in b.index}
     return arcs, b, unship
