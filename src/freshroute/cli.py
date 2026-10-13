@@ -121,7 +121,17 @@ def main(argv: list[str] | None = None) -> None:
     r.add_argument("--seed", type=int, default=DEFAULT_SEED)
     r.add_argument("--out")
     r.add_argument("--fail-on-violations", action="store_true", help="exit 1 if violations > 0")
+    lad = sub.add_parser("ladder", help="fifo -> fefo -> milp -> milp_markdown + waterfall")
+    lad.add_argument("--scenario", required=True)
+    lad.add_argument("--seed", type=int, default=DEFAULT_SEED)
+    lad.add_argument("--out")
     a = p.parse_args(argv)
+    if a.cmd == "ladder":
+        from freshroute.ladder import format_ladder, run_ladder
+        out = run_ladder(a.scenario, a.seed, a.out)
+        print(format_ladder(out))
+        print(f"wrote {out}")
+        return
     out = run(a.scenario, a.policy, a.seed, a.out)
     m = json.loads((out / "metrics.json").read_text(encoding="utf-8"))
     print(format_kpis(m))

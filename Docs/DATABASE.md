@@ -386,6 +386,8 @@ Arrive by: day 0 17:00
 ```
 Step formulas: `ARCHITECTURE.md` §12. Signs: cost steps are negative when the plan spends more. Invariant: `first total + Σ deltas = last total` within tolerance.
 
+**Until C-06 lands (no organizer baseline doc yet):** `ladder.json → official_baseline` is `null` and `waterfall.json → baseline` is `"fefo"`. Both switch to `organizer_baseline` once C-06 is implemented. Written by `freshroute ladder` to `outputs/<scenario>__ladder__s<seed>/`; each ladder policy also gets its normal `outputs/<run_id>/`.
+
 ### 5.12 Stress and sensitivity
 
 - `stress.csv` — one row per scenario `i` per policy: `scenario_i, policy, spoilage_kg, spoilage_pct, demand_fulfillment_pct, min_dest_fill_pct, net_inr`.
