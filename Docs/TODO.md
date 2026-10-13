@@ -112,14 +112,14 @@ Order matters: **validator and metrics before the optimizer.**
 ## 5. Phase 2 — Core engine (H5–H9)
 
 **P1**
-- [ ] **C-01** · 1.5 h — Full MILP objective per `ARCHITECTURE.md` §9.2 (revenue, variable transport, fixed trip cost, destination handling, λ·spoilage, FEFO tie-break, unshipped-expiry penalty).
-- [ ] **C-02** · 1.0 h — Soft constraints + penalty slacks, 30 s limit returning the incumbent, **fallback to FEFO-greedy** if no incumbent, slack usage and `fallback_used` in the manifest.
-- [ ] **C-03** · 1.0 h — Plan/trips export (`plan.csv`, `trips.csv`, first-fit trip loading), priority score and ordering, C6 balance constraint, and the **`demand_cap_override` hook** for the newsvendor.
+- [x] **C-01** · 1.5 h — Full MILP objective per `ARCHITECTURE.md` §9.2 (revenue, variable transport, fixed trip cost, destination handling, λ·spoilage, FEFO tie-break, unshipped-expiry penalty).
+- [x] **C-02** · 1.0 h — Soft constraints + penalty slacks, 30 s limit returning the incumbent, **fallback to FEFO-greedy** if no incumbent, slack usage and `fallback_used` in the manifest.
+- [x] **C-03** · 1.0 h — Plan/trips export (`plan.csv`, `trips.csv`, first-fit trip loading), priority score and ordering, C6 balance constraint, and the **`demand_cap_override` hook** for the newsvendor.
 - [ ] **C-04** · 0.5 h — **MILP ↔ simulator consistency test** (overship 0, markdown off, p50 realization ⇒ simulator net equals MILP objective without tie-break/slack terms).
 
 **P2**
-- [ ] **C-05** · 0.75 h — `policies/fefo.py` (FEFO-greedy over feasible arcs, same demand caps) and `policies/last_day_50.py`.
-- [ ] **C-06** · 1.0 h — `policies/organizer_baseline.py` implemented exactly from the organizers' doc + export of plans in the organizers' submission format.
+- [x] **C-05** · 0.75 h — `policies/fefo.py` (FEFO-greedy over feasible arcs, same demand caps) and `policies/last_day_50.py`.
+- [ ] **C-06** · 1.0 h — `policies/organizer_baseline.py` implemented exactly from the organizers' doc + export of plans in the organizers' submission format. *Blocked: no organizer doc yet (S-01); until then `ladder.json` has `official_baseline: null` and the waterfall baseline is `fefo`.*
 - [ ] **C-07** · 1.25 h — `ladder.py`: `fifo → fefo → milp → milp_markdown` through the same simulator, `ladder.json`, `waterfall.json` with the **reconciliation test** (±₹0.01).
 - [ ] **C-08** · 0.5 h — `run_manifest.json` + **determinism test** (same seed ⇒ identical `metrics.json`).
 - [ ] **C-09** · 0.5 h — Perf harness: generate a 10× scenario and time plan solves (feeds U-02 and the performance budget).
@@ -127,8 +127,8 @@ Order matters: **validator and metrics before the optimizer.**
 **P3**
 - [ ] **C-10** · 1.0 h — Calibrate the generator so the FIFO baseline's market-stage spoilage lands near NABCONS tomato ≈ 3.25 % and onion ≈ 1.96 % (sanity check — A-21), so the baseline is plausible, not a strawman.
 - [ ] **C-11** · 0.75 h — Wire the **`milp_markdown`** pipeline: plan → `discount.py` → `discounts.csv` → simulator (with P1/P2).
-- [ ] **C-12** · 1.5 h — Scoreboard: 4 KPI tiles (spoilage kg and %, fulfillment %, net ₹, violations baseline n vs ours), min fill rate, validator panel, "synthetic data" banner — all read from `outputs/`.
-- [ ] **C-13** · 0.75 h — Reason-card text templates + dispatch-sheet skeleton.
+- [x] **C-12** · 1.5 h — Scoreboard: 4 KPI tiles (spoilage kg and %, fulfillment %, net ₹, violations baseline n vs ours), min fill rate, validator panel, "synthetic data" banner — all read from `outputs/`.
+- [x] **C-13** · 0.75 h — Reason-card text templates + dispatch-sheet skeleton.
 
 **Gate G2 (H9):** on **3 seeds**, `milp` has higher net ₹ than **FEFO** (not just FIFO) and is not worse on spoilage · independent validator reports **0 violations** for `milp` and `milp_markdown` · plan → simulator → metrics → scoreboard works · consistency test C-04 passes.
 *If MILP does not beat FEFO:* check objective coefficients against the simulator (C-04) before touching anything else; do not start Phase 4 until the spine wins.
