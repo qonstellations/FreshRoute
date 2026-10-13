@@ -7,7 +7,7 @@ FreshRoute is a hub-level decision tool for perishable produce. Given batches wi
 - **Spine:** shelf-life feasibility pre-filter → allocation MILP (HiGHS) → disclosed tiered markdown rule, scored by one seeded simulator and checked by an independent validator.
 - **A+ add-ons (each behind a flag):** Monte Carlo stress test with P10–P90 bands, event-driven replan with a diff view, newsvendor demand target. An LLM narrator is stretch only; it never decides.
 
-> **Status:** planning/documentation phase. No code yet; the sections marked *TBD* are filled by the tasks named next to them.
+> **Status:** Phases 0–1 built (skeleton, validator, simulator, metrics, feasibility, FIFO, generator, MILP skeleton). Sections marked *TBD* are filled by the tasks named next to them.
 > **Data:** practice scenarios are **synthetic** and always labelled so. Real-world loss statistics are context, not model inputs.
 
 ## Documentation
@@ -26,19 +26,20 @@ FreshRoute is a hub-level decision tool for perishable produce. Given batches wi
 
 ## Quickstart *(TBD — V-04)*
 
-Planned commands (see `Docs/CONTRIBUTING.md` §4):
+Commands (see `Docs/CONTRIBUTING.md` §4):
 
 ```bash
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 make setup && make test
-make demo        # the one command every reported number comes from (seed 42)
-make app         # Streamlit dashboard
+make run-stub    # freshroute run on tests/fixtures/tiny_3batch (full pipeline, prints the 4 KPIs)
+make demo        # (V-04, not built yet) the one command every reported number comes from (seed 42)
+make app         # Streamlit dashboard (shows tests/fixtures/metrics_example.json when outputs/ is empty)
 ```
 
-## Assumptions and cost-model mapping *(TBD — S-02, V-03)*
+## Assumptions and cost-model mapping *(S-02 written on defaults; finalized at V-03)*
 
-The assumption log lives in `Docs/ARCHITECTURE.md` §20 and the organizer column mapping template in `Docs/DATABASE.md` §8. Both are copied here at S-02 and finalized at V-03, with each *confirm* item marked resolved or open.
+The assumption log lives in `Docs/ARCHITECTURE.md` §20 and the organizer column mapping template in `Docs/DATABASE.md` §8. Both are copied in the sections below (S-02) and finalized at V-03, with each *confirm* item marked resolved or open. The copy below stops at A-22; later assumptions (A-23 onward) live in `ARCHITECTURE.md` §20 only until V-03.
 
 ## Results *(TBD — V-04)*
 
@@ -47,15 +48,6 @@ To be copied from `make demo` output only. No projected numbers appear here.
 ## Sources
 
 Verified, secondhand and vendor-reported claims are labelled in `Docs/TODO.md` §10 and `Docs/RESEARCH-v1.md` §H.
-
-## Quickstart (stub)
-
-```bash
-pip install -r requirements.txt   # see Makefile
-make setup && make test
-make run-stub    # freshroute run --scenario tests/fixtures/tiny_3batch --policy milp --seed 42
-make app         # Streamlit dashboard (shows tests/fixtures/metrics_example.json when outputs/ is empty)
-```
 
 ## Organizer mapping
 
@@ -138,7 +130,7 @@ Copy of `Docs/ARCHITECTURE.md` §20. Every **confirm** item is still open: no or
 |---|---|---|
 | A-01 | Epoch = 00:00 of day 0; windows are absolute hours unless `scenario.json` says `window_mode = daily` | confirm - still open |
 | A-02 | Hub dispatch hour = 05:00 (`DISPATCH_HOUR`) | team |
-| A-03 | `remaining_shelf_life_h` is measured at `available_from_h`, in reference-temperature-equivalent hours; wall-clock life at storage temp = RSL / decay(T_store) | confirm - still open |
+| A-03 | `remaining_shelf_life_h` is measured at `available_from_h`, in reference-temperature-equivalent hours; wall-clock life at storage temp = RSL / decay(T_store) | confirm - still open (default in `DECISIONS.md`) |
 | A-04 | After arrival, life decays 1 h per h | team |
 | A-05 | Day-bucket sales: lot sellable on day k iff `arrival_day <= k` and `expiry_h > 24k` | team |
 | A-06 | Horizon end: unexpired stock is carry-over, valued 0, not spoiled; reported as `carryover_kg` | confirm - still open |
@@ -149,7 +141,7 @@ Copy of `Docs/ARCHITECTURE.md` §20. Every **confirm** item is still open: no or
 | A-11 | Elasticity uplift is linear in discount, capped at `MAX_UPLIFT` | team |
 | A-12 | Shelf price = discount of FEFO-head lot at start of day | team |
 | A-13 | Stress sampling distributions as in `Docs/ARCHITECTURE.md` §14.1 | team |
-| A-14 | Event semantics as in `Docs/DATABASE.md` §6 | confirm - still open |
+| A-14 | Event semantics as in `Docs/DATABASE.md` §6 | confirm - still open (default in `DECISIONS.md`) |
 | A-15 | Base shelf lives are de-rated team assumptions (FAO/UMaine values are temperate cold-storage references) | team |
 | A-16 | `overship_slack`, phi, lambda, `EPS_FEFO` defaults as in `Docs/ARCHITECTURE.md` §19 | team |
 | A-17 | Newsvendor `c_u`, `c_o`, markdown reference and clamp as in `Docs/ARCHITECTURE.md` §14.3 | team |

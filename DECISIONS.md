@@ -37,6 +37,9 @@ The open decisions above stay open until the organizers' material answers them (
 - **Hard violations:** the codes in `validator/` as built in F-04.
 - **Organizer data:** `data/organizer/` is git-ignored and never committed.
 - **AI assistants / external data:** use is allowed (human owner reviews every merge) until the event rules say otherwise; if they forbid it, stop and flag it at the next gate.
+- **Full question list:** the eight S-01 questions in `Docs/TODO.md` §3 (baseline, submission format, hidden scenarios, rail/P10/P90/events presence, pitch and venue rules, in addition to the four above) are open on the same terms; the README "Open questions" table tracks each one.
+- **`remaining_shelf_life_h` (A-03):** measured at `available_from_h` in reference-temperature-equivalent hours, as `Docs/ARCHITECTURE.md` §7.
+- **Event semantics (A-14):** as `Docs/DATABASE.md` §6.
 - **Anything else:** the module owner decides within 5 minutes, records an `A-xx` or `D-xx`, and moves on.
 
 When an open decision is resolved, add the next free `D-xx` row and update the matching `A-xx`; the default above is then superseded.

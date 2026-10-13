@@ -168,6 +168,8 @@ replan.replan(scenario, plan, discounts, event) -> ReplanResult
 
 ## 7. Cost model (shared, single source of truth)
 
+**Where it lives:** every formula below is implemented only in `costmodel.py` (shelf-life maths in `shelflife.py`); every parameter value lives in `config.py` (§19) or the dataset. The validator re-implements the maths independently (§11).
+
 All times are **hours from the planning epoch t = 0**. `day(h) = floor(h / 24)`. Money is ₹. Mass is kg.
 
 **Shelf-life decay.** `decay(T) = q10 ^ ((T − ref_temp_c) / 10)`. One hour at temperature T consumes `decay(T)` hours of remaining life. Default `q10 = 2` is a modelling convention we did **not** verify per commodity; it is exposed as a UI slider.

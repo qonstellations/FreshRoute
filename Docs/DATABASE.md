@@ -173,10 +173,11 @@ Our addition for the shelf-life countdown map. The optimizer never reads it. If 
   "horizon_days": 3,
   "window_mode": "absolute",
   "dispatch_hour": 5,
+  "price_source": "static_table_generator_v1",
   "notes": "free text"
 }
 ```
-`source` is `synthetic` or `organizer`. `dispatch_hour` overrides `config.DISPATCH_HOUR`. `horizon_days` bounds `demand.day`, `prices.day`, dispatch days and arrival days.
+`source` is `synthetic` or `organizer`. `price_source` is optional and informational (e.g. `static_table_generator_v1` or `agmarknet_snapshot`); the loader ignores it. `dispatch_hour` overrides `config.DISPATCH_HOUR`. `horizon_days` bounds `demand.day`, `prices.day`, dispatch days and arrival days.
 
 ---
 
@@ -278,7 +279,7 @@ Loads are assigned to trips by deterministic first-fit in priority order; one ba
 
 ### 5.6 `sim_ledger.csv` (PK `(dest_id, commodity, day)`) and `sim_lots.csv` (PK `lot_id`)
 
-`sim_ledger.csv`: `dest_id, commodity, day, arrived_kg, handling_loss_kg, base_demand_kg, effective_demand_kg, shelf_discount_frac, price_inr_kg, sold_kg, gross_at_list_inr, revenue_inr, expired_unsold_kg, on_hand_end_kg`.
+`sim_ledger.csv`: `dest_id, commodity, day, base_demand_kg, effective_demand_kg, delivered_kg, handling_loss_kg, sold_kg, price_inr_kg, discount_frac, unsold_expired_kg, on_hand_end_kg, carryover_kg`. (`discount_frac` is 0–1 in memory and in this file; money columns are not stored here — `metrics.json` derives revenue from `sold_kg`, `price_inr_kg` and `discount_frac` via `costmodel.py`.)
 `sim_lots.csv`: `lot_id, dest_id, commodity, arrival_h, arrival_day, expiry_h, kg_arrived, kg_handling_loss, kg_sold, kg_expired_unsold, kg_carryover`.
 
 ### 5.7 `metrics.json`
