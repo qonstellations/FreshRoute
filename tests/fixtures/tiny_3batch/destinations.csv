@@ -1,0 +1,3 @@
+dest_id,name,type,receive_cap_kg_day,handling_time_h,handling_cost_inr_kg,window_open_h,window_close_h
+D1,Mandi One,mandi,2000,2,1.0,0,72
+D2,Retail DC Two,retail_DC,1500,2,1.5,0,72

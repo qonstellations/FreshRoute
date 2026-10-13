@@ -1,0 +1,4 @@
+batch_id,commodity,origin_hub,qty_kg,remaining_shelf_life_h,rsl_p10_h,rsl_p90_h,storage_temp_c,quality_grade,available_from_h
+B1,tomato,HUB1,1000,100,80,120,20,A,0
+B2,tomato,HUB1,500,60,50,70,20,B,0
+B3,onion,HUB1,800,400,350,450,20,A,0

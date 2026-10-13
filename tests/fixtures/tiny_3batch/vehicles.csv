@@ -1,0 +1,2 @@
+vehicle_id,origin,mode,capacity_kg,available_from_h,max_trips_day
+V1,HUB1,reefer,2000,0,2

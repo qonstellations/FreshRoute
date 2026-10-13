@@ -1,0 +1,13 @@
+dest_id,commodity,day,price_inr_kg,price_min,price_max
+D1,tomato,0,30,25,35
+D1,tomato,1,30,25,35
+D1,tomato,2,30,25,35
+D1,onion,0,20,18,22
+D1,onion,1,20,18,22
+D1,onion,2,20,18,22
+D2,tomato,0,32,27,37
+D2,tomato,1,32,27,37
+D2,tomato,2,32,27,37
+D2,onion,0,22,19,25
+D2,onion,1,22,19,25
+D2,onion,2,22,19,25

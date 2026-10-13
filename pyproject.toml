@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "freshroute"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+  "scipy>=1.9", "pulp==4.0.0", "highspy==1.15.1", "pandas==2.3.3", "numpy==2.2.1",
+  "pydantic==2.10.4", "streamlit==1.52.2", "pydeck==0.9.1", "plotly==7.0.0",
+  "pytest==8.4.2", "ruff==0.15.15",
+]
+
+[project.scripts]
+freshroute = "freshroute.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "validator", "app", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

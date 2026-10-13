@@ -1,0 +1,3 @@
+origin,dest_id,mode,travel_h_p50,travel_h_p90,cost_fixed_inr_trip,cost_var_inr_kg,transit_temp_c,departure_slots
+HUB1,D1,reefer,12,16,2000,2.0,10,
+HUB1,D2,reefer,18,24,2500,2.5,10,
