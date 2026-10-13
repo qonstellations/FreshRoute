@@ -13,6 +13,7 @@ test:
 check:
 	$(PY) -m ruff check .
 	$(PY) -m pytest -q
+	$(PY) -m freshroute.cli run --scenario tests/fixtures/tiny_3batch --policy fifo --out outputs/check_fifo --fail-on-violations
 
 demo:
 	@echo "demo: not implemented yet (freshroute demo lands with the spine)"
