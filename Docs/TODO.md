@@ -1,0 +1,305 @@
+# TODO.md
+
+**FreshRoute — Plan A+ · 20-hour build · team of 3**
+Check items off as they land on `main`. Task IDs are stable — reference them in commits and PRs.
+
+> Companion docs: `ARCHITECTURE.md` (how it works) · `DATABASE.md` (data contracts) · `CONTRIBUTING.md` (how we work).
+> **Rule #1: the organizers' cost model and dataset format override ours.** S-02 exists to make that mapping explicit.
+> **ID legend:** `PRE` pre-event · `S` scaffolding · `F` foundations · `C` core engine · `U` product surface · `AD` A+ add-ons · `H` hardening · `V` wrap-up · `R` release/rehearsal · `G0–G7` gates. **`A-xx` always means an *assumption*** (`ARCHITECTURE.md` §20) and `D-xx` a *decision* (`DECISIONS.md`) — never a task.
+
+---
+
+## 0. Roles
+
+| Role | Person | Owns |
+|---|---|---|
+| **P1 — Optimization lead** | Aarush | shelf-life maths, feasibility filter, MILP, replan, reason-card fields, LLM narrator (stretch) |
+| **P2 — Simulation, metrics & validation** | Omcar | repo/CLI skeleton, cost model, simulator, metrics, independent validator, baselines, ladder, Monte Carlo, newsvendor, determinism/perf |
+| **P3 — Product, UI & AI/pitch** | Pratham | generator/adapter, discount rule, Streamlit dashboard, dispatch sheet, template narration, deck, demo script, video |
+
+(Research doc's 4-role plan merged for a team of 3: UI + product/pitch + AI = P3.)
+
+---
+
+## 1. Timeline at a glance
+
+| Phase | Hours | Name | Gate at end |
+|---|---|---|---|
+| 0 | H0–H2 | **Scaffolding & contracts** | **G0** (H2) |
+| 1 | H2–H5 | Foundations: validator, metrics, simulator, feasibility, generator | **G1** (H5) |
+| 2 | H5–H9 | Core engine: MILP, markdown, baselines, ladder | **G2** (H9) |
+| 3 | H9–H12 | Product surface + spine hardening | **G3** (H12) — tag `v0.1-spine` |
+| 4 | H12–H15 | A+ add-ons: stress test, replan, newsvendor | **G4** (H15) |
+| 5 | H15–H17 | Hardening, dry runs, **FEATURE FREEZE** | **G5** (H17) — tag `v1.0-freeze` |
+| 6 | H17–H18 | Backup video, README, final numbers | **G6** (H18) |
+| 7 | H18–H20 | Fresh-clone test, rehearsal ×3, submission | **G7** (H20) |
+
+Budget: 3 people × 20 h = 60 person-hours. Research-doc rule of thumb: ~40 % engine/simulation/validation, ~25 % UI, ~15 % robustness & replan, ~20 % pitch/demo hardening/docs. Do a 10-minute checkpoint at every gate (what's green, what's red, cut or continue).
+
+Hours per person per phase (estimates; sums to 20 h each):
+
+| | P0 | P1 | P2 | P3 | P4 | P5 | P6 | P7 |
+|---|---|---|---|---|---|---|---|---|
+| P1 | 2.0 | 3.0 | 4.0 | 3.0 | 3.0 | 2.0 | 1.0 | 2.0 |
+| P2 | 2.0 | 3.0 | 4.0 | 3.0 | 3.0 | 2.0 | 1.0 | 2.0 |
+| P3 | 2.0 | 3.0 | 4.0 | 3.0 | 3.0 | 2.0 | 1.0 | 2.0 |
+
+P1's Phase 5 figure includes up to 1.0 h for the optional AD-09 stretch; if AD-09 is dropped at G4, that hour becomes bug-fix buffer, not new scope.
+
+Plan one real meal break around H8–H9 and a short break roughly every 4 h. Nobody codes alone for more than 45 minutes while stuck.
+
+---
+
+## 2. Before H0 (pre-event)
+
+- [ ] **PRE-01** · all — Create the repo, add everyone, agree on one Python version (3.10+; write it to `.python-version`). Everyone installs `scipy>=1.9`, `pulp`, `highspy`, `pandas`, `numpy`, `pydantic>=2`, `streamlit`, `pydeck`, `plotly`, `pytest`, `ruff` in a virtual environment and confirms a toy MILP solves through **both** PuLP→HiGHS and `scipy.optimize.milp`. (`statsforecast` is **not** needed — out of scope for the 20 h build.)
+- [ ] **PRE-02** · P3 — Download an **Agmarknet CSV snapshot** (data.gov.in, "Variety-wise Daily Market Prices Data of Commodity") for tomato, onion, banana, potato, spinach for 2–3 representative mandis → `data/agmarknet/agmarknet_snapshot.csv`. Never depend on the live API (the sample key reportedly caps at 10 records/request — unverified). *If missed:* use a static price table in the generator and do not spend event hours on it.
+- [ ] **PRE-03** · P3 — Re-verify every ₹ crore figure you plan to put on a slide against the official PIB page. The tomato ₹5,921.15 crore figure (PIB release 2081044) has been **fact-checked by Pratham**; any *other* ₹ figure still needs the same check.
+- [ ] **PRE-04** · all — Choose the **demo laptop**; test HDMI/projector; install a screen recorder; confirm everything runs with Wi-Fi off.
+- [ ] **PRE-05** · all — Read `ARCHITECTURE.md`, `DATABASE.md`, `CONTRIBUTING.md`. Sleep.
+- [ ] **PRE-06** · P1 — Only if you expect to attempt AD-09: decide the LLM provider and put the API key in an environment variable (never in git).
+
+---
+
+## 3. Phase 0 — Scaffolding & contracts (H0–H2)
+
+Goal: by H2 everyone can run `make setup && make test && make run-stub && make app`, and the written contracts are signed off. No feature code before G0.
+
+- [ ] **S-01** · all · 0.5 h — **Read the organizers' material** (rubric, dataset, baseline, cost model, submission format, rules) and answer the **open questions** below in writing.
+- [ ] **S-02** · all · 0.5 h — **Contract sign-off.** Fill the mapping table (`DATABASE.md` §8) into the README; compare the organizers' cost model with `ARCHITECTURE.md` §7 and list every coefficient or formula in `costmodel.py` / `config.py` that must change; confirm discount rule, hard-constraint list, window mode, horizon, origin handling cost; copy the assumption log (`ARCHITECTURE.md` §20) into the README and mark each **confirm** item resolved or still open. *Done when:* a commit `docs: sign off cost model and contracts` exists and all three agree.
+- [ ] **S-03** · P2 · 1.0 h — **Repo skeleton.** Create the layout in `ARCHITECTURE.md` §5, `Makefile` (`setup test check demo app run-stub`), `pyproject.toml`/`requirements.txt` with pinned versions, `.gitignore` (outputs, data/organizer, `.env`, `.venv`), ruff + pytest config, `config.py`, `schema.py` (column-name constants), CLI skeleton so `freshroute run --scenario X --policy milp --seed 42` writes a stub `metrics.json`, plus the **input CSVs for `tests/fixtures/tiny_3batch/`** (3 batches, 2 destinations, 1 vehicle; valid per `DATABASE.md`; expected outputs come at F-04). *Done when:* `make test` passes with one placeholder test and `make run-stub` loads the fixture.
+- [ ] **S-04** · P1 · 1.0 h — **Solver smoke test + decision D-02.** Solve a toy MILP via PuLP→HiGHS and `scipy.optimize.milp`; verify the **time-limit and MIP-gap options actually work** in the chosen API; record the decision. Create `shelflife.py` with the `decay` / `usable_life_at_arrival` signatures and a stub test of the worked example (`ARCHITECTURE.md` §7.1).
+- [ ] **S-05** · P3 · 1.0 h — **Streamlit shell** that renders from `tests/fixtures/metrics_example.json` (hand-written from `DATABASE.md` §5.7). Add a README quickstart stub. *Done when:* `make app` shows placeholder KPI tiles.
+
+**Open questions to resolve at H0** (S-01):
+1. Exact cost model: revenue, transport, handling (incl. any **origin** handling), spoilage and disposal, how discounts are accounted.
+2. The organizers' baseline: documented procedure and how it is scored.
+3. Submission format for plans and whether a scoring/checker script is provided.
+4. Hidden scenarios: same file format as the dataset? How large? Which events? Horizon?
+5. Time conventions: epoch, whether delivery windows are absolute or repeat daily.
+6. What counts as a hard-constraint violation.
+7. Rules: are AI coding assistants / external data / open-source libraries allowed? Pitch length (we assume 3:00) and live-demo vs video requirements; venue network and hardware.
+8. Are rail lanes, P10/P90 columns and events present in the real data?
+
+**Gate G0 (H2):** cost model signed off in writing · `make setup && make test && make run-stub && make app` work on all three laptops · `tests/fixtures/tiny_3batch/` inputs and `metrics_example.json` committed · open questions answered or logged as assumptions.
+*If red:* do not start Phase 1 work that depends on the missing contract — resolve it first.
+
+---
+
+## 4. Phase 1 — Foundations (H2–H5)
+
+Order matters: **validator and metrics before the optimizer.**
+
+**P1**
+- [ ] **F-01** · 0.75 h — `shelflife.py` (decay, usable life) + tests incl. the worked example: usable life 87 / 69 / 13 h, third arc rejected.
+- [ ] **F-02** · 1.0 h — `feasibility.py`: full `arcs` table (feasible + rejected with `reject_reason`) for absolute and daily window modes, rail slots, availability, horizon. Tests per reject reason.
+- [ ] **F-03** · 1.25 h — MILP skeleton on `tiny_3batch`: variables `x, n, u`, constraints C1–C5, HiGHS with time limit; returns a `Plan`.
+
+**P2**
+- [ ] **F-04** · 1.25 h — Hand-compute the **expected outputs** of the `tiny_3batch` fixture (inputs exist from S-03; compute by hand, with P1 checking the arithmetic) + the **independent `validator/`** (all hard-violation codes) + injected-violation tests + AST import-independence test.
+- [ ] **F-05** · 0.5 h — `costmodel.py` and `metrics.py` with the §5.7 invariants (mass balance, revenue/net identities) as tests.
+- [ ] **F-06** · 0.75 h — `simulator.py` per `ARCHITECTURE.md` §13 + hand-checked fixture result.
+- [ ] **F-07** · 0.5 h — `policies/fifo.py` (FIFO-nearest) + `freshroute run --policy fifo` printing the 4 KPIs.
+
+**P3**
+- [ ] **F-08** · 2.0 h — **If organizer data exists:** `adapters/organizer.py` (1.5 h) + a small generator for edge/stress scenarios (0.5 h). **If not:** the full generator for all 8 tables (+ `geo.csv`), seeded, with the commodity mix and starting points in `DATABASE.md` §3.1. Output: a practice scenario with ~200 batches / 8 destinations / 3 days / 3 vehicles scale, plus a small one. (If PRE-02 was missed, use the static price table here.)
+- [ ] **F-09** · 1.0 h — `discount.py` as a pure function + tests on tier boundaries (`risk` 0.09 → 0 %, 0.10 → 10 %, 0.29 → 10 %, 0.30 → 20 %, 0.50 → 20 %, 0.51 → 35 %; boundary convention is assumption A-22), the 24 h time trigger (35 % stays 35 %), max-discount cap, salvage floor, worth-it test, monotonicity.
+
+**Gate G1 (H5):** validator + metrics tests green on the hand-computed fixture · `freshroute run --policy fifo` prints spoilage, fulfillment, net ₹, violations · feasibility table works on the practice scenario · generator/adapter emits all tables and loads without errors.
+
+---
+
+## 5. Phase 2 — Core engine (H5–H9)
+
+**P1**
+- [ ] **C-01** · 1.5 h — Full MILP objective per `ARCHITECTURE.md` §9.2 (revenue, variable transport, fixed trip cost, destination handling, λ·spoilage, FEFO tie-break, unshipped-expiry penalty).
+- [ ] **C-02** · 1.0 h — Soft constraints + penalty slacks, 30 s limit returning the incumbent, **fallback to FEFO-greedy** if no incumbent, slack usage and `fallback_used` in the manifest.
+- [ ] **C-03** · 1.0 h — Plan/trips export (`plan.csv`, `trips.csv`, first-fit trip loading), priority score and ordering, C6 balance constraint, and the **`demand_cap_override` hook** for the newsvendor.
+- [ ] **C-04** · 0.5 h — **MILP ↔ simulator consistency test** (overship 0, markdown off, p50 realization ⇒ simulator net equals MILP objective without tie-break/slack terms).
+
+**P2**
+- [ ] **C-05** · 0.75 h — `policies/fefo.py` (FEFO-greedy over feasible arcs, same demand caps) and `policies/last_day_50.py`.
+- [ ] **C-06** · 1.0 h — `policies/organizer_baseline.py` implemented exactly from the organizers' doc + export of plans in the organizers' submission format.
+- [ ] **C-07** · 1.25 h — `ladder.py`: `fifo → fefo → milp → milp_markdown` through the same simulator, `ladder.json`, `waterfall.json` with the **reconciliation test** (±₹0.01).
+- [ ] **C-08** · 0.5 h — `run_manifest.json` + **determinism test** (same seed ⇒ identical `metrics.json`).
+- [ ] **C-09** · 0.5 h — Perf harness: generate a 10× scenario and time plan solves (feeds U-02 and the performance budget).
+
+**P3**
+- [ ] **C-10** · 1.0 h — Calibrate the generator so the FIFO baseline's market-stage spoilage lands near NABCONS tomato ≈ 3.25 % and onion ≈ 1.96 % (sanity check — A-21), so the baseline is plausible, not a strawman.
+- [ ] **C-11** · 0.75 h — Wire the **`milp_markdown`** pipeline: plan → `discount.py` → `discounts.csv` → simulator (with P1/P2).
+- [ ] **C-12** · 1.5 h — Scoreboard: 4 KPI tiles (spoilage kg and %, fulfillment %, net ₹, violations baseline n vs ours), min fill rate, validator panel, "synthetic data" banner — all read from `outputs/`.
+- [ ] **C-13** · 0.75 h — Reason-card text templates + dispatch-sheet skeleton.
+
+**Gate G2 (H9):** on **3 seeds**, `milp` has higher net ₹ than **FEFO** (not just FIFO) and is not worse on spoilage · independent validator reports **0 violations** for `milp` and `milp_markdown` · plan → simulator → metrics → scoreboard works · consistency test C-04 passes.
+*If MILP does not beat FEFO:* check objective coefficients against the simulator (C-04) before touching anything else; do not start Phase 4 until the spine wins.
+
+---
+
+## 6. Phase 3 — Product surface & spine hardening (H9–H12)
+
+**P1**
+- [ ] **U-01** · 1.0 h — Reason-card fields: rejected alternatives with reason codes, chosen-vs-runner-up margin and slack (`reason_cards.json`, `DATABASE.md` §5.9).
+- [ ] **U-02** · 1.5 h — **Scale test**: 10× scenario; implement the aggregation fallback (commodity × RSL bucket → disaggregate → re-check); record the measured size/time.
+- [ ] **U-03** · 0.5 h — Pick and lock the **demo scenario + seed**; fix bugs found at G2.
+
+**P2**
+- [ ] **U-04** · 1.0 h — Sensitivity harness (`q10`, ε vs ε/2, overship, demand ±20 %) → `sensitivity.csv`.
+- [ ] **U-05** · 1.0 h — **Edge-case pytest scenarios**: zero vehicle capacity (`max_trips_day = 0`), an all-expired batch, a demand spike, a day with no demand rows, a single destination. None may crash; each must produce a validated plan.
+- [ ] **U-06** · 0.75 h — `make check` (ruff + pytest + validate demo plan) and `make demo` (**the one command** every slide number comes from). Time it.
+- [ ] **U-07** · 0.25 h — First dry run of an organizer-format scenario through the adapter.
+
+**P3**
+- [ ] **U-08** · 0.75 h — Waterfall and attribution-ladder charts.
+- [ ] **U-09** · 0.75 h — Dispatch sheet CSV + WhatsApp-style text + UI table (priority-ordered, slack in hours).
+- [ ] **U-10** · 0.5 h — Reason-card UI (click a shipment → card) and discount cards.
+- [ ] **U-11** · 0.75 h — Shelf-life countdown map (pydeck, colour by hours left) with colour-coded-table fallback.
+- [ ] **U-12** · 0.25 h — "Trust" tab: assumptions, coefficients, run manifest.
+
+**Gate G3 (H12):** end-to-end click-through works — press **Plan** → scoreboard → waterfall → ladder → click a batch for its reason card → dispatch sheet · `make check` green · merge and tag **`v0.1-spine`**. From here on, add-ons must not break the spine.
+*If red:* cut per §9 before starting Phase 4.
+
+---
+
+## 7. Phase 4 — A+ add-ons (H12–H15)
+
+Priority order (and reverse cut order): **stress test → replan → newsvendor → narrator**. Each lands behind a flag; each must pass the validator.
+
+**P1**
+- [ ] **AD-01** · 0.5 h — `events.py` pydantic schema + a sample `diff.json` **committed first** (deliver by ~H12.5 so P3 can build the Replan tab against it).
+- [ ] **AD-02** · 2.5 h — `replan.py`: apply event, freeze `dispatch_h ≤ at_h`, residual scenario, re-solve, `diff.json`, ΔKPIs = old plan under event vs replanned. Tests: frozen shipments unchanged, validator 0 violations, time measured (< 5 s on the demo scenario).
+
+**P2**
+- [ ] **AD-03** · 2.0 h — `stress.py`: 200 seeded realizations (fallback 50, then 3 named), **paired** with the baseline, P10–P90 bands and "% of scenarios where plan beats baseline", `stress_summary.json`. Time it.
+- [ ] **AD-04** · 1.0 h — `newsvendor.py`, `--newsvendor` flag, `demand_target` table, ablation row in the ladder output.
+
+**P3**
+- [ ] **AD-05** · 1.0 h — Fan chart + sensitivity table (Robustness tab) and `q10`/ε sliders.
+- [ ] **AD-06** · 1.25 h — Replan tab: dropdown of 5 canned events, **Apply**, diff view, ΔKPIs.
+- [ ] **AD-07** · 0.5 h — **Template narration** (`narrator.template_narration`) over `diff.json`/`metrics.json` — works with no LLM.
+- [ ] **AD-08** · 0.25 h — Deck skeleton (6–7 slides, §10 below).
+
+**Stretch (only if G4 conditions are all green)**
+- [ ] **AD-09** · P1 · ≤ 1.0 h, starts only after the G4 go decision (uses P1's Phase 5 time, before H-01), **must merge by H16.5 or be dropped** — LLM event parser (function calling → pydantic → dropdown fallback) + narrator over metrics/diff JSON with the "every number must appear in the JSON" guard. Template narration remains the default.
+
+**Gate G4 (H15):** stress bands render in the UI · replan completes in < 5 s with 0 validator violations and frozen invariants holding · `--newsvendor` produces an ablation result · go/no-go on AD-09 decided (go only if all of the above are green).
+*If red:* apply the cut list (§9): fall back to precomputed named scenarios / a precomputed replan loaded instantly.
+
+---
+
+## 8. Phases 5–7 — Hardening, freeze, wrap-up
+
+### Phase 5 — Hardening and dry runs (H15–H17)
+- [ ] **H-01** · P1 · 1.0 h — MILP edge cases (zero capacity, all-expired batch, demand spike, infeasible balance → slack used, no crash) and replan edge cases (event after everything is dispatched; event before the first dispatch; two events in a row).
+- [ ] **H-02** · P2 · 1.5 h — **10 random seeds, no crashes**; determinism re-check; 10× performance; dry run of the organizers' format/hidden-scenario flow end-to-end including the submission export.
+- [ ] **H-03** · P2 · 0.5 h — Commit **`outputs/demo_backup/`** (a complete demo run) and prepare the `v1.0-freeze` tag.
+- [ ] **H-04** · P3 · 0.75 h — Run the **golden-path click-through 5×** on the demo scenario; lock seed and scenario; confirm offline operation.
+- [ ] **H-05** · P3 · 1.25 h — Complete the deck draft and the demo script (§10).
+- [ ] *(AD-09 stretch continues here until H16.5 — P1.)*
+
+**Gate G5 — FEATURE FREEZE (H17):** no crashes on 10 random seeds · edge cases pass · determinism verified · `make check` green · `outputs/demo_backup/` committed · tag **`v1.0-freeze`**. After this: bug fixes only, each approved by a second person.
+
+### Phase 6 — Wrap-up (H17–H18)
+- [ ] **V-01** · P3 · 0.5 h — Record the **backup demo video** (local run, golden path + replan). Save it in two places (laptop + USB/another machine).
+- [ ] **V-02** · P3 · 0.5 h — Finalize deck with **measured** numbers from `make demo` only.
+- [ ] **V-03** · P1 · 1.0 h — README: **Assumptions** (A-xx with status), **Cost-model mapping** (§8 table), sources with verified/secondhand labels.
+- [ ] **V-04** · P2 · 1.0 h — README: quickstart, the one command, reproducibility (seeds, manifest), **Results table** copied from `make demo`, test instructions.
+
+**Gate G6 (H18):** backup video saved in two places · README complete (assumptions, mapping, quickstart, results) · every slide number traceable to `make demo` output.
+
+### Phase 7 — Verify, rehearse, submit (H18–H20)
+- [ ] **R-01** · P2 · 0.5 h — **Fresh-clone test** on a different machine: clone → `make setup` → `make demo`; headline numbers must match.
+- [ ] **R-02** · P3 · 0.5 h — Demo-laptop setup: browser/zoom, notifications off, Wi-Fi off test, app launched, video queued.
+- [ ] **R-03** · P1 · 0.5 h — Q&A drill (§11) — everyone answers every question once.
+- [ ] **R-04** · all · 1.0 h — **Rehearse the pitch 3× with a timer; each run under 3:00.** After each run, one minute of feedback.
+- [ ] **R-05** · all · 0.5 h — Submission checklist (§13). **Last 30 minutes: no code changes.**
+
+**Gate G7 (H20):** submitted · fresh-clone test passed · three timed rehearsals under 3:00.
+
+---
+
+## 9. If we fall behind — cut list
+
+Cut from the top; **never** cut the "never" list.
+
+1. AD-09 LLM narrator / natural-language box (keep template narration + 5-event dropdown).
+2. Pydeck map (→ colour-coded table).
+3. Newsvendor (AD-04).
+4. Sensitivity beyond `q10` slider and ε vs ε/2.
+5. Live replan (→ precomputed scenario loaded instantly, per research fallback).
+6. Monte Carlo 200 → 50 → 3 named scenarios (optimistic / base / stress).
+7. Reason-card polish (→ static top-3 reasons table).
+
+**Never cut:** independent validator · cost model/metrics · simulator · feasibility pre-filter + MILP · scoreboard · attribution ladder (it kills the "strawman baseline" critique) · README assumptions · the one reproducible command · backup video.
+
+---
+
+## 10. Pitch and demo checklist
+
+**Rule:** say measured numbers, never projected ones. Label synthetic data as synthetic. Only say a scale ("60 batches, 7 destinations, 4 trucks") if the demo scenario really has it.
+
+**Framing facts (status in brackets):**
+- NABCONS/MoFPI study, reference years 2020–22, 54 commodities, 15 agro-climatic zones, 292 districts; reported losses 6.02–15.05 % (fruits), 4.87–11.61 % (vegetables) [verified against PIB text].
+- Tomato 8.37 % at farm stage + 3.25 % at market stage; onion 5.31 % + 1.96 % [verified]. "Market level" covers godowns, wholesalers, retailers, processing units and transport — the slice a distributor can move.
+- Tomato loss value ₹5,921.15 crore [**verified by Pratham (PRE-03)**; still confirm which stages it covers and whether it is annual before saying "a year"].
+- India: 8,815 cold storages, 402.18 lakh MT capacity as of 30 June 2025 [PIB backgrounder]. Framing: India built storage but not a *chain* — first-mile, reefers, traceability lag.
+
+**Corrected hook (use this, not the research draft's wording):**
+> "India's government-commissioned NABCONS study found that tomatoes lose about 8.4 % at the farm stage and a further 3.25 % at the market stage — godowns, wholesalers, retailers and transport. Post-harvest loss for tomato overall is valued at roughly ₹5,921 crore *[figure verified; say "a year" only if the source confirms it is annual]*. The market-stage slice is the part a distributor can actually move."
+Do **not** attach the ₹5,921 crore to the market-stage slice alone (it is the figure for tomato's post-harvest loss value, not the value of the 3.25 % slice); do **not** say "3.25 % of that loss" (3.25 % is a share of tomato *output*, not of the loss); and do not say "a year" unless the source confirms the ₹ figure is annual.
+
+**3-minute script (timings from the research):**
+
+| Time | Beat | Notes |
+|---|---|---|
+| 0:00–0:20 | Hook | Corrected hook above |
+| 0:20–0:35 | User and moment | "5 a.m. at a hub; N batches, M destinations, K trucks; 20 minutes to decide" — real counts only |
+| 0:35–1:30 | **Live demo, golden path** | Load scenario → **Plan** (say the measured seconds) → scoreboard lights up → click a batch: reason card ("sent to Pune, not Delhi: Delhi leaves 9 h of life, below the 24 h sell window…" — use the real numbers from the card) → click the discount card |
+| 1:30–2:05 | Robustness | Press a canned disruption (e.g. +6 h delay on lanes to one destination) → diff (moved batches, deepened markdowns, ΔKPIs, **measured** replan time) → fan chart: "across 200 sampled futures we beat baseline in X %" (X from `stress_summary.json`) |
+| 2:05–2:25 | Trust | Zero violations by the independent validator; one seeded command; assumptions in the README |
+| 2:25–3:00 | Commercial | SaaS per hub per month for distributors, FPO aggregators and cold-storage operators. Positioning: "Afresh decides what a store orders. Wasteless decides the shelf price. Celcius books the reefer. **FreshRoute decides which batch goes where, when, and at what markdown, at the distributor hub.**" Next: pilot with one FPO using Agmarknet prices |
+
+Competitor claims, if cited, are **vendor-reported and unaudited**: Afresh (US; $34M raise April 2026; "up to 25 % shrink reduction"), Wasteless (expiry-anchored shelf markdowns; "40 % waste reduction at Edeka Hamburg"). Celcius Logistics (India): ₹250 crore Series B, May 2025. Skip Ninjacart's tonnage — the figure is dated (~2019).
+
+**Demo hygiene**
+- [ ] Run live from local data; backup video queued; `outputs/demo_backup/` ready.
+- [ ] Keep the demo to one golden path; no live debugging on stage.
+- [ ] Value must be clear within ~30 seconds; a simple demo the judges understand beats a clever one they can't.
+
+---
+
+## 11. Q&A prep — everyone answers each
+
+1. **"Why trust your elasticity?"** — It's a disclosed assumption (A-11), uplift is capped, and the sensitivity table shows results at ε and ε/2.
+2. **"What if the hidden data is 10× larger?"** — The feasibility pre-filter shrinks the model; 30 s limit returns the incumbent; aggregation fallback; quote the **measured** U-02 numbers.
+3. **"How does this reach a real distributor?"** — SaaS per hub; pilot with one FPO/aggregator; Agmarknet prices; dispatch sheet works over WhatsApp.
+4. **"Is your baseline fair?"** — The organizers' baseline is the official comparison; the attribution ladder also beats FEFO, not just FIFO (research cites a simulation where FEFO cut expired product 50 % vs FIFO — secondhand).
+5. **"What does the LLM actually decide?"** — Nothing. It translates a sentence to a validated event and narrates numbers it was given; HiGHS decides. (If AD-09 was cut: "We don't use an LLM for decisions; narration is template-based.")
+6. **"How do you know the plan is feasible?"** — An independent validator that doesn't import optimizer code; infeasible arcs never exist in the model.
+7. **"What if constraints can't all be met?"** — Soft constraints with penalty slacks; slack usage is reported; fallback plan if the solver times out.
+8. **"Is this real data?"** — Say plainly: synthetic (or organizer-provided) data, calibrated for plausibility against NABCONS market-stage loss figures and Agmarknet prices; post-harvest-loss statistics are context, not model inputs.
+
+---
+
+## 12. Rubric coverage checklist (tick when the evidence exists)
+
+| Rubric (pts) | Evidence we can show | Task |
+|---|---|---|
+| Spoilage reduction (20) | Spoilage kg/% baseline → plan; spoilage breakdown; ladder | C-07, C-12 |
+| Demand fulfillment (15) | Fulfillment % and **min destination fill** | C-12 |
+| Net economic outcome (20) | Net ₹ + reconciling waterfall | C-07, U-08 |
+| Allocation feasibility (15) | Independent validator: baseline n vs ours **0** | F-04, C-12 |
+| Robustness & sensitivity (10) | MC bands, % scenarios beating baseline, `q10`/ε sensitivity, replan | AD-03, U-04, AD-02 |
+| Engineering & reproducibility (10) | One seeded command, tests, manifest, fresh-clone pass | U-06, C-08, R-01 |
+| Explainability & commercial (10) | Reason cards, dispatch sheet, positioning slide | U-01, U-09, V-02 |
+
+---
+
+## 13. Submission checklist (R-05)
+
+- [ ] Repo state = `v1.0-freeze` (+ approved fixes only); `make check` green.
+- [ ] Plan export in the organizers' required format validated (our validator + their checker if provided).
+- [ ] README: assumptions, cost-model mapping, quickstart, results, sources (verified vs secondhand labelled).
+- [ ] Deck exported; backup video playable from two places; `outputs/demo_backup/` present.
+- [ ] No secrets or restricted organizer data in git; `.env` ignored.
+- [ ] Demo laptop: charged, Wi-Fi-off run tested, app pre-launched.
+- [ ] Everyone knows who presents which beat and who handles Q&A.
