@@ -11,11 +11,13 @@ FILES = ("plan.csv", "trips.csv", "discounts.csv", "sim_ledger.csv", "sim_lots.c
          "metrics.json", "validation.json", "run_manifest.json")
 
 
-def test_run_writes_outputs_and_is_valid(tmp_path):
+def test_run_writes_outputs_and_reports_violations(tmp_path):
     out = cli.run(str(FIX), "fifo", 42, str(tmp_path))
     assert all((out / f).exists() for f in FILES)
     m = json.loads((out / "metrics.json").read_text())
-    assert m["kpis"]["violations"] == 0
+    # naive FIFO (ARCH 12, A-31) ignores shelf life: violations are reported, not hidden
+    assert m["kpis"]["violations"] == 2
+    assert json.loads((out / "validation.json").read_text())["counts"] == {"SHELF_LIFE": 2}
     assert m["kpis"]["net_inr"] == m["economics_inr"]["net"]
     v = m["volumes_kg"]
     assert abs(v["total_supply"] - v["sold"] - m["kpis"]["spoilage_kg"]

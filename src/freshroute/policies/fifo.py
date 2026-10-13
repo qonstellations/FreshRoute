@@ -1,6 +1,7 @@
-"""FIFO-nearest baseline (ARCHITECTURE.md section 12): oldest batch first, to the nearest
-feasible destination with remaining demand. Respects vehicle capacity, trips/day, receiving
-capacity and the p50 demand cap. Never computes net INR (AGENTS.md rule 3).
+"""FIFO-nearest baseline (ARCHITECTURE.md section 12, A-31): oldest batch first, to the nearest
+destination with remaining demand. Respects vehicle capacity, trips/day, receiving capacity
+and the p50 demand cap but not shelf life or delivery windows (naive dispatcher); the
+validator reports what that costs. Never computes net INR (AGENTS.md rule 3).
 """
 from __future__ import annotations
 
@@ -13,10 +14,10 @@ from freshroute.feasibility import build_arcs
 from freshroute.io import Scenario
 from freshroute.policies.base import PLAN_COLUMNS, TRIP_COLUMNS, Plan, Policy
 
-# Feasible arcs only (task brief). ARCH 12 describes a naive FIFO that also ignores shelf-life/
-# window; to get that variant use ("", "WINDOW", "SHELF_LIFE", "BEYOND_HORIZON") (2 violations
-# on tiny_3batch).
-_USABLE = ("",)
+# Naive FIFO per ARCH 12 (A-31): window/shelf-life rejects are usable, violations are reported
+# honestly. Physical rejects (NO_LANE, NOT_AVAILABLE, RAIL_SLOT) stay out; the
+# arrival_day < horizon filter below still drops BEYOND_HORIZON arcs (no demand/price there).
+_USABLE = ("", "WINDOW", "SHELF_LIFE", "BEYOND_HORIZON")
 
 
 class FifoPolicy(Policy):
