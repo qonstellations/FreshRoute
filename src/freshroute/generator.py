@@ -28,6 +28,12 @@ _COMM = {
     "onion": ("low", 720, 20, 2.0, 48, 1.0, 12, 1, 4, 0.5, 20),
     "potato": ("low", 900, 20, 2.0, 48, 1.0, 10, 1, 4, 0.5, 20),
 }
+# [team] C-10 calibration knobs (A-21): tuned so naive FIFO lands near NABCONS spoilage.
+QTY_KG = (80, 480)  # batch size range; was 300-1800 (supply ~3x fleet reach)
+RSL_FRAC = (0.53, 1.0)  # remaining shelf life as a fraction of base shelf life
+DEMAND_SUPPLY_RATIO = 1.2  # total p50 demand / supply per commodity
+VEHICLE_CAP_KG = (2000, 3000, 4000)
+MAX_TRIPS_DAY = 4  # ponytail: no trip-duration check; trips are fleet slots
 _DEST_TYPES = ("mandi", "retail_DC", "HoReCa", "processor")
 _BASE_LATLON = (12.97, 77.59)  # arbitrary synthetic anchor
 
@@ -52,9 +58,9 @@ def generate(name: str, seed: int, n_batches: int, n_dests: int, days: int,
     rows = []
     for i in range(n_batches):
         c = comms[rng.integers(len(comms))]
-        rsl = _r(_COMM[c][1] * rng.uniform(0.4, 1.0))
+        rsl = _r(_COMM[c][1] * rng.uniform(*RSL_FRAC))
         rows.append((
-            f"B{i + 1:04d}", c, hubs[rng.integers(n_hubs)], _r(rng.uniform(300, 1800)),
+            f"B{i + 1:04d}", c, hubs[rng.integers(n_hubs)], _r(rng.uniform(*QTY_KG)),
             rsl, _r(rsl * 0.85), _r(rsl * 1.15), float(rng.choice([15.0, 20.0, 25.0])),
             str(rng.choice(["A", "B"])), float(24 * rng.integers(0, max(days - 1, 1))),
         ))
@@ -67,12 +73,12 @@ def generate(name: str, seed: int, n_batches: int, n_dests: int, days: int,
                      _r(rng.uniform(0.8, 2.0)), 0.0, float(24 * days)))
     dests = pd.DataFrame(rows, columns=list(S.DESTINATIONS))
 
-    # demand sized so total p50 demand ~ 1.2 x supply per commodity
+    # demand sized so total p50 demand ~ DEMAND_SUPPLY_RATIO x supply per commodity
     supply = batches.groupby("commodity")["qty_kg"].sum()
     w = rng.dirichlet(np.ones(n_dests))
     rows, prow = [], []
     for c in comms:
-        per_day = float(supply.get(c, 0.0)) * 1.2 / days
+        per_day = float(supply.get(c, 0.0)) * DEMAND_SUPPLY_RATIO / days
         for di, d in enumerate(dest_ids):
             base_p = STATIC_PRICE_INR_KG[c] * rng.uniform(0.9, 1.15)
             for day in range(days):
@@ -100,7 +106,7 @@ def generate(name: str, seed: int, n_batches: int, n_dests: int, days: int,
     for i in range(n_vehicles):
         mode = "reefer" if i % 2 == 0 else "ambient"
         rows.append((f"V{i + 1}", hubs[i % n_hubs], mode,
-                     float(rng.choice([2000, 3000, 4000])), 0.0, 2))
+                     float(rng.choice(VEHICLE_CAP_KG)), 0.0, MAX_TRIPS_DAY))
     vehicles = pd.DataFrame(rows, columns=list(S.VEHICLES))
     events = pd.DataFrame(columns=list(S.EVENTS))
 

@@ -148,7 +148,7 @@ Copy of `Docs/ARCHITECTURE.md` §20. Every **confirm** item is still open: no or
 | A-18 | `last_day_50` = FIFO-nearest + `min(50 %, max_discount_pct)` markdown, salvage floor respected | team |
 | A-19 | Unshipped stock is penalized as spoilage only if it would expire at origin within the horizon | team |
 | A-20 | Practice prices calibrated from Agmarknet modal Rs/quintal / 100; Agmarknet and post-harvest-loss figures are context, never model inputs claimed as "real" batch data | team |
-| A-21 | Practice data is calibrated so FIFO market-stage spoilage lands near NABCONS tomato about 3.25 % and onion about 1.96 % (sanity check only; those are market-stage % of production incl. godowns/wholesale/retail/transport) | team |
+| A-21 | Practice data is calibrated so FIFO market-stage spoilage lands near NABCONS tomato about 3.25 % and onion about 1.96 % (sanity check only; those are market-stage % of production incl. godowns/wholesale/retail/transport). Measured on synthetic `practice` (FIFO): tomato 3.51 %, onion 0.82 % (onion capped by its 1 % handling loss), others 0.85-7.83 %, overall 3.31 % | team |
 | A-22 | Markdown tier boundaries: `risk` exactly 0.30 -> 20 % tier and exactly 0.50 -> 20 % tier (the research ranges "0.10-0.30 / 0.30-0.50" overlap at the boundaries) | team |
 
 ## Sign-off
