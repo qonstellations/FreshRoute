@@ -26,6 +26,7 @@ class Plan:
     plan: pd.DataFrame  # plan.csv
     trips: pd.DataFrame  # trips.csv
     solver: dict | None = None  # manifest "solver" block; None for non-MILP policies
+    discounts: pd.DataFrame | None = None  # discounts.csv (DATABASE.md 5.4); None = no markdown
 
 
 class Policy:

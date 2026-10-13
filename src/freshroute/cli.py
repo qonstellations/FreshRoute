@@ -21,13 +21,19 @@ from freshroute.discount import COLUMNS as DISCOUNT_COLUMNS
 from freshroute.io import load_scenario
 from freshroute.simulator import simulate
 
-POLICIES = ("fifo", "milp")
+POLICIES = ("fifo", "fefo", "last_day_50", "milp")
 
 
 def _policy(name: str):
     if name == "fifo":
         from freshroute.policies.fifo import FifoPolicy
         return FifoPolicy()
+    if name == "fefo":
+        from freshroute.policies.fefo import FefoPolicy
+        return FefoPolicy()
+    if name == "last_day_50":
+        from freshroute.policies.last_day_50 import LastDay50Policy
+        return LastDay50Policy()
     if name == "milp":
         from freshroute.policies.milp import MilpPolicy
         return MilpPolicy()
@@ -68,8 +74,8 @@ def run(scenario: str, policy: str, seed: int, out: str | None = None) -> Path:
 
     result = _policy(policy).plan(sc, {"seed": seed})
     plan, trips = result.plan, result.trips
-    # ponytail: no markdown policy yet (fifo/milp are markdown-free per ARCH 12): empty discounts
-    discounts = pd.DataFrame(columns=list(DISCOUNT_COLUMNS))
+    markdown = result.discounts is not None
+    discounts = result.discounts if markdown else pd.DataFrame(columns=list(DISCOUNT_COLUMNS))
     report = validate(sc, plan, discounts, overship_slack=OVERSHIP_SLACK)
     sim = simulate(sc, plan, discounts)
     sim.update(run_id=run_id, policy=policy, seed=seed, violations=report.violation_total)
@@ -85,7 +91,7 @@ def run(scenario: str, policy: str, seed: int, out: str | None = None) -> Path:
     manifest = {
         "schema_version": SCHEMA_VERSION, "run_id": run_id, "git_sha": _git_sha(),
         "scenario": str(scenario), "scenario_sha256": _sha(Path(scenario)), "policy": policy,
-        "flags": {"markdown": False, "newsvendor": False}, "seed": seed,
+        "flags": {"markdown": markdown, "newsvendor": False}, "seed": seed,
         "realization": "base", "package_versions": _versions(), "solver": result.solver,
         "timestamp_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }

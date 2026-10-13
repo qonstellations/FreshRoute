@@ -17,6 +17,7 @@ PENALTY_MULT = 10  # [team] x max price
 DISCOUNT_RISK_BREAKS = (0.10, 0.30, 0.50)  # [doc]
 DISCOUNT_TIERS_PCT = (0, 10, 20, 35)  # [doc]
 DISCOUNT_TIME_TRIGGER_H = 24  # [doc]
+LAST_DAY_DISCOUNT_PCT = 50  # [doc] last_day_50 baseline, ARCH 12
 MC_N = 200  # [doc]
 MC_N_FALLBACK = 50  # [doc]
 NEWSVENDOR_CLAMP = (0.05, 0.95)  # [team]
