@@ -6,11 +6,13 @@ capacities (the validator's job). All coefficients come from the scenario tables
 """
 from __future__ import annotations
 
+import math
+
 import pandas as pd
 
 from freshroute.config import FLOAT_TOL, MAX_UPLIFT
 from freshroute.discount import _lots
-from freshroute.shelflife import decay
+from freshroute.shelflife import decay, usable_life_at_arrival
 
 
 def _price(ser: pd.Series | None, day: int) -> float:
@@ -19,14 +21,53 @@ def _price(ser: pd.Series | None, day: int) -> float:
     return float(ser[ser.index <= day].iloc[-1])
 
 
+def _realize(scenario, plan: pd.DataFrame, discounts: pd.DataFrame, real: dict):
+    """Re-time plan lines under sampled `travel_h` / `rsl_h` (ARCH 14.1, A-42): same dispatch,
+    new arrival and usable life (section 7). Discount rows follow their lot to its new id."""
+    if plan.empty or not (real.get("travel_h") or real.get("rsl_h")):
+        return plan, discounts
+    t = scenario.tables
+    b = t["batches"].set_index("batch_id").loc[plan["batch_id"]]
+    c = t["commodities"].set_index("commodity").loc[b["commodity"]]
+    lane_key = list(zip(b["origin_hub"], plan["dest_id"], plan["mode"], strict=True))
+    lanes = t["lanes"].set_index(["origin", "dest_id", "mode"])["transit_temp_c"]
+    tr, rsl = real.get("travel_h", {}), real.get("rsl_h", {})
+    # default travel = the plan's own (p50); a line with no lane keeps its planned timing
+    travel = [tr.get(k, a - d) for k, a, d in
+              zip(lane_key, plan["arrival_h"], plan["dispatch_h"], strict=True)]
+    life = [
+        usable_life_at_arrival(rsl.get(bid, r), dh - af, tv, hh, st, lanes[k], ref, q)
+        if k in lanes.index else ul
+        for bid, r, dh, af, tv, hh, st, k, ref, q, ul in zip(
+            plan["batch_id"], b["remaining_shelf_life_h"], plan["dispatch_h"],
+            b["available_from_h"], travel,
+            plan["dest_id"].map(t["destinations"].set_index("dest_id")["handling_time_h"]),
+            b["storage_temp_c"], lane_key, c["ref_temp_c"], c["q10"],
+            plan["usable_life_at_arrival_h"], strict=True)]
+    p = plan.copy()
+    old = p["arrival_day"].astype(int)
+    p["arrival_h"] = p["dispatch_h"] + travel
+    p["usable_life_at_arrival_h"] = life
+    p["arrival_day"] = [math.floor(a / 24 + FLOAT_TOL) for a in p["arrival_h"]]
+    if discounts is not None and not discounts.empty:
+        # ponytail: two old lots landing on one new lot share its last discount row
+        stem = p.batch_id + "@" + p.dest_id + "@"
+        ids = dict(zip(stem + old.astype(str), stem + p.arrival_day.astype(str), strict=True))
+        discounts = discounts.assign(lot_id=discounts.lot_id.map(ids).fillna(discounts.lot_id))
+    return p, discounts
+
+
 def simulate(scenario, plan: pd.DataFrame, discounts: pd.DataFrame, realization=None) -> dict:
-    """realization: None = base (p50 demand, plan's own arrival/life), or a dict with an
-    optional "demand_kg": {(dest_id, commodity, day): kg} overriding base demand."""
+    """realization: None = base (p50 demand, plan's own arrival/life), or a dict with optional
+    "demand_kg": {(dest_id, commodity, day): kg}, "travel_h": {(origin, dest_id, mode): h} and
+    "rsl_h": {batch_id: h} overrides (A-28, A-42)."""
     t = scenario.tables
     horizon = int(scenario.meta.get("horizon_days", 1))
     comm = t["commodities"].set_index("commodity")
     batches = t["batches"].set_index("batch_id")
     real = realization or {}
+    plan, discounts = _realize(scenario, plan, discounts, real)
+    rsl_over = real.get("rsl_h", {})
 
     demand = dict(t["demand"].set_index(["dest_id", "commodity", "day"])["demand_kg_p50"].items())
     demand.update(real.get("demand_kg", {}))
@@ -91,7 +132,7 @@ def simulate(scenario, plan: pd.DataFrame, discounts: pd.DataFrame, realization=
     for bid, b in batches.sort_index().iterrows():
         un = max(0.0, b["qty_kg"] - float(shipped.get(bid, 0.0)))
         c = comm.loc[b["commodity"]]
-        exp_h = b["available_from_h"] + b["remaining_shelf_life_h"] / decay(
+        exp_h = b["available_from_h"] + rsl_over.get(bid, b["remaining_shelf_life_h"]) / decay(
             b["storage_temp_c"], c["ref_temp_c"], c["q10"])
         # stock still in transit at horizon end is treated like origin stock (mass balance)
         un += sum(x["kg_arrived"] for x in transit if x["batch_id"] == bid)

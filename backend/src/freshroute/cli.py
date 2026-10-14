@@ -21,6 +21,8 @@ from freshroute.config import (
     DEFAULT_SEED,
     DEMO_SCENARIO,
     DEMO_SEED,
+    MC_N,
+    MC_N_FALLBACK,
     OVERSHIP_SLACK,
     SCHEMA_VERSION,
 )
@@ -175,6 +177,14 @@ def main(argv: list[str] | None = None) -> None:
     sen.add_argument("--scenario", required=True)
     sen.add_argument("--seed", type=int, default=DEFAULT_SEED)
     sen.add_argument("--out")
+    st = sub.add_parser("stress", help="Monte Carlo bands -> stress.csv, stress_summary.json")
+    st.add_argument("--scenario", required=True)
+    st.add_argument("--policy", default="milp_markdown", choices=POLICY_CHOICES)
+    st.add_argument("--n", type=int, default=MC_N, help=f"realizations (fallback {MC_N_FALLBACK})")
+    st.add_argument("--seed", type=int, default=DEFAULT_SEED)
+    st.add_argument("--named", action="store_true",
+                    help="last-resort fallback: 3 named scenarios (optimistic/base/stress)")
+    st.add_argument("--out")
     dm = sub.add_parser("demo", help="ladder + waterfall on the demo scenario; the pitch numbers")
     dm.add_argument("--scenario", default=DEMO_SCENARIO)
     dm.add_argument("--seed", type=int, default=DEMO_SEED)
@@ -190,6 +200,13 @@ def main(argv: list[str] | None = None) -> None:
         out = run_sensitivity(a.scenario, a.seed, a.out)
         print((out / "sensitivity.csv").read_text(encoding="utf-8"), end="")
         print(f"wrote {out}")
+        return
+    if a.cmd == "stress":
+        from freshroute.stress import run_stress
+        t0 = time.perf_counter()
+        out = run_stress(a.scenario, a.policy, a.n, a.seed, a.out, a.named)
+        print((out / "stress_summary.json").read_text(encoding="utf-8"), end="")
+        print(f"wrote {out}  ({time.perf_counter() - t0:.1f} s wall)")
         return
     if a.cmd == "ladder":
         from freshroute.ladder import format_ladder, run_ladder
