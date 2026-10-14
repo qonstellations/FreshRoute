@@ -6,6 +6,8 @@ here changes a plan or a KPI.
 """
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pandas as pd
 
 from freshroute.config import FLOAT_TOL
@@ -57,15 +59,40 @@ def _f(x) -> float | None:
     return None if x is None or pd.isna(x) else float(x)
 
 
-def build_cards(scenario: Scenario, plan: pd.DataFrame, discounts: pd.DataFrame) -> list[dict]:
-    """reason_cards.json (DATABASE.md 5.9): one card per shipment, sorted by shipment_id."""
+def _scoped_arcs(scenario: Scenario, plan: pd.DataFrame) -> pd.DataFrame:
+    """Arcs for reason cards on a scoped sub-scenario (U-02 full-run fix).
+
+    Only batches in ``plan`` are looked up (``by_batch.get(batch)`` below), and
+    vehicles sharing ``(origin, mode, available_from_h)`` have identical arcs
+    (A-46), so one representative vehicle per class suffices. Alternatives carry
+    no ``vehicle_id`` (DATABASE.md 5.9), so the representative choice is
+    invisible in the output. Destinations stay unfiltered: every batch needs
+    every destination as a candidate alternative.
+    """
+    t = scenario.tables
+    batches = t["batches"][t["batches"].batch_id.isin(set(plan.batch_id))].copy()
+    vehicles = t["vehicles"].sort_values("vehicle_id")
+    reps = vehicles.groupby(["origin", "mode", "available_from_h"], sort=True).head(1)
+    sub = replace(scenario, tables={**t, "batches": batches, "vehicles": reps})
+    return build_arcs(sub)
+
+
+def build_cards(scenario: Scenario, plan: pd.DataFrame, discounts: pd.DataFrame,
+                arcs: pd.DataFrame | None = None) -> list[dict]:
+    """reason_cards.json (DATABASE.md 5.9): one card per shipment, sorted by shipment_id.
+
+    ``arcs`` overrides the internally built table (callers with arcs on hand may
+    pass them); otherwise only the scoped arcs needed for this plan are built.
+    """
+    if len(plan) == 0:
+        return []
     t = scenario.tables
     commodity = dict(zip(t["batches"].batch_id, t["batches"].commodity, strict=True))
     demand = t["demand"].set_index(["dest_id", "commodity", "day"])["demand_kg_p50"]
     shipped = plan.assign(commodity=plan.batch_id.map(commodity)).groupby(
         ["dest_id", "commodity", "arrival_day"]).kg.sum()
 
-    arcs = build_arcs(scenario)
+    arcs = _scoped_arcs(scenario, plan) if arcs is None else arcs
     arcs = arcs[~arcs.reject_reason.isin(["NO_LANE", "NOT_AVAILABLE"])]
     # best arc per (batch, dest, mode): feasible first, then margin, slack, earliest, vehicle
     best = (arcs.sort_values(["batch_id", "dest_id", "mode", "feasible", "margin_inr_kg",

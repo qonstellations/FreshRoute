@@ -103,6 +103,26 @@ def test_build_cards_on_fixture():
     assert build_cards(sc, r.plan.iloc[0:0], none) == []
 
 
+def test_build_cards_scoped_equals_full_and_arcs_override():
+    import pandas as pd
+
+    from freshroute.discount import COLUMNS as DISCOUNT_COLUMNS
+    from freshroute.feasibility import build_arcs
+    from freshroute.policies.milp import MilpPolicy
+    from freshroute.reasons import build_cards
+    sc = load_scenario(FIX)
+    r = MilpPolicy().plan(sc, {"seed": 42})
+    none = pd.DataFrame(columns=list(DISCOUNT_COLUMNS))
+    scoped = build_cards(sc, r.plan, none)
+    full = build_cards(sc, r.plan, none, arcs=build_arcs(sc))
+    assert scoped == full
+    # pooled-vehicle equivalence: duplicate the fleet, cards must not change
+    dup = sc.tables["vehicles"].copy()
+    dup["vehicle_id"] = dup["vehicle_id"] + "_DUP"
+    sc.tables["vehicles"] = pd.concat([sc.tables["vehicles"], dup], ignore_index=True)
+    assert build_cards(sc, r.plan, none) == scoped
+
+
 def test_cli_run_writes_reason_cards(tmp_path):
     import json
 
