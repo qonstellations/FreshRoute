@@ -1,5 +1,5 @@
 """Dispatch sheet: priority-ordered CSV and WhatsApp-style text (ARCHITECTURE.md section 15;
-format in DATABASE.md 5.10). Skeleton: not wired into the CLI yet.
+format in DATABASE.md 5.10). Written by `cli.run` for every run.
 """
 from __future__ import annotations
 
@@ -21,7 +21,8 @@ def _clock(h: float) -> str:
 
 
 def _n(x: float) -> str:
-    return f"{x:g}"
+    """Readable number for a phone message: one decimal at most."""
+    return f"{round(x, 1):g}"
 
 
 def build(scenario: Scenario, plan: pd.DataFrame, trips: pd.DataFrame) -> tuple[pd.DataFrame, str]:
@@ -56,6 +57,6 @@ def build(scenario: Scenario, plan: pd.DataFrame, trips: pd.DataFrame) -> tuple[
             f"(day {trip_day[trip_id]})\n"
             f"To: {first.dest_name}\n"
             f"Load: {load}\n"
-            f"Arrive by: day {last.arrival_day} {_clock(last.arrival_h)}"
+            f"Arrive by: day {int(last.arrival_day)} {_clock(last.arrival_h)}"
         )
     return df, "\n\n".join(blocks) + ("\n" if blocks else "")

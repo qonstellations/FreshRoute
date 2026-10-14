@@ -59,3 +59,23 @@ def test_dispatch_sheet_on_fixture():
     sc.tables["destinations"] = sc.tables["destinations"].drop(columns="name")
     df2, _ = dispatch_sheet.build(sc, r.plan, r.trips)
     assert (df2.dest_name == df2.dest_id).all()
+
+
+def test_cli_run_writes_dispatch_sheet(tmp_path):
+    import pandas as pd
+
+    from freshroute import cli
+    out = cli.run(str(FIX), "milp", 42, out=str(tmp_path))
+    df = pd.read_csv(out / "dispatch_sheet.csv")
+    assert tuple(df.columns) == dispatch_sheet.COLUMNS
+    assert len(df) > 0 and df.priority_rank.is_monotonic_increasing
+    txt = (out / "dispatch_sheet.txt").read_text(encoding="utf-8")
+    assert txt.startswith("Vehicle ")
+    assert not re.search(r"\d\.\d\d|day \d+\.\d", txt)  # phone-readable: <= 1 decimal, int days
+
+
+def test_dispatch_sheet_empty_plan():
+    sc = load_scenario(FIX)
+    r = FifoPolicy().plan(sc)
+    df, text = dispatch_sheet.build(sc, r.plan.iloc[0:0], r.trips.iloc[0:0])
+    assert df.empty and tuple(df.columns) == dispatch_sheet.COLUMNS and text == ""

@@ -180,7 +180,7 @@ Decisions D-15 … D-23 in `DECISIONS.md`; target-state behaviour in `ARCHITECTU
 
 **P3**
 - [ ] **U-08** · 0.75 h — Waterfall and attribution-ladder charts (recharts, from `GET /api/ladder`).
-- [ ] **U-09** · 0.75 h — Dispatch sheet CSV + WhatsApp-style text + UI table (priority-ordered, slack in hours), from `GET /api/runs/{id}/dispatch-sheet`.
+- [ ] **U-09** · 0.75 h — Dispatch sheet CSV + WhatsApp-style text + UI table (priority-ordered, slack in hours), from `GET /api/runs/{id}/dispatch-sheet`. *Backend done: `freshroute run` writes `dispatch_sheet.csv` / `.txt` for every run; UI table pending (React).*
 - [ ] **U-10** · 0.5 h — Reason-card drawer (click a shipment → card) and discount cards, from `GET /api/runs/{id}/reason-cards`.
 - [ ] **U-11** · 0.75 h — Shelf-life countdown map (react-leaflet over `geo.csv`, colour by hours left) with colour-coded-table fallback.
 - [ ] **U-12** · 0.25 h — "Trust" tab: assumptions, coefficients, run manifest.
@@ -205,7 +205,7 @@ Priority order (and reverse cut order): **stress test → replan → newsvendor 
 **P3**
 - [ ] **AD-05** · 1.0 h — Fan chart + sensitivity table (Robustness tab, recharts) and `q10`/ε sliders.
 - [ ] **AD-06** · 1.25 h — Replan tab: dropdown of 5 canned events, **Apply**, diff view, ΔKPIs.
-- [ ] **AD-07** · 0.5 h — **Template narration** (`narrator.template_narration`) over `diff.json`/`metrics.json` — works with no LLM.
+- [x] **AD-07** · 0.5 h — **Template narration** (`narrator.template_narration`) over `diff.json`/`metrics.json` — works with no LLM. *Verified on the format-example fixture `tests/fixtures/diff_example.json`; real `diff.json` pending AD-01/AD-02.*
 - [ ] **AD-08** · 0.25 h — Deck skeleton (6–7 slides, §10 below).
 
 **Stretch (only if G4 conditions are all green)**
@@ -270,11 +270,11 @@ Cut from the top; **never** cut the "never" list.
 **Framing facts (status in brackets):**
 - NABCONS/MoFPI study, reference years 2020–22, 54 commodities, 15 agro-climatic zones, 292 districts; reported losses 6.02–15.05 % (fruits), 4.87–11.61 % (vegetables) [verified against PIB text].
 - Tomato 8.37 % at farm stage + 3.25 % at market stage; onion 5.31 % + 1.96 % [verified]. "Market level" covers godowns, wholesalers, retailers, processing units and transport — the slice a distributor can move.
-- Tomato loss value ₹5,921.15 crore [**verified by Pratham (PRE-03)**; still confirm which stages it covers and whether it is annual before saying "a year"].
-- India: 8,815 cold storages, 402.18 lakh MT capacity as of 30 June 2025 [PIB backgrounder]. Framing: India built storage but not a *chain* — first-mile, reefers, traceability lag.
+- Tomato loss value ₹5,921.15 crore [**verified (PRE-03)**: PIB release 2081044, Lok Sabha written reply, 5 Dec 2024, Annexure "Estimated Post-harvest monetary loss (Rs. in Crore)", NABCONS study, reference year 2020–22. The release does **not** say it is annual and gives **no stage split**: say "post-harvest loss valued at about ₹5,921 crore (NABCONS, 2020–22)", never "a year" or "at market stage"].
+- India: 8,815 cold storages, 402.18 lakh MT capacity as of 30 June 2025 [**verified (PRE-03)**: PIB backgrounder "From Harvest to Home", Sep 2025, https://static.pib.gov.in/WriteReadData/specificdocs/documents/2025/sep/doc2025928649201.pdf]. Framing: India built storage but not a *chain* — first-mile, reefers, traceability lag.
 
 **Corrected hook (use this, not the research draft's wording):**
-> "India's government-commissioned NABCONS study found that tomatoes lose about 8.4 % at the farm stage and a further 3.25 % at the market stage — godowns, wholesalers, retailers and transport. Post-harvest loss for tomato overall is valued at roughly ₹5,921 crore *[figure verified; say "a year" only if the source confirms it is annual]*. The market-stage slice is the part a distributor can actually move."
+> "India's government-commissioned NABCONS study found that tomatoes lose about 8.4 % at the farm stage and a further 3.25 % at the market stage — godowns, wholesalers, retailers and transport. Post-harvest loss for tomato overall is valued at roughly ₹5,921 crore in that study *[verified, PIB 2081044; the source does not say annual, so never say "a year"]*. The market-stage slice is the part a distributor can actually move."
 Do **not** attach the ₹5,921 crore to the market-stage slice alone (it is the figure for tomato's post-harvest loss value, not the value of the 3.25 % slice); do **not** say "3.25 % of that loss" (3.25 % is a share of tomato *output*, not of the loss); and do not say "a year" unless the source confirms the ₹ figure is annual.
 
 **3-minute script (timings from the research):**
@@ -288,7 +288,8 @@ Do **not** attach the ₹5,921 crore to the market-stage slice alone (it is the 
 | 2:05–2:25 | Trust | Zero violations by the independent validator; one seeded command; assumptions in the README |
 | 2:25–3:00 | Commercial | SaaS per hub per month for distributors, FPO aggregators and cold-storage operators. Positioning: "Afresh decides what a store orders. Wasteless decides the shelf price. Celcius books the reefer. **FreshRoute decides which batch goes where, when, and at what markdown, at the distributor hub.**" Next: pilot with one FPO using Agmarknet prices |
 
-Competitor claims, if cited, are **vendor-reported and unaudited**: Afresh (US; $34M raise April 2026; "up to 25 % shrink reduction"), Wasteless (expiry-anchored shelf markdowns; "40 % waste reduction at Edeka Hamburg"). Celcius Logistics (India): ₹250 crore Series B, May 2025. Skip Ninjacart's tonnage — the figure is dated (~2019).
+Competitor claims, if cited, are **vendor-reported and unaudited**: Afresh (US; $34M raise April 2026; "up to 25 % shrink reduction"), Wasteless (expiry-anchored shelf markdowns; "40 % waste reduction at Edeka Hamburg"). Celcius Logistics (India): ₹250 crore Series B, May 2025.
+*PRE-03 status (2026-10-14):* Afresh $34M, 21 Apr 2026, "up to 25 % shrink reduction" [verified as **company-reported**: PR Newswire release, https://www.prnewswire.com/news-releases/afresh-raises-34m-to-scale-ai-across-the-grocery-industry--driving-fresher-food-stronger-margins-and-less-waste-302747794.html]. Celcius ₹250 crore Series B, announced 6 May 2025, equity + debt (+ secondary), led by Eurazeo and Omnivore [verified in trade press: https://india.entrepreneur.com/en-in/news-and-trends/celcius-logistics-secures-inr-250-cr-in-series-b-to-expand/491145; say "raised ₹250 crore", not "₹250 crore equity"]. Wasteless "40 % at Edeka Hamburg" [**secondhand only**: Solar Impulse listing; Wasteless's own case study is Edeka Rhein-Ruhr fresh meat, 47–74 % within the covered assortment, https://wasteless.com/success/edeka-achieves-dramatic-waste-reduction-and-margin-gains-with-wasteless-ai-powered-markdowns. **Recommend dropping the number**; say "expiry-based shelf markdowns" only]. Skip Ninjacart's tonnage — the figure is dated (~2019).
 
 **Demo hygiene**
 - [ ] Start with `make serve` before walking on stage; the browser is already on the URL. Nothing calls the internet.
@@ -299,6 +300,8 @@ Competitor claims, if cited, are **vendor-reported and unaudited**: Afresh (US; 
 ---
 
 ## 11. Q&A prep — everyone answers each
+
+Spoken answers with measured numbers: `docs/QA.md`.
 
 1. **"Why trust your elasticity?"** — It's a disclosed assumption (A-11), uplift is capped, and the sensitivity table shows results at ε and ε/2.
 2. **"What if the hidden data is 10× larger?"** — The feasibility pre-filter shrinks the model; 30 s limit returns the incumbent; aggregation fallback; quote the **measured** U-02 numbers.
