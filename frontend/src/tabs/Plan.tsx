@@ -1,8 +1,10 @@
 // Plan tab (ARCHITECTURE §15–§16): dispatch table, reason cards, discount cards, shelf-life map.
 // Every number is a served field (DATABASE §5.9–§5.10), only rounded for display.
+import 'leaflet/dist/leaflet.css'
 import { useCallback, useEffect, useState } from 'react'
+import { CircleMarker, MapContainer, Tooltip } from 'react-leaflet'
 import { api } from '../api/client'
-import type { DispatchRow, DispatchSheet, ReasonCard, ReasonCards, RunDetail } from '../types'
+import type { DispatchRow, DispatchSheet, GeoRecord, ReasonCard, ReasonCards, RunDetail } from '../types'
 
 const num = (v: number | null | undefined) =>
   v == null ? '' : v.toLocaleString('en-IN', { maximumFractionDigits: 1 })
@@ -137,7 +139,67 @@ function DiscountCards({ cards, onOpen }: { cards: ReasonCard[]; onOpen: (c: Rea
   )
 }
 
-export function Plan({ runId }: { run: RunDetail; runId: string }) {
+// ponytail: display bands for colour only, not a model parameter; move to config if the engine ever owns them
+const band = (h: number) => (h < 6 ? ['#c0392b', '< 6 h'] : h < 24 ? ['#e08e0b', '6–24 h'] : ['#1f7a4d', '≥ 24 h'])
+const BANDS = [band(0), band(12), band(48)]
+
+function ShelfLifeMap({ scenario, rows }: { scenario: string; rows: DispatchRow[] }) {
+  const [geo, setGeo] = useState<GeoRecord[] | null | undefined>(undefined)
+  useEffect(() => {
+    setGeo(undefined)
+    api.geo(scenario).then(setGeo).catch(() => setGeo(null)) // 404 = no geo.csv → colour table
+  }, [scenario])
+
+  // Per destination: the smallest served slack_h among its dispatch rows (picks a value, computes none).
+  const urgent = new Map<string, DispatchRow>()
+  for (const r of rows) if (!urgent.has(r.dest_id) || r.slack_h < urgent.get(r.dest_id)!.slack_h) urgent.set(r.dest_id, r)
+  const dests = [...urgent.values()].sort((a, b) => a.slack_h - b.slack_h)
+
+  const legend = <p className="legend">{BANDS.map(([c, l]) => <span key={l}><i style={{ background: c }} />{l}</span>)}
+    <span><i style={{ background: '#5b6575' }} />hub</span> · tightest slack h per destination</p>
+
+  if (geo === undefined) return <p className="placeholder">Loading map…</p>
+  const pts = (geo ?? []).filter(g => typeof g.lat === 'number' && typeof g.lon === 'number')
+  if (!pts.length) return (
+    <section>
+      <h2>Shelf-life countdown <span className="caption">no geo.csv for this scenario, table view</span></h2>
+      {legend}
+      <table>
+        <thead><tr><th>Destination</th><th className="n">Tightest slack h</th><th>Batch</th><th>Vehicle</th></tr></thead>
+        <tbody>{dests.map(d => (
+          <tr key={d.dest_id}>
+            <td><i className="dot" style={{ background: band(d.slack_h)[0] }} />{d.dest_name} ({d.dest_id})</td>
+            <td className="n">{num(d.slack_h)}</td><td>{d.batch_id} {d.commodity}</td><td>{d.vehicle_id}</td>
+          </tr>))}
+        </tbody>
+      </table>
+    </section>
+  )
+  return (
+    <section>
+      <h2>Shelf-life countdown <span className="caption">offline, no map tiles</span></h2>
+      {legend}
+      <MapContainer className="map" bounds={pts.map(g => [g.lat, g.lon] as [number, number])}
+        boundsOptions={{ padding: [40, 40] }} attributionControl={false} scrollWheelZoom={false}>
+        {pts.map(g => {
+          const d = urgent.get(String(g.node_id))
+          const colour = g.node_type === 'hub' ? '#5b6575' : d ? band(d.slack_h)[0] : '#b8c0cc'
+          return (
+            <CircleMarker key={String(g.node_id)} center={[g.lat as number, g.lon as number]}
+              radius={g.node_type === 'hub' ? 7 : 11}
+              pathOptions={{ color: '#fff', weight: 2, fillColor: colour, fillOpacity: 0.95 }}>
+              <Tooltip permanent direction={g.node_type === 'hub' ? 'left' : 'right'} offset={[g.node_type === 'hub' ? -8 : 10, 0]}>
+                <b>{g.name}</b>{g.node_type === 'hub' ? ' (hub)' : d ? ` · ${num(d.slack_h)} h` : ' · no load'}
+              </Tooltip>
+            </CircleMarker>
+          )
+        })}
+      </MapContainer>
+    </section>
+  )
+}
+
+export function Plan({ run, runId }: { run: RunDetail; runId: string }) {
   const [sheet, setSheet] = useState<DispatchSheet | null | undefined>(undefined)
   const [cards, setCards] = useState<ReasonCards | undefined>(undefined)
   const [open, setOpen] = useState<ReasonCard | null | undefined>(undefined) // undefined = drawer closed
@@ -158,7 +220,10 @@ export function Plan({ runId }: { run: RunDetail; runId: string }) {
     <div className="plan">
       {error && <p className="banner error">{error}</p>}
       {sheet === undefined ? <p className="placeholder">Loading…</p>
-        : sheet ? <Dispatch sheet={sheet} runId={runId} onRow={openRow} />
+        : sheet ? <>
+          <ShelfLifeMap scenario={run.scenario.split(/[\\/]/).pop() ?? run.scenario} rows={sheet.csv} />
+          <Dispatch sheet={sheet} runId={runId} onRow={openRow} />
+        </>
         : <p className="placeholder">No dispatch sheet for this run.</p>}
       {cards === null && <p className="placeholder">No reason cards for this run.</p>}
       {cards && <DiscountCards cards={cards} onOpen={setOpen} />}

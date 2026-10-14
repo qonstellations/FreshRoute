@@ -67,3 +67,9 @@ dd { margin: 0; }
 .discount-card { display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 10px 12px;
   background: var(--warn-bg); border-color: #f0d68a; border-radius: 6px; }
 .discount-card strong { font-size: 1.1rem; }
+.map { height: 380px; margin-top: 8px; border: 1px solid var(--border); border-radius: 6px; z-index: 0;
+  background-color: #eef3f7;
+  background-image: linear-gradient(#dde5ec 1px, transparent 1px), linear-gradient(90deg, #dde5ec 1px, transparent 1px);
+  background-size: 40px 40px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin: 6px 0 0; font-size: .85rem; color: var(--muted); }
+.legend i, i.dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
