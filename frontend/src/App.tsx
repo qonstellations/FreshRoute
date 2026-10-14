@@ -90,7 +90,7 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    api.scenarios().then(s => { setScenarios(s); setScenario(v => v || s[0]?.name || '') })
+    api.scenarios().then(s => { setScenarios(s); setScenario(v => v || s.find(x => x.name === 'practice')?.name || s[0]?.name || '') })
       .catch(e => setError(`Cannot list scenarios: ${e.message}`))
     loadRuns()
   }, [loadRuns])
