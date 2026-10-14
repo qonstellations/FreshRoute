@@ -192,6 +192,8 @@ Decisions D-15 … D-23 in `DECISIONS.md`; target-state behaviour in `ARCHITECTU
 **Gate G3 (H18):** end-to-end click-through works — press **Plan** → scoreboard → waterfall → ladder → click a batch for its reason card → dispatch sheet · `make check` green · merge and tag **`v0.1-spine`**. From here on, add-ons must not break the spine.
 *If red:* cut per §9 before starting Phase 4.
 
+**G3 result (2026-10-14):** passed. `make check` green (ruff, 168 passed + 1 xfailed, frontend build, demo plan practice/milp_markdown s42 validated with 0 violations). Pratham clicked through `make serve` live in a browser: Plan → scoreboard → waterfall → ladder → reason card → dispatch sheet, all animations working. UI restyled on Mantine + motion (D-24). Open going into Phase 4: U-02 over budget at batches+vehicles 10× (252 s; batches-only 10× now 23 s), U-07 blocked on S-01, C-06 blocked. Tagged `v0.1-spine`.
+
 ---
 
 ## 7. Phase 4 — A+ add-ons (H18–H21)
