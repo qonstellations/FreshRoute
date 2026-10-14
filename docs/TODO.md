@@ -301,6 +301,8 @@ Competitor claims, if cited, are **vendor-reported and unaudited**: Afresh (US; 
 
 ## 11. Q&A prep — everyone answers each
 
+Spoken answers with measured numbers: `Docs/QA.md`.
+
 1. **"Why trust your elasticity?"** — It's a disclosed assumption (A-11), uplift is capped, and the sensitivity table shows results at ε and ε/2.
 2. **"What if the hidden data is 10× larger?"** — The feasibility pre-filter shrinks the model; 30 s limit returns the incumbent; aggregation fallback; quote the **measured** U-02 numbers.
 3. **"How does this reach a real distributor?"** — SaaS per hub; pilot with one FPO/aggregator; Agmarknet prices; dispatch sheet works over WhatsApp.
