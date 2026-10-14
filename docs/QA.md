@@ -56,7 +56,7 @@ For time-limited solves, yes, and we measured it. On a loaded CPU practice MILP 
 From the waterfall on practice, FEFO → FreshRoute [`waterfall.json`]: extra sales at list price **+₹246,772**, spoilage cost avoided +₹2,214, transport −₹9,156 (a saving), handling ₹15,630 more, discounts ₹483. Net ₹1,413,264 → ₹1,655,293; it reconciles to ±₹0.01 (tested).
 
 **13. "Does the UI work offline?"**
-[pending: UI is moving from Streamlit to React + FastAPI; answer after R-02's Wi-Fi-off test.]
+Design says yes: FastAPI serves the built React app and the outputs from one local origin, with no external calls (D-18, D-20). [pending R-02: say "yes" only after the Wi-Fi-off test passes on the demo laptop.]
 
 **14. "How fast is a replan?"**
 [pending AD-02: quote only the measured `solve_seconds`.]
