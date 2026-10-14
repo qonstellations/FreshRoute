@@ -31,6 +31,8 @@ class FifoPolicy(Policy):
         arcs = arcs.assign(tr=arcs.arrival_h - arcs.dispatch_h)
         batches = t["batches"].sort_values(["available_from_h", "batch_id"])
         veh = t["vehicles"].set_index("vehicle_id")
+        cap_by, max_trips = veh.capacity_kg.to_dict(), veh.max_trips_day.to_dict()
+        by_batch_day = {k: g for k, g in arcs.groupby(["batch_id", "dispatch_day"], sort=False)}
         lanes = t["lanes"].set_index(["origin", "dest_id", "mode"])
         price = t["prices"].set_index(["dest_id", "commodity", "day"]).price_inr_kg
         left_dem = t["demand"].set_index(["dest_id", "commodity", "day"]).demand_kg_p50.to_dict()
@@ -42,9 +44,10 @@ class FifoPolicy(Policy):
         stock = batches.set_index("batch_id").qty_kg.to_dict()
 
         for b in batches.itertuples():
-            ba = arcs[arcs.batch_id == b.batch_id]
             for day in range(horizon):
-                da = ba[ba.dispatch_day == day]
+                da = by_batch_day.get((b.batch_id, day))
+                if da is None:
+                    continue
                 # nearest destination first, then earliest arrival, then ids (deterministic)
                 da = da.sort_values(["tr", "dest_id", "arrival_h", "vehicle_id"], kind="stable")
                 for a in da.itertuples():
@@ -52,7 +55,7 @@ class FifoPolicy(Policy):
                         break
                     dkey = (a.dest_id, b.commodity, int(a.arrival_day))
                     rkey = (a.dest_id, int(a.arrival_day))
-                    cap = float(veh.loc[a.vehicle_id, "capacity_kg"])
+                    cap = float(cap_by[a.vehicle_id])
                     same = [k for k, v in trips.items() if (
                         v["vehicle"], v["dest"], v["day"]) == (a.vehicle_id, a.dest_id, day)]
                     # reuse an open trip with the same departure, else open a new one if allowed
@@ -61,7 +64,7 @@ class FifoPolicy(Policy):
                                 and trips[k]["kg"] < cap - FLOAT_TOL), None)
                     new = tid is None
                     if new:
-                        if trips_used[(a.vehicle_id, day)] >= veh.max_trips_day[a.vehicle_id]:
+                        if trips_used[(a.vehicle_id, day)] >= max_trips[a.vehicle_id]:
                             continue
                         tid = f"T-{a.vehicle_id}-{a.dest_id}-{day}-{len(same) + 1}"
                         trips[tid] = {"vehicle": a.vehicle_id, "dest": a.dest_id, "day": day,

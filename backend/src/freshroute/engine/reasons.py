@@ -94,9 +94,9 @@ def build_cards(scenario: Scenario, plan: pd.DataFrame, discounts: pd.DataFrame,
         return []
     t = scenario.tables
     commodity = dict(zip(t["batches"].batch_id, t["batches"].commodity, strict=True))
-    demand = t["demand"].set_index(["dest_id", "commodity", "day"])["demand_kg_p50"]
+    demand = t["demand"].set_index(["dest_id", "commodity", "day"])["demand_kg_p50"].to_dict()
     shipped = plan.assign(commodity=plan.batch_id.map(commodity)).groupby(
-        ["dest_id", "commodity", "arrival_day"]).kg.sum()
+        ["dest_id", "commodity", "arrival_day"]).kg.sum().to_dict()
 
     arcs = _scoped_arcs(scenario, plan) if arcs is None else arcs
     arcs = arcs[~arcs.reject_reason.isin(["NO_LANE", "NOT_AVAILABLE"])]
