@@ -12,14 +12,14 @@ from pathlib import Path
 
 import pandas as pd
 
-from freshroute import dispatch_sheet, reasons
-from freshroute import metrics as M
 from freshroute.config import OVERSHIP_SLACK, SCHEMA_VERSION
-from freshroute.discount import COLUMNS as DISCOUNT_COLUMNS
-from freshroute.io import load_scenario
+from freshroute.data.io import load_scenario
+from freshroute.domain.discount import COLUMNS as DISCOUNT_COLUMNS
+from freshroute.engine import dispatch_sheet, reasons
+from freshroute.engine import metrics as M
+from freshroute.engine.simulator import simulate
 from freshroute.policies import REGISTRY, get_policy
 from freshroute.runs import naming
-from freshroute.simulator import simulate
 from validator.validate import validate
 
 POLICIES = ("fifo", "fefo", "last_day_50", "milp", "milp_markdown")
@@ -83,7 +83,7 @@ def run(scenario: str, policy: str, seed: int, out: str | None = None,
 
     ctx = {"seed": seed}
     if newsvendor:
-        from freshroute import newsvendor as nv
+        from freshroute.engine import newsvendor as nv
         target = nv.demand_target(sc)
         target.to_csv(out_dir / "demand_target.csv", index=False)
         ctx["demand_cap_override"] = nv.override(target)

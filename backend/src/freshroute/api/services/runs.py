@@ -6,7 +6,7 @@ from freshroute.api import data_access as da
 from freshroute.api import deps, jobs
 from freshroute.api.schemas import RunRequest
 from freshroute.api.services import outputs as out
-from freshroute.io import load_scenario
+from freshroute.data.io import load_scenario
 from freshroute.runs import runner
 
 

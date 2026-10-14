@@ -5,9 +5,10 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from freshroute import cli, newsvendor
+from freshroute import cli
 from freshroute.config import FLOAT_TOL, NEWSVENDOR_CLAMP
-from freshroute.io import load_scenario
+from freshroute.data.io import load_scenario
+from freshroute.engine import newsvendor
 from freshroute.policies.milp import MilpPolicy
 from freshroute.runs import ladder
 

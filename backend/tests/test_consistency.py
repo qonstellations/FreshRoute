@@ -5,11 +5,11 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from freshroute import metrics
-from freshroute.discount import COLUMNS
-from freshroute.io import load_scenario
+from freshroute.data.io import load_scenario
+from freshroute.domain.discount import COLUMNS
+from freshroute.engine import metrics
+from freshroute.engine.simulator import simulate
 from freshroute.policies import milp
-from freshroute.simulator import simulate
 
 ROOT = Path(__file__).parents[2]
 

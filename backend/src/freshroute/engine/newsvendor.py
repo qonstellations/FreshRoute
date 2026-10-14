@@ -8,9 +8,9 @@ from __future__ import annotations
 
 import pandas as pd
 
-from freshroute import costmodel
 from freshroute.config import NEWSVENDOR_CLAMP, NEWSVENDOR_MARKDOWN_REF
-from freshroute.io import Scenario
+from freshroute.data.io import Scenario
+from freshroute.domain import costmodel
 
 COLUMNS = ("dest_id", "commodity", "day", "target_kg", "quantile_used", "c_u", "c_o")
 _KNOTS = (0.1, 0.5, 0.9)

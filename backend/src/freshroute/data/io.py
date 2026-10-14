@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from freshroute import schema as S
 from freshroute.config import DISPATCH_HOUR, SCHEMA_VERSION
+from freshroute.data import schema as S
 
 log = logging.getLogger(__name__)
 

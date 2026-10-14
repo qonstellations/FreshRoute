@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from freshroute.narrator import template_narration
+from freshroute.engine.narrator import template_narration
 
 FIX = Path(__file__).parent / "fixtures"
 DIFF = json.loads((FIX / "diff_example.json").read_text(encoding="utf-8"))

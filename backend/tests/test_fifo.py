@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 from freshroute import cli
-from freshroute.io import load_scenario
+from freshroute.data.io import load_scenario
 from freshroute.policies.fifo import FifoPolicy
 
 FIX = Path(__file__).parent / "fixtures" / "tiny_3batch"

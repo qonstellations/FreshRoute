@@ -14,9 +14,9 @@ import time
 from pathlib import Path
 
 from freshroute.config import DEFAULT_SEED
-from freshroute.feasibility import build_arcs
+from freshroute.data.io import load_scenario
+from freshroute.domain.feasibility import build_arcs
 from freshroute.generator import generate
-from freshroute.io import load_scenario
 from freshroute.policies.milp import MilpPolicy
 
 BASE = "data/scenarios/practice"

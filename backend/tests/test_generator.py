@@ -6,9 +6,9 @@ import pandas as pd
 import pytest
 
 from freshroute import cli
-from freshroute import schema as S
+from freshroute.data import schema as S
+from freshroute.data.io import load_scenario
 from freshroute.generator import generate
-from freshroute.io import load_scenario
 
 
 @pytest.fixture
@@ -79,7 +79,7 @@ def test_demand_matches_supply_and_is_reachable():
     by_dest = t["demand"].groupby("dest_id").demand_kg_p50.sum()
     assert by_dest.max() < 0.5 * by_dest.sum()
     # every demand row sits on a day some vehicle's lane reaches the outlet inside its window
-    from freshroute.feasibility import build_arcs
+    from freshroute.domain.feasibility import build_arcs
     arcs = build_arcs(_practice())
     ok = {(r.dest_id, r.arrival_day) for r in arcs[arcs.feasible].itertuples()}
     pairs = set(zip(t["demand"].dest_id, t["demand"].day, strict=True))
@@ -134,7 +134,7 @@ def test_practice_uses_rail_and_binding_windows():
 
 def test_hidden_suite_loads_and_events_validate():
     """Every hidden_* scenario loads; event rows parse as Events."""
-    from freshroute.events import Event
+    from freshroute.data.events import Event
 
     root = Path(__file__).parents[2] / "data" / "scenarios"
     hidden = sorted(p for p in root.iterdir() if p.name.startswith("hidden_"))

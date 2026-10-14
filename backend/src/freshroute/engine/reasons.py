@@ -12,8 +12,8 @@ from dataclasses import replace
 import pandas as pd
 
 from freshroute.config import FLOAT_TOL
-from freshroute.feasibility import build_arcs
-from freshroute.io import Scenario
+from freshroute.data.io import Scenario
+from freshroute.domain.feasibility import build_arcs
 
 # arc reject_reason -> card reason_code (DATABASE.md 5.9). NO_LANE / NOT_AVAILABLE arcs do not
 # exist physically and are never offered as alternatives.

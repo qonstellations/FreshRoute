@@ -7,7 +7,7 @@ Instructions for anyone (human or AI assistant) working on FreshRoute.
 
 ## Non-negotiables
 1. **Organizer cost model/data format overrides ours.** Coefficients live only in `costmodel.py`, `config.py` or the dataset. No literals elsewhere.
-2. **The `validator` package is independent** (`backend/src/validator/`). It may import only stdlib, pandas, numpy, `freshroute.schema`, `freshroute.io`. It re-implements the maths.
+2. **The `validator` package is independent** (`backend/src/validator/`). It may import only stdlib, pandas, numpy, `freshroute.data.schema`, `freshroute.data.io`. It re-implements the maths.
 3. **One simulator scores every policy.** Policies never compute their own reported net ₹.
 4. **Deterministic.** Randomness only via `numpy.random.default_rng(seed)`; sort before iterating; same inputs ⇒ identical `metrics.json`.
 5. **The LLM never decides.** HiGHS decides; an LLM may only parse a sentence into a pydantic-validated event or narrate JSON it was given.

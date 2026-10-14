@@ -10,10 +10,10 @@ import math
 
 import pandas as pd
 
-from freshroute import costmodel as cm
-from freshroute import discount
 from freshroute.config import FLOAT_TOL
-from freshroute.shelflife import decay, usable_life_at_arrival
+from freshroute.domain import costmodel as cm
+from freshroute.domain import discount
+from freshroute.domain.shelflife import decay, usable_life_at_arrival
 
 
 def _price(ser: pd.Series | None, day: int) -> float:

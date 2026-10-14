@@ -9,13 +9,13 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from freshroute.io import load_scenario
+from freshroute.data.io import load_scenario
 from validator.validate import validate
 
 ROOT = Path(__file__).parent
 FIX = ROOT / "fixtures" / "tiny_3batch"
 EXP = FIX / "expected"
-ALLOWED = {"pandas", "numpy", "freshroute.schema", "freshroute.io", "validator"}
+ALLOWED = {"pandas", "numpy", "freshroute.data.schema", "freshroute.data.io", "validator"}
 
 
 def base():

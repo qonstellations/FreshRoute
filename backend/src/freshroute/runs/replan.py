@@ -15,16 +15,16 @@ from pathlib import Path
 
 import pandas as pd
 
-from freshroute import metrics as M
 from freshroute.config import FLOAT_TOL, OVERSHIP_SLACK, REPLAN_TIME_LIMIT_S
-from freshroute.discount import COLUMNS as DISCOUNT_COLUMNS
-from freshroute.discount import build_discounts
-from freshroute.events import Event, apply_event, lane_mask, load_event
-from freshroute.io import Scenario, load_scenario
+from freshroute.data.events import Event, apply_event, lane_mask, load_event
+from freshroute.data.io import Scenario, load_scenario
+from freshroute.domain.discount import COLUMNS as DISCOUNT_COLUMNS
+from freshroute.domain.discount import build_discounts
+from freshroute.domain.shelflife import usable_life_at_arrival
+from freshroute.engine import metrics as M
+from freshroute.engine.simulator import simulate
 from freshroute.policies.base import PLAN_COLUMNS, TRIP_COLUMNS
 from freshroute.policies.milp import MilpPolicy
-from freshroute.shelflife import usable_life_at_arrival
-from freshroute.simulator import simulate
 from validator.validate import ValidationReport, validate
 
 KPI_KEYS = ("spoilage_kg", "spoilage_pct", "demand_fulfillment_pct", "min_dest_fill_pct",

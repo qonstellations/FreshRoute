@@ -5,8 +5,8 @@ import pandas as pd
 import pytest
 
 from freshroute.config import FLOAT_TOL
-from freshroute.feasibility import REASONS, build_arcs
-from freshroute.io import load_scenario
+from freshroute.data.io import load_scenario
+from freshroute.domain.feasibility import REASONS, build_arcs
 
 ROOT = Path(__file__).parent
 FIX = ROOT / "fixtures" / "tiny_3batch"

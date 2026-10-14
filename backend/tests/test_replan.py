@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 
 from freshroute.cli import main, run
-from freshroute.narrator import template_narration
+from freshroute.engine.narrator import template_narration
 from freshroute.runs.replan import DECISION_COLUMNS, replan_run
 from test_narrator import _guard
 

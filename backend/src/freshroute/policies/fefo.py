@@ -4,7 +4,7 @@ greedy fallback; never computes net INR (AGENTS.md rule 3).
 """
 from __future__ import annotations
 
-from freshroute.io import Scenario
+from freshroute.data.io import Scenario
 from freshroute.policies.base import Plan, Policy
 from freshroute.solvers.greedy import fefo_greedy
 from freshroute.solvers.milp_model import build_plan, model_data

@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 
 from freshroute import config
-from freshroute.io import load_scenario
+from freshroute.data.io import load_scenario
 from freshroute.policies.milp import MilpPolicy
 from freshroute.solvers import milp_model
 

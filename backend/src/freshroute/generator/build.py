@@ -9,8 +9,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from freshroute import schema as S
 from freshroute.config import DISPATCH_HOUR, HOURS_PER_DAY, SCHEMA_VERSION
+from freshroute.data import schema as S
 
 from .constants import (
     _COMM,

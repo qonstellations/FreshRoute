@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from freshroute.io import Scenario
+from freshroute.data.io import Scenario
 from validator.rules import demand_warnings, discount_rules, shipment_rules
 
 SCHEMA_VERSION = 2

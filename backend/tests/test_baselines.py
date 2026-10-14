@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from freshroute import cli
-from freshroute.io import load_scenario
+from freshroute.data.io import load_scenario
 from freshroute.policies.fefo import FefoPolicy
 from freshroute.policies.last_day_50 import LastDay50Policy
 from validator.validate import validate

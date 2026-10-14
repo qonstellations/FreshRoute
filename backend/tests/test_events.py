@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from freshroute.events import Event, EventError, apply_event, load_event
-from freshroute.io import load_scenario
+from freshroute.data.events import Event, EventError, apply_event, load_event
+from freshroute.data.io import load_scenario
 
 FIX = Path(__file__).parent / "fixtures"
 TINY = FIX / "tiny_3batch"

@@ -7,8 +7,8 @@ import math
 import numpy as np
 import pandas as pd
 
-from freshroute import schema as S
 from freshroute.config import DISPATCH_HOUR, HOURS_PER_DAY
+from freshroute.data import schema as S
 
 from .constants import (
     DEST_TYPE,

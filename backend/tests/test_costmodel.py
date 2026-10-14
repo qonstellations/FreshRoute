@@ -1,8 +1,8 @@
 """costmodel.py formulas (ARCHITECTURE.md section 7)."""
 import pytest
 
-from freshroute import costmodel as cm
 from freshroute.config import FLOAT_TOL
+from freshroute.domain import costmodel as cm
 
 
 def test_revenue_identity():

@@ -7,10 +7,10 @@ import math
 
 import pandas as pd
 
-from freshroute import costmodel as cm
 from freshroute.config import FLOAT_TOL, HOURS_PER_DAY
-from freshroute.io import Scenario
-from freshroute.shelflife import usable_life_at_arrival
+from freshroute.data.io import Scenario
+from freshroute.domain import costmodel as cm
+from freshroute.domain.shelflife import usable_life_at_arrival
 
 REASONS = ("NO_LANE", "NOT_AVAILABLE", "RAIL_SLOT", "WINDOW", "SHELF_LIFE", "BEYOND_HORIZON")
 COLUMNS = (

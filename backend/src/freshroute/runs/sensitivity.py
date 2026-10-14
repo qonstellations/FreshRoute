@@ -13,7 +13,6 @@ from pathlib import Path
 
 import pandas as pd
 
-from freshroute import metrics as M
 from freshroute.config import (
     FLOAT_TOL,
     OVERSHIP_SLACK,
@@ -22,10 +21,11 @@ from freshroute.config import (
     SENS_OVERSHIP_SLACK,
     SENS_Q10,
 )
-from freshroute.io import Scenario, load_scenario
+from freshroute.data.io import Scenario, load_scenario
+from freshroute.engine import metrics as M
+from freshroute.engine.simulator import simulate
 from freshroute.policies.milp import MilpMarkdownPolicy
 from freshroute.runs import naming
-from freshroute.simulator import simulate
 
 POLICY = "milp_markdown"
 COLUMNS = ("parameter", "value", "policy", "net_inr", "spoilage_kg", "demand_fulfillment_pct")

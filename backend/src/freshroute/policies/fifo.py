@@ -10,8 +10,8 @@ from collections import defaultdict
 import pandas as pd
 
 from freshroute.config import FLOAT_TOL
-from freshroute.feasibility import build_arcs
-from freshroute.io import Scenario
+from freshroute.data.io import Scenario
+from freshroute.domain.feasibility import build_arcs
 from freshroute.policies.base import PLAN_COLUMNS, TRIP_COLUMNS, Plan, Policy
 
 # Naive FIFO per ARCH 12 (A-31): window/shelf-life rejects are usable, violations are reported

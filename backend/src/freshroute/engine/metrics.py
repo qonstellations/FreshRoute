@@ -18,8 +18,8 @@ from __future__ import annotations
 
 import pandas as pd
 
-from freshroute import costmodel as cm
 from freshroute.config import SCHEMA_VERSION
+from freshroute.domain import costmodel as cm
 
 
 def _pct(num: float, den: float) -> float:

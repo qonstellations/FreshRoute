@@ -11,7 +11,6 @@ import time
 import pandas as pd
 import pulp
 
-from freshroute import costmodel
 from freshroute.config import (
     EPS_FEFO,
     FLOAT_TOL,
@@ -21,10 +20,11 @@ from freshroute.config import (
     PENALTY_MULT,
     PHI_BALANCE,
 )
-from freshroute.feasibility import build_arcs
-from freshroute.io import Scenario
+from freshroute.data.io import Scenario
+from freshroute.domain import costmodel
+from freshroute.domain.feasibility import build_arcs
+from freshroute.domain.shelflife import decay
 from freshroute.policies.base import PLAN_COLUMNS, TRIP_COLUMNS, Plan
-from freshroute.shelflife import decay
 from freshroute.solvers.greedy import classes, fefo_greedy, lookups
 
 _OK = (pulp.LpSolveStatus.Optimal, pulp.LpSolveStatus.TimeLimit, pulp.LpSolveStatus.GapLimit)

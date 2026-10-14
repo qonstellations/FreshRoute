@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from freshroute.config import FLOAT_TOL
-from freshroute.metrics import compute
+from freshroute.engine.metrics import compute
 
 FIXTURE = Path(__file__).parent / "fixtures" / "metrics_example.json"
 

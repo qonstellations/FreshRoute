@@ -7,9 +7,9 @@ import pandas as pd
 
 from freshroute import config
 from freshroute.cli import main
-from freshroute.io import load_scenario
+from freshroute.data.io import load_scenario
+from freshroute.engine.simulator import simulate
 from freshroute.runs import stress
-from freshroute.simulator import simulate
 
 FIX = Path(__file__).parent / "fixtures"
 SCENARIO = str(FIX / "tiny_3batch")

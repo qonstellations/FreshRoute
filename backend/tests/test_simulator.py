@@ -4,9 +4,9 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from freshroute.io import load_scenario
-from freshroute.metrics import compute
-from freshroute.simulator import simulate
+from freshroute.data.io import load_scenario
+from freshroute.engine.metrics import compute
+from freshroute.engine.simulator import simulate
 from test_metrics import check_invariants, near
 
 SC = load_scenario(Path(__file__).parent / "fixtures" / "tiny_3batch")

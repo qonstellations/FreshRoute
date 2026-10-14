@@ -6,10 +6,10 @@ from __future__ import annotations
 
 import pandas as pd
 
-from freshroute import costmodel as cm
 from freshroute.config import DISCOUNT_TIME_TRIGGER_H, FLOAT_TOL, LAST_DAY_DISCOUNT_PCT
-from freshroute.discount import COLUMNS, lots
-from freshroute.io import Scenario
+from freshroute.data.io import Scenario
+from freshroute.domain import costmodel as cm
+from freshroute.domain.discount import COLUMNS, lots
 from freshroute.policies.base import Plan, Policy
 from freshroute.policies.fifo import FifoPolicy
 

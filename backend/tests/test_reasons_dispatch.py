@@ -2,10 +2,10 @@
 import re
 from pathlib import Path
 
-from freshroute import dispatch_sheet
-from freshroute.io import load_scenario
+from freshroute.data.io import load_scenario
+from freshroute.engine import dispatch_sheet
+from freshroute.engine.reasons import render_text
 from freshroute.policies.fifo import FifoPolicy
-from freshroute.reasons import render_text
 
 FIX = Path(__file__).parent / "fixtures" / "tiny_3batch"
 
@@ -80,9 +80,9 @@ CODES = {"SHELF_LIFE", "WINDOW", "CAPACITY_BOUND", "DEMAND_CAP", "LOWER_MARGIN"}
 def test_build_cards_on_fixture():
     import pandas as pd
 
-    from freshroute.discount import COLUMNS as DISCOUNT_COLUMNS
+    from freshroute.domain.discount import COLUMNS as DISCOUNT_COLUMNS
+    from freshroute.engine.reasons import build_cards
     from freshroute.policies.milp import MilpPolicy
-    from freshroute.reasons import build_cards
     sc = load_scenario(FIX)
     r = MilpPolicy().plan(sc, {"seed": 42})
     none = pd.DataFrame(columns=list(DISCOUNT_COLUMNS))
@@ -106,10 +106,10 @@ def test_build_cards_on_fixture():
 def test_build_cards_scoped_equals_full_and_arcs_override():
     import pandas as pd
 
-    from freshroute.discount import COLUMNS as DISCOUNT_COLUMNS
-    from freshroute.feasibility import build_arcs
+    from freshroute.domain.discount import COLUMNS as DISCOUNT_COLUMNS
+    from freshroute.domain.feasibility import build_arcs
+    from freshroute.engine.reasons import build_cards
     from freshroute.policies.milp import MilpPolicy
-    from freshroute.reasons import build_cards
     sc = load_scenario(FIX)
     r = MilpPolicy().plan(sc, {"seed": 42})
     none = pd.DataFrame(columns=list(DISCOUNT_COLUMNS))

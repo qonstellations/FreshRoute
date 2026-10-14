@@ -4,7 +4,7 @@ from __future__ import annotations
 import pandas as pd
 
 from freshroute.config import FLOAT_TOL, OVERSHIP_SLACK
-from freshroute.io import Scenario
+from freshroute.data.io import Scenario
 
 
 def lookups(sc: Scenario, override: dict | None = None):

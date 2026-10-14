@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 from freshroute.config import BASELINE, PLAN
-from freshroute.io import load_scenario
+from freshroute.data.io import load_scenario
 from freshroute.runs import naming
 from freshroute.runs.runner import run
 

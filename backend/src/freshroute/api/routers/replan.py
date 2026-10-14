@@ -4,12 +4,12 @@ from __future__ import annotations
 from fastapi import APIRouter
 from pydantic import ValidationError
 
-from freshroute import narrator
 from freshroute.api import data_access as da
 from freshroute.api import deps, jobs
 from freshroute.api.schemas import ReplanRequest, ReplanSubmitResponse
 from freshroute.api.services import outputs as out
-from freshroute.events import Event
+from freshroute.data.events import Event
+from freshroute.engine import narrator
 from freshroute.runs import replan
 
 router = APIRouter(prefix="/api")

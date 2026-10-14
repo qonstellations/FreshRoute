@@ -12,7 +12,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from freshroute import metrics as M
 from freshroute.config import (
     BASELINE,
     DEFAULT_SEED,
@@ -22,11 +21,12 @@ from freshroute.config import (
     MC_TRAVEL_CAP_MULT,
     PLAN,
 )
-from freshroute.discount import COLUMNS as DISCOUNT_COLUMNS
-from freshroute.io import Scenario, load_scenario
+from freshroute.data.io import Scenario, load_scenario
+from freshroute.domain.discount import COLUMNS as DISCOUNT_COLUMNS
+from freshroute.engine import metrics as M
+from freshroute.engine.simulator import simulate
 from freshroute.runs import naming
 from freshroute.runs.runner import _policy
-from freshroute.simulator import simulate
 
 COLUMNS = ("scenario_i", "policy", "spoilage_kg", "spoilage_pct", "demand_fulfillment_pct",
            "min_dest_fill_pct", "net_inr")

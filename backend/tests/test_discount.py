@@ -5,8 +5,8 @@ import pandas as pd
 import pytest
 
 from freshroute.config import FLOAT_TOL
-from freshroute.discount import build_discounts, delta_revenue, discount_pct, tier_index
-from freshroute.io import load_scenario
+from freshroute.data.io import load_scenario
+from freshroute.domain.discount import build_discounts, delta_revenue, discount_pct, tier_index
 
 TIERS = [0, 10, 20, 35]
 # stock 1000 / demand 100 / eps 3: tiers 10 and 20 pass the worth-it test, 35 does not

@@ -6,7 +6,7 @@ from dataclasses import replace
 import pandas as pd
 
 from freshroute.config import AGG_RSL_BUCKET_H, FLOAT_TOL
-from freshroute.io import Scenario
+from freshroute.data.io import Scenario
 from freshroute.policies.base import Plan
 from freshroute.solvers import milp_model
 from freshroute.solvers.greedy import fefo_greedy

@@ -9,13 +9,13 @@ from typing import NamedTuple
 
 import pandas as pd
 
-from freshroute import costmodel as cm
 from freshroute.config import (
     DISCOUNT_RISK_BREAKS,
     DISCOUNT_TIERS_PCT,
     DISCOUNT_TIME_TRIGGER_H,
     FLOAT_TOL,
 )
+from freshroute.domain import costmodel as cm
 
 COLUMNS = (
     "lot_id", "dest_id", "commodity", "batch_id", "day", "stock_kg", "risk",

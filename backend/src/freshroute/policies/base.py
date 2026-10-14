@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from freshroute.io import Scenario
+from freshroute.data.io import Scenario
 
 PLAN_COLUMNS = (
     "shipment_id", "batch_id", "dest_id", "vehicle_id", "trip_id", "mode", "dispatch_day",

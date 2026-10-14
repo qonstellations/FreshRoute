@@ -8,7 +8,7 @@ from freshroute.config import (  # noqa: F401  patched by tests, read at call ti
     MIP_REL_GAP,
     OVERSHIP_SLACK,
 )
-from freshroute.io import Scenario
+from freshroute.data.io import Scenario
 from freshroute.policies.base import Plan, Policy
 from freshroute.solvers import milp_model
 from freshroute.solvers.aggregate import plan_aggregated
@@ -53,7 +53,7 @@ class MilpMarkdownPolicy(MilpPolicy):
     name = "milp_markdown"
 
     def plan(self, scenario: Scenario, ctx: dict | None = None) -> Plan:
-        from freshroute.discount import build_discounts
+        from freshroute.domain.discount import build_discounts
 
         p = super().plan(scenario, ctx)
         p.plan["policy"] = self.name

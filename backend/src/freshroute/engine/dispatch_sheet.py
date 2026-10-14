@@ -6,7 +6,7 @@ from __future__ import annotations
 import pandas as pd
 
 from freshroute.config import HOURS_PER_DAY
-from freshroute.io import Scenario
+from freshroute.data.io import Scenario
 
 COLUMNS = (
     "vehicle_id", "trip_id", "dispatch_h", "depart_clock", "dest_id", "dest_name", "batch_id",

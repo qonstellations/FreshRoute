@@ -2,7 +2,7 @@
 import pytest
 
 from freshroute.config import FLOAT_TOL, Q10_DEFAULT
-from freshroute.shelflife import decay, usable_life_at_arrival
+from freshroute.domain.shelflife import decay, usable_life_at_arrival
 
 MIN_SELL_WINDOW_H = 24  # section 7.1 example value, test-local
 # (transit_temp_c, travel_h, usable_h, feasible); RSL 100, wait 5, handling 2, store/ref 20 C, q10 2
