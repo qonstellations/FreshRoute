@@ -56,6 +56,10 @@ MAX_TRIPS_DAY = 4  # ponytail: no trip-duration check; trips are fleet slots
 RAIL_TRIPS_DAY = 2
 _DEST_TYPES = ("mandi", "retail_DC", "HoReCa", "processor")
 _BASE_LATLON = (12.97, 77.59)  # arbitrary synthetic anchor
+# [team] held-out hidden-style seeds (S-01e): NEVER tune calibration against
+# these — A-47 bands are fitted on practice/seed 42 only. U-07 dry-runs and
+# H-02 hardening run here.
+HIDDEN_SEEDS = (101, 102, 103, 104, 201, 202, 203, 204, 205, 206)
 
 
 def _r(x, n=2):
@@ -188,3 +192,26 @@ def generate(name: str, seed: int, n_batches: int, n_dests: int, days: int,
 if __name__ == "__main__":  # regenerate committed scenarios
     generate("practice", 42, 200, 8, 3, 3, "data/scenarios/practice")
     generate("small", 42, 30, 3, 2, 2, "data/scenarios/small")
+    # hidden-style suite (S-01e): scale ladder + one event-bearing scenario
+    # per event type + edge-case-as-data. Held-out seeds: see HIDDEN_SEEDS.
+    generate("hidden_small", 101, 30, 3, 2, 2, "data/scenarios/hidden_small")
+    generate("hidden_practice", 102, 200, 8, 3, 3, "data/scenarios/hidden_practice")
+    generate("hidden_3x", 103, 600, 8, 3, 6, "data/scenarios/hidden_3x")
+    generate("hidden_10x", 104, 2000, 8, 3, 30, "data/scenarios/hidden_10x")
+    _EV = {
+        "hidden_ev_delay": (201, [("EV1", "route_delay", "HUB1|D1|reefer", 6.0, 8.0)]),
+        "hidden_ev_capacity": (202, [("EV1", "capacity_drop", "vehicle:V1", 0.5, 8.0)]),
+        "hidden_ev_demand": (203, [("EV1", "demand_spike", "dest:D2|*", 1.5, 8.0)]),
+        "hidden_ev_price": (204, [("EV1", "price_shock", "dest:D3|tomato", 0.8, 8.0)]),
+        "hidden_ev_order": (205, [("EV1", "new_order", "dest:D2|mango", 500.0, 8.0)]),
+    }
+    for _name, (_seed, _rows) in _EV.items():
+        generate(_name, _seed, 200, 8, 3, 3, f"data/scenarios/{_name}", event_rows=_rows)
+    _edge = generate("hidden_edge", 206, 30, 3, 2, 2, "data/scenarios/hidden_edge")
+    _b = pd.read_csv(_edge / "batches.csv")
+    _b.loc[len(_b)] = ["BEDGE01", "spinach", "HUB1", 200.0, 0.0, 0.0, 0.0,
+                       20.0, "B", 0.0]  # already expired at origin
+    _b.to_csv(_edge / "batches.csv", index=False, lineterminator="\n")
+    _v = pd.read_csv(_edge / "vehicles.csv")
+    _v.loc[_v.vehicle_id == "V1", "max_trips_day"] = 0  # zero-capacity vehicle
+    _v.to_csv(_edge / "vehicles.csv", index=False, lineterminator="\n")
