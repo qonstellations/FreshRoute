@@ -203,7 +203,7 @@ Rejected rows are kept: reason cards read them.
 
 ### 4.2 `demand_target` — one row per `(dest_id, commodity, day)` (newsvendor)
 
-`dest_id, commodity, day, target_kg, quantile_used, c_u, c_o`. When the newsvendor flag is off, `target_kg = demand_kg_p50`.
+`dest_id, commodity, day, target_kg, quantile_used, c_u, c_o`. When the newsvendor flag is off, `target_kg = demand_kg_p50` (`quantile_used = 0.5`). Built by `newsvendor.demand_target` (ARCHITECTURE §14.3); written as `outputs/<run_id>/demand_target.csv` only for `--newsvendor` runs, sorted by key. `c_u ≤ 0` ⇒ `target_kg = 0`, `quantile_used = 0`. A row with no priced lane from an origin holding the commodity keeps `target_kg = demand_kg_p50`, `quantile_used = 0.5`, `c_u = c_o = NaN` (no arc can use it). `--newsvendor` is accepted only for `milp`/`milp_markdown`.
 
 ---
 
@@ -229,7 +229,7 @@ Rejected rows are kept: reason cards read them.
   "timestamp_utc": "…"
 }
 ```
-`solver` is `null` for non-MILP policies. MILP runs also carry `size` (`{"vars", "constraints"}` of the model solved) and, only when the scale fallback ran (ARCHITECTURE §9.5, U-02), `aggregation` (`{"batches", "groups", "agg_arcs", "dropped_lines", "validator_violations"}`). Timestamp and `solve_seconds` are the only fields allowed to differ between identical runs.
+`flags.newsvendor` is `true` only for `--newsvendor` runs (then `run_id` ends in `__nv`). `solver` is `null` for non-MILP policies. MILP runs also carry `size` (`{"vars", "constraints"}` of the model solved) and, only when the scale fallback ran (ARCHITECTURE §9.5, U-02), `aggregation` (`{"batches", "groups", "agg_arcs", "dropped_lines", "validator_violations"}`). Timestamp and `solve_seconds` are the only fields allowed to differ between identical runs.
 
 ### 5.2 `plan.csv` — PK `shipment_id` (one row per batch × destination × trip line)
 
@@ -373,9 +373,13 @@ Arrive by: day 0 17:00
  "official_baseline": {"policy": "organizer_baseline", "kpis": {}},
  "ladder": [{"policy": "fifo", "kpis": {}}, {"policy": "fefo", "kpis": {}},
             {"policy": "milp", "kpis": {}}, {"policy": "milp_markdown", "kpis": {}}],
- "extras": [{"policy": "last_day_50", "kpis": {}}]}
+ "extras": [{"policy": "last_day_50", "kpis": {}}],
+ "ablation": [{"policy": "milp_markdown", "flags": {"newsvendor": true},
+               "run_id": "…__milp_markdown__s42__nv", "vs": "milp_markdown", "kpis": {},
+               "delta": {"net_inr": 0.0, "spoilage_kg": 0.0, "spoilage_pct": 0.0,
+                         "demand_fulfillment_pct": 0.0}}]}
 ```
-`kpis` has the same keys as `metrics.json → kpis`.
+`kpis` has the same keys as `metrics.json → kpis`. `ablation` is present only for `freshroute ladder --newsvendor` (absent otherwise, so the flag-off file is unchanged): the plan policy re-run with the §14.3 target, scored by the same simulator, its run dir written beside the others; `delta` = ablation KPI − `vs` KPI (AD-04).
 
 `waterfall.json`:
 ```json
@@ -429,6 +433,7 @@ data/scenarios/<name>/        commodities.csv batches.csv destinations.csv deman
 outputs/<run_id>/             run_manifest.json plan.csv trips.csv discounts.csv unshipped.csv
                               sim_ledger.csv sim_lots.csv metrics.json validation.json
                               reason_cards.json dispatch_sheet.csv dispatch_sheet.txt
+                              [demand_target.csv — --newsvendor runs only]
                               [ladder.json waterfall.json stress.csv stress_summary.json sensitivity.csv]
                               [replan/<event_id>/…]
 outputs/.api/jobs/              API run-queue state only (§11); gitignored with the rest of outputs/

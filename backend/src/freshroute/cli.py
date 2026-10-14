@@ -32,6 +32,7 @@ from validator.validate import validate
 POLICIES = ("fifo", "fefo", "last_day_50", "milp", "milp_markdown")
 # Recognised names that cannot run yet (C-06). Listed in --policy choices so the parser accepts
 # them and _policy() can explain the block, instead of argparse saying "invalid choice".
+NEWSVENDOR_POLICIES = ("milp", "milp_markdown")
 BLOCKED_POLICIES = ("organizer_baseline",)
 POLICY_CHOICES = POLICIES + BLOCKED_POLICIES
 ORGANIZER_BASELINE_BLOCKED = (  # also the API's 400 detail (DATABASE.md section 11.2)
@@ -89,14 +90,24 @@ def _versions() -> dict:
     return out
 
 
-def run(scenario: str, policy: str, seed: int, out: str | None = None) -> Path:
-    """Run one policy end to end and write the run directory; returns it."""
+def run(scenario: str, policy: str, seed: int, out: str | None = None,
+        newsvendor: bool = False) -> Path:
+    """Run one policy end to end and write the run directory; returns it. `newsvendor` swaps
+    the MILP demand cap for the section 14.3 target (MILP policies only)."""
+    if newsvendor and policy not in NEWSVENDOR_POLICIES:
+        raise SystemExit(f"--newsvendor needs a MILP policy: {', '.join(NEWSVENDOR_POLICIES)}")
     sc = load_scenario(scenario)
-    run_id = f"{sc.name}__{policy}__s{seed}"
+    run_id = f"{sc.name}__{policy}__s{seed}" + ("__nv" if newsvendor else "")
     out_dir = Path(out) if out else Path("outputs") / run_id
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    result = _policy(policy).plan(sc, {"seed": seed})
+    ctx = {"seed": seed}
+    if newsvendor:
+        from freshroute import newsvendor as nv
+        target = nv.demand_target(sc)
+        target.to_csv(out_dir / "demand_target.csv", index=False)
+        ctx["demand_cap_override"] = nv.override(target)
+    result = _policy(policy).plan(sc, ctx)
     plan, trips = result.plan, result.trips
     markdown = result.discounts is not None
     discounts = result.discounts if markdown else pd.DataFrame(columns=list(DISCOUNT_COLUMNS))
@@ -120,7 +131,7 @@ def run(scenario: str, policy: str, seed: int, out: str | None = None) -> Path:
     manifest = {
         "schema_version": SCHEMA_VERSION, "run_id": run_id, "git_sha": _git_sha(),
         "scenario": str(scenario), "scenario_sha256": _sha(Path(scenario)), "policy": policy,
-        "flags": {"markdown": markdown, "newsvendor": False}, "seed": seed,
+        "flags": {"markdown": markdown, "newsvendor": newsvendor}, "seed": seed,
         "realization": "base", "package_versions": _versions(), "solver": result.solver,
         "timestamp_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
@@ -166,11 +177,13 @@ def main(argv: list[str] | None = None) -> None:
     r.add_argument("--policy", required=True, choices=POLICY_CHOICES)
     r.add_argument("--seed", type=int, default=DEFAULT_SEED)
     r.add_argument("--out")
+    r.add_argument("--newsvendor", action="store_true", help="MILP demand cap = newsvendor target")
     r.add_argument("--fail-on-violations", action="store_true", help="exit 1 if violations > 0")
     lad = sub.add_parser("ladder", help="fifo -> fefo -> milp -> milp_markdown + waterfall")
     lad.add_argument("--scenario", required=True)
     lad.add_argument("--seed", type=int, default=DEFAULT_SEED)
     lad.add_argument("--out")
+    lad.add_argument("--newsvendor", action="store_true", help="add the newsvendor ablation row")
     sen = sub.add_parser("sensitivity", help="one-at-a-time sensitivity -> sensitivity.csv")
     sen.add_argument("--scenario", required=True)
     sen.add_argument("--seed", type=int, default=DEFAULT_SEED)
@@ -193,11 +206,11 @@ def main(argv: list[str] | None = None) -> None:
         return
     if a.cmd == "ladder":
         from freshroute.ladder import format_ladder, run_ladder
-        out = run_ladder(a.scenario, a.seed, a.out)
+        out = run_ladder(a.scenario, a.seed, a.out, a.newsvendor)
         print(format_ladder(out))
         print(f"wrote {out}")
         return
-    out = run(a.scenario, a.policy, a.seed, a.out)
+    out = run(a.scenario, a.policy, a.seed, a.out, a.newsvendor)
     m = json.loads((out / "metrics.json").read_text(encoding="utf-8"))
     print(format_kpis(m))
     print(f"wrote {out}")
