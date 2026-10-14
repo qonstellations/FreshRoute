@@ -408,7 +408,7 @@ Step formulas: `ARCHITECTURE.md` §12. Signs: cost steps are negative when the p
            "demand_fulfillment_pct": {"plan": {}, "baseline": {}}},
  "share_plan_beats_baseline": {"net_inr": 0.0, "spoilage_kg": 0.0}}
 ```
-`share_plan_beats_baseline` is in 0–1 over **paired** scenarios.
+`share_plan_beats_baseline` is in 0–1 over **paired** scenarios. Bands are `numpy.percentile` (linear) over the `n` scenarios; `baseline` is `fefo` until C-06. With `--named`, `n = 3` and `scenario_i` 0/1/2 = optimistic/base/stress (`MC_NAMED`, A-42). Written by `freshroute stress` to `outputs/<scenario>__stress__s<seed>/`.
 - `sensitivity.csv` — `parameter, value, policy, net_inr, spoilage_kg, demand_fulfillment_pct`. Parameters: `q10` (1.5, 2.0, 3.0; overrides every commodity's `q10`), `elasticity_multiplier` (1, 0.5; scales `price_elasticity`), `overship_slack` (0, 0.05, 0.10), `demand_multiplier` (0.8, 1.0, 1.2; scales p10/p50/p90). One row per (parameter, value), one parameter moved at a time, `policy` = `milp_markdown`; rows at the base value (`elasticity_multiplier` 1, `overship_slack` = `OVERSHIP_SLACK`, `demand_multiplier` 1.0) are the plain run. Values from `config.py` `SENS_*`. Written by `freshroute sensitivity` to `outputs/<scenario>__sensitivity__s<seed>/`.
 
 ### 5.13 Replan outputs — `replan/<event_id>/`
