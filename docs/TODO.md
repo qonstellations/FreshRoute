@@ -180,7 +180,7 @@ Decisions D-15 … D-23 in `DECISIONS.md`; target-state behaviour in `ARCHITECTU
 
 **P3**
 - [ ] **U-08** · 0.75 h — Waterfall and attribution-ladder charts (recharts, from `GET /api/ladder`).
-- [ ] **U-09** · 0.75 h — Dispatch sheet CSV + WhatsApp-style text + UI table (priority-ordered, slack in hours), from `GET /api/runs/{id}/dispatch-sheet`.
+- [ ] **U-09** · 0.75 h — Dispatch sheet CSV + WhatsApp-style text + UI table (priority-ordered, slack in hours), from `GET /api/runs/{id}/dispatch-sheet`. *Backend done: `freshroute run` writes `dispatch_sheet.csv` / `.txt` for every run; UI table pending (React).*
 - [ ] **U-10** · 0.5 h — Reason-card drawer (click a shipment → card) and discount cards, from `GET /api/runs/{id}/reason-cards`.
 - [ ] **U-11** · 0.75 h — Shelf-life countdown map (react-leaflet over `geo.csv`, colour by hours left) with colour-coded-table fallback.
 - [ ] **U-12** · 0.25 h — "Trust" tab: assumptions, coefficients, run manifest.
@@ -205,7 +205,7 @@ Priority order (and reverse cut order): **stress test → replan → newsvendor 
 **P3**
 - [ ] **AD-05** · 1.0 h — Fan chart + sensitivity table (Robustness tab, recharts) and `q10`/ε sliders.
 - [ ] **AD-06** · 1.25 h — Replan tab: dropdown of 5 canned events, **Apply**, diff view, ΔKPIs.
-- [ ] **AD-07** · 0.5 h — **Template narration** (`narrator.template_narration`) over `diff.json`/`metrics.json` — works with no LLM.
+- [x] **AD-07** · 0.5 h — **Template narration** (`narrator.template_narration`) over `diff.json`/`metrics.json` — works with no LLM. *Verified on the format-example fixture `tests/fixtures/diff_example.json`; real `diff.json` pending AD-01/AD-02.*
 - [ ] **AD-08** · 0.25 h — Deck skeleton (6–7 slides, §10 below).
 
 **Stretch (only if G4 conditions are all green)**
