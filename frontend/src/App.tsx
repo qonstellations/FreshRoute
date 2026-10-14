@@ -151,7 +151,9 @@ export default function App() {
               {TAB_NAMES.map(t => (
                 <Tabs.Tab key={t} value={t}>
                   {t === tab && (
-                    <m.span layoutId="tab-pill" className="tab-pill" transition={spring.snappy}>
+                    // layoutDependency: only re-measure on tab change; otherwise banners mounting above
+                    // the tabs leave the pill projected at a stale y (stuck there under reduced motion)
+                    <m.span layoutId="tab-pill" layoutDependency={tab} className="tab-pill" transition={spring.snappy}>
                       {/* squash on arrival, then spring back */}
                       <m.span className="tab-pill-fill" initial={{ scaleX: 1.12, scaleY: 0.8 }}
                         animate={{ scaleX: 1, scaleY: 1 }} transition={spring.bouncy} />
