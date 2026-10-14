@@ -25,7 +25,7 @@
 | Files | UTF-8, comma-separated, header row, `\n` line endings, no index column, no quoting unless needed |
 | Time | Hours from the planning epoch `t = 0`; `day(h) = floor(h / 24)`; days are 0-based integers. Epoch = 00:00 of day 0 (assumption A-01) |
 | Units | mass **kg** · money **₹** · price **₹/kg** · temperature **°C** · time **h** |
-| Percent columns | Columns/fields ending `_pct` hold **0–100** in files and JSON. `io.py` converts to fractions (`*_frac`, 0–1) on load — the **only** place that conversion happens |
+| Percent columns | Columns/fields ending `_pct` hold **0–100** in files and JSON. `data/io.py` converts to fractions (`*_frac`, 0–1) on load — the **only** place that conversion happens |
 | Fractions | Fields ending `_frac` hold 0–1 |
 | Naming | `snake_case`; suffixes carry units: `_kg`, `_h`, `_inr`, `_inr_kg`, `_c`, `_pct`, `_frac`, `_day` |
 | IDs | Non-empty strings, case-sensitive, no spaces recommended; PKs unique within their table |
@@ -183,7 +183,7 @@ Our addition for the shelf-life countdown map. The optimizer never reads it. If 
 
 ## 4. Derived tables (in memory; written to `outputs/` when useful)
 
-### 4.1 `arcs` — one row per candidate `(batch, dest, vehicle, dispatch day)` (built by `feasibility.py`)
+### 4.1 `arcs` — one row per candidate `(batch, dest, vehicle, dispatch day)` (built by `domain/feasibility.py`)
 
 | Column | Type | Notes |
 |---|---|---|
@@ -279,7 +279,7 @@ Not written as a file. Unshipped kg and its fate are in `metrics.json`: `volumes
 
 ### 5.6 `sim_ledger.csv` (PK `(dest_id, commodity, day)`) and `sim_lots.csv` (PK `lot_id`)
 
-`sim_ledger.csv`: `dest_id, commodity, day, base_demand_kg, effective_demand_kg, delivered_kg, handling_loss_kg, sold_kg, price_inr_kg, discount_frac, unsold_expired_kg, on_hand_end_kg, carryover_kg`. (`discount_frac` is 0–1 in memory and in this file; money columns are not stored here — `metrics.json` derives revenue from `sold_kg`, `price_inr_kg` and `discount_frac` via `costmodel.py`.)
+`sim_ledger.csv`: `dest_id, commodity, day, base_demand_kg, effective_demand_kg, delivered_kg, handling_loss_kg, sold_kg, price_inr_kg, discount_frac, unsold_expired_kg, on_hand_end_kg, carryover_kg`. (`discount_frac` is 0–1 in memory and in this file; money columns are not stored here — `metrics.json` derives revenue from `sold_kg`, `price_inr_kg` and `discount_frac` via `domain/costmodel.py`.)
 `sim_lots.csv`: `lot_id, dest_id, commodity, arrival_h, arrival_day, expiry_h, kg_arrived, kg_handling_loss, kg_sold, kg_expired_unsold, kg_carryover`.
 
 ### 5.7 `metrics.json`
@@ -350,7 +350,7 @@ Violation and warning code lists: ARCHITECTURE §11. `kpis.violations == violati
   "text": "Sent to Pune, not Delhi: …"
 }
 ```
-Written by `cli.run` for every run (`reasons.build_cards`); a list sorted by `shipment_id`, one card per `plan.csv` row. All numbers are copied from `plan.csv`, the feasibility arcs (§4.1) and `discounts.csv`; nothing is re-optimised. Implementation (no format change): arcs are built scoped to batches in the plan × all destinations × one vehicle per `(origin, mode, available_from_h)` class (A-44/A-46); callers holding arcs may pass them as `build_cards(..., arcs=...)`. `chosen` is the plan row. `alternatives` holds, for every other destination × mode of the same batch, its best arc (feasible first, then highest `margin_inr_kg`, `slack_h`, earliest day, `vehicle_id`); arcs rejected as `NO_LANE`/`NOT_AVAILABLE` are not alternatives. Sorted feasible first, then margin descending; `alternatives[0]` is the runner-up, summarised in `runner_up` (`null` when there is no alternative).
+Written by `runs.runner.run` for every run (`engine.reasons.build_cards`); a list sorted by `shipment_id`, one card per `plan.csv` row. All numbers are copied from `plan.csv`, the feasibility arcs (§4.1) and `discounts.csv`; nothing is re-optimised. Implementation (no format change): arcs are built scoped to batches in the plan × all destinations × one vehicle per `(origin, mode, available_from_h)` class (A-44/A-46); callers holding arcs may pass them as `build_cards(..., arcs=...)`. `chosen` is the plan row. `alternatives` holds, for every other destination × mode of the same batch, its best arc (feasible first, then highest `margin_inr_kg`, `slack_h`, earliest day, `vehicle_id`); arcs rejected as `NO_LANE`/`NOT_AVAILABLE` are not alternatives. Sorted feasible first, then margin descending; `alternatives[0]` is the runner-up, summarised in `runner_up` (`null` when there is no alternative).
 
 `alternatives[].reason_code ∈ {SHELF_LIFE, WINDOW, CAPACITY_BOUND, DEMAND_CAP, LOWER_MARGIN}`: an infeasible arc maps its `reject_reason` (`SHELF_LIFE`→`SHELF_LIFE`, `WINDOW`/`BEYOND_HORIZON`→`WINDOW`, `RAIL_SLOT`→`CAPACITY_BOUND`); a feasible arc is `LOWER_MARGIN` if its margin is below the chosen one, else `DEMAND_CAP` if the plan already ships ≥ `demand_kg_p50` to that destination × commodity × arrival day, else `CAPACITY_BOUND`. Deltas are **chosen − alternative**: `margin_delta_inr_kg` (₹/kg), `margin_delta_inr` = that × `chosen.kg` (₹), `slack_delta_h` (h). A positive margin delta means the chosen option earns more; a negative one only occurs with `DEMAND_CAP`/`CAPACITY_BOUND`. `discount` is the first applied, non-zero `discounts.csv` row of the shipment's lot (`tier_pct` = its `discount_pct`), `null` when none applies. Numbers above are format examples only.
 
@@ -427,7 +427,7 @@ Step formulas: `ARCHITECTURE.md` §12. Signs: cost steps are negative when the p
 ```
 `kpis_old_plan_under_event` = the old plan executed in the changed world (the honest do-nothing comparison).
 
-Written by `freshroute replan` (`replan.py`). Field rules:
+Written by `freshroute replan` (`runs/replan.py`). Field rules:
 - `kpis_old_plan_under_event`, `kpis_replanned`: the six `metrics.json` `kpis` (`spoilage_kg`, `spoilage_pct`, `demand_fulfillment_pct`, `min_dest_fill_pct`, `net_inr`, `violations`), both from the one simulator on the changed world; `delta_kpis` = replanned − old, per key. `violations` counts as in `validation.json` below.
 - `moved_batches`: per batch, the `(dest_id, dispatch_day)` carrying most of its **undispatched** kg in the old plan vs the replan, listed only when they differ; `kg` = kg on the new main line (on the old one if the batch is now unshipped). `dest_id`/`dispatch_day` are `null` on the side where the batch is unshipped.
 - `discount_changes`: every `(lot_id, day)` whose `discount_pct` differs (a missing row counts as 0); `from_pct`/`to_pct` are floats.
@@ -464,7 +464,7 @@ The HTTP layer has its own `api_version` (§11).
 ```json
 {"event_id": "E-001", "type": "route_delay", "target": "NASHIK|PUNE|*", "magnitude": 6, "at_h": 8, "note": "NH-48 jam"}
 ```
-Validated with pydantic (`events.py`: `Event`, `load_event`, `apply_event`). `note` is optional and never used by the solver. Unknown fields, an unknown `type`, a malformed `target` or a `magnitude` out of range are rejected at parse time; a `target` naming a lane, vehicle, destination or commodity the scenario does not have raises `EventError` when the event is applied. `day(at_h) = ⌊at_h / 24⌋`. A `new_order` for a `(dest, commodity, day)` with no demand row creates one (p10 = p50 = p90 = `magnitude`, `event_flag` = `event_id`). **Semantics are our interpretation (A-14) — confirm against the organizers' event definitions.**
+Validated with pydantic (`data/events.py`: `Event`, `load_event`, `apply_event`). `note` is optional and never used by the solver. Unknown fields, an unknown `type`, a malformed `target` or a `magnitude` out of range are rejected at parse time; a `target` naming a lane, vehicle, destination or commodity the scenario does not have raises `EventError` when the event is applied. `day(at_h) = ⌊at_h / 24⌋`. A `new_order` for a `(dest, commodity, day)` with no demand row creates one (p10 = p50 = p90 = `magnitude`, `event_flag` = `event_id`). **Semantics are our interpretation (A-14) — confirm against the organizers' event definitions.**
 
 | `type` | `target` syntax | `magnitude` | Effect |
 |---|---|---|---|
@@ -578,7 +578,7 @@ The dashboard's only door to the engine. The API **serves run artifacts verbatim
 
 - **Verbatim by default.** A field in a response is the field in the file. The API adds at most three wrappers: `baseline` (the ladder/fefo comparison), `validation` and `manifest` (companion files of the same run), and `fixture` (the placeholder flag when nothing is on disk).
 - **Nothing is computed.** No KPI, no delta, no average, no aggregation over tables. If a number is not in a file, it is not in the response.
-- **Never a 500 from bad data.** A scenario that fails to load is a `400` with `{"detail": "..."}`; a run that fails is a job in state `error`, not an exception.
+- **Bad input is a 400, a run failure is a job.** A scenario that fails to load, or a scenario path that is absolute or contains `..`, is a `400` with `{"detail": "..."}`; a run that fails is a job in state `error`, not an exception. An unreadable (corrupt) output JSON file is a `500` with `{"detail": "unreadable output file: ..."}`.
 - **Loopback, no auth.** Binds `API_HOST`/`API_PORT` (§19 of `ARCHITECTURE.md`); CORS is dev-only.
 
 ### 11.2 Endpoints
@@ -586,7 +586,7 @@ The dashboard's only door to the engine. The API **serves run artifacts verbatim
 | Method + path | Success | Body |
 |---|---|---|
 | `GET /api/health` | 200 | `{"status": "ok", "schema_version": 2, "api_version": 1}` |
-| `GET /api/config` | 200 | `{"NAME": value, …}` — every public UPPERCASE constant of `config.py` (`ARCHITECTURE.md` §19) whose value is JSON-serialisable, verbatim (tuples become lists), sorted by name. `costmodel.py` has no module constants (its coefficients come from the scenario tables), so nothing else is added. Additive in `api_version` 1 |
+| `GET /api/config` | 200 | `{"NAME": value, …}` — every public UPPERCASE constant of `config.py` (`ARCHITECTURE.md` §19) whose value is JSON-serialisable, verbatim (tuples become lists), sorted by name. `domain/costmodel.py` has no module constants (its coefficients come from the scenario tables), so nothing else is added. Additive in `api_version` 1 |
 | `GET /api/scenarios` | 200 | `[{"name", "source", "horizon_days", "window_mode"}]` — from `data/scenarios/*/scenario.json`, sorted by `name` |
 | `GET /api/scenarios/{name}/geo` | 200 / 404 | `geo.csv` as records (§3.9), or 404 when absent (the UI uses the colour table) |
 | `GET /api/runs` | 200 | `{"runs": [{"run_id", "scenario", "policy", "seed", "has_ladder"}], "fixture": false}` — `run_id` = the name of each `outputs/<dir>/` holding a `metrics.json` (the key every `/api/runs/{run_id}` endpoint resolves; it can differ from `metrics.run_id` when the CLI wrote to a custom `--out`), sorted; `fixture: true` (and `runs: []`) when no run is on disk; the UI then requests `GET /api/runs/<run_id of backend/tests/fixtures/metrics_example.json>` (e.g. `EXAMPLE-SYNTHETIC`) |
@@ -619,7 +619,7 @@ There is no `/api/demo` endpoint: the demo scoreboard comes from the CLI (`make 
  "seed": 42, "started_utc": "…", "finished_utc": null, "error": null}
 ```
 
-`state` is `running` while the worker thread holds the job, `done` when `outputs/<run_id>/metrics.json` exists, `error` with `error` set otherwise. It is deleted when `outputs/<run_id>/` is deleted. One worker thread (`JOB_WORKERS = 1`), so two solves never run at once on the demo laptop.
+`state` is `running` while the worker thread holds the job, `done` when `outputs/<run_id>/metrics.json` exists, `error` with `error` set otherwise; the job file of a failed run also carries a `traceback` field (the status endpoint's `error` message is unchanged). A job is submitted atomically: the duplicate check and the enqueue happen under one lock. It is deleted when `outputs/<run_id>/` is deleted. One worker thread (`JOB_WORKERS = 1`), so two solves never run at once on the demo laptop.
 
 ### 11.4 Frontend types
 

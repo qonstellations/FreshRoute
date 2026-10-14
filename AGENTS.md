@@ -6,22 +6,22 @@ Instructions for anyone (human or AI assistant) working on FreshRoute.
 `docs/ARCHITECTURE.md` (behaviour) → `docs/DATABASE.md` (contracts) → `DECISIONS.md`.
 
 ## Non-negotiables
-1. **Organizer cost model/data format overrides ours.** Coefficients live only in `costmodel.py`, `config.py` or the dataset. No literals elsewhere.
+1. **Organizer cost model/data format overrides ours.** Coefficients live only in `domain/costmodel.py`, `config.py` or the dataset. No literals elsewhere.
 2. **The `validator` package is independent** (`backend/src/validator/`). It may import only stdlib, pandas, numpy, `freshroute.data.schema`, `freshroute.data.io`. It re-implements the maths.
 3. **One simulator scores every policy.** Policies never compute their own reported net ₹.
 4. **Deterministic.** Randomness only via `numpy.random.default_rng(seed)`; sort before iterating; same inputs ⇒ identical `metrics.json`.
 5. **The LLM never decides.** HiGHS decides; an LLM may only parse a sentence into a pydantic-validated event or narrate JSON it was given.
 6. **Never crash on a scenario.** Soft constraints, solve time limit, FEFO-greedy fallback.
 7. **Measured numbers only**; synthetic data labelled synthetic. Do not present projected rubric scores as results.
-8. **The UI shows, the engine decides.** `freshroute/api` (FastAPI) serves `outputs/` files verbatim and may enqueue `cli.run`/`ladder.run_ladder`; `frontend/` (React) renders the JSON it is given. Neither computes a KPI — a display delta between two stored numbers is the only exception and lives in one helper.
+8. **The UI shows, the engine decides.** `freshroute/api` (FastAPI) serves `outputs/` files verbatim and may enqueue `runs.runner.run`/`runs.ladder.run_ladder`; `frontend/` (React) renders the JSON it is given. Neither computes a KPI — a display delta between two stored numbers is the only exception and lives in one helper.
 9. **Add-ons are flags**, removable without breaking the spine.
 
 ## Conventions
-- Layout: `backend/src/freshroute/` (engine + `api/`), `backend/src/validator/`, `backend/tests/`, `frontend/` (React). `docs/`, `data/`, `outputs/` at the root.
+- Layout: `backend/src/freshroute/` (`data/`, `domain/`, `engine/`, `policies/`, `solvers/`, `runs/`, `generator/`, `api/`; `cli.py` is argparse-only; imports run one way, cli -> runs -> engine/domain/data), `backend/src/validator/`, `backend/tests/`, `frontend/` (React). `docs/`, `data/`, `outputs/` at the root.
 - Python 3.10+ floor, developed on the version pinned in `.python-version`; ruff, type hints on public functions.
 - uv owns Python: `uv sync` to install, `uv run …` to execute, `uv lock` to resolve. No `pip`, no `requirements.txt`.
-- Unit suffixes: `_kg _h _inr _inr_kg _c _pct` (0–100) `_frac` (0–1). Percent→fraction conversion only in `io.py`.
-- Column names from `schema.py` constants; frontend types mirror `docs/DATABASE.md` §11.
+- Unit suffixes: `_kg _h _inr _inr_kg _c _pct` (0–100) `_frac` (0–1). Percent→fraction conversion only in `data/io.py`.
+- Column names from `data/schema.py` constants; frontend types mirror `docs/DATABASE.md` §11.
 - Tolerance: `FLOAT_TOL` from `config.py`, never `==` on floats.
 - Each module starts with a short docstring naming the `ARCHITECTURE.md` section it implements.
 
