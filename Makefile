@@ -13,7 +13,7 @@ check:
 	uv run ruff check .
 	uv run pytest -q
 	npm --prefix frontend run build
-	# demo plan (config.DEMO_SCENARIO/DEMO_SEED): ~36 s, MILP hits its 30 s time limit (A-40)
+	# demo plan (config.DEMO_SCENARIO/DEMO_SEED): MILP hits its 30 s time limit
 	uv run freshroute run --scenario data/scenarios/practice --policy milp_markdown --seed 42 --out outputs/check_demo --fail-on-violations
 
 # every pitch number: ladder + waterfall on config.DEMO_SCENARIO/DEMO_SEED; add --with-sensitivity (+~275 s)
