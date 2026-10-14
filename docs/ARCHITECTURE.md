@@ -127,7 +127,7 @@ freshroute/
 │   ├── src/validator/          # second top-level package, INDEPENDENT of freshroute logic (D-17)
 │   │   └── validate.py  rules.py
 │   └── tests/                  # fixtures/tiny_3batch/  fixtures/metrics_example.json  test_*.py
-├── frontend/                   # React SPA: Vite + TypeScript + recharts + react-leaflet (D-19)
+├── frontend/                   # React SPA: Vite + TypeScript + recharts + react-leaflet (D-19) + Mantine + motion (D-24)
 │   ├── package.json  package-lock.json  vite.config.ts  tsconfig.json  index.html
 │   └── src/  main.tsx  App.tsx  api/  components/  pages/  lib/  types.ts
 ├── scripts/                    # build_prices.py (Agmarknet → prices.csv)
@@ -414,6 +414,8 @@ Reason codes for the runner-up: `SHELF_LIFE`, `WINDOW`, `CAPACITY_BOUND`, `DEMAN
 ---
 
 ## 16. Dashboard (`frontend/`, React SPA over `backend/src/freshroute/api/`)
+
+Components are Mantine 9; motion springs animate tab switches, the reason-card drawer, KPI count-ups, table rows and the Replan diff (D-24). Every animation respects `prefers-reduced-motion`.
 
 | Area | Contents |
 |---|---|
