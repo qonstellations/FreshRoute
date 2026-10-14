@@ -583,7 +583,17 @@ The dashboard's only door to the engine. The API **serves run artifacts verbatim
 | `POST /api/runs` | 202 | Request `{"scenario": "data/scenarios/practice", "policy": "milp_markdown", "seed": 42, "flags": {"markdown": true, "newsvendor": false}}` → `{"run_id": "…__milp_markdown__s42", "status": "running"}`. `policy ∈ ` the CLI's `POLICIES`; an unknown policy or scenario is `400`. `organizer_baseline` is a *recognised* name that cannot run yet (C-06): the API accepts it in the request shape and answers `400` with the same explanation the CLI prints, rather than a bare "unknown policy". `scenario` is a scenario directory path (`data/scenarios/<name>`), resolved like the CLI's `--scenario`, i.e. against the API's working directory (the repo root). `flags.newsvendor = true` is `400` until the CLI has `--newsvendor`; `flags.markdown` is implied by the policy. A malformed body is FastAPI's `422`. Re-posting a run that is still `running` returns it without enqueueing again. |
 | `GET /api/runs/{run_id}/status` | 200 / 404 | `{"state": "running" \| "done" \| "error", "started_utc", "finished_utc", "error"}`; a run on disk with no job file (CLI-made, or `.api/` cleared) is `done` with the other three `null` |
 
-Added later, same shape, only when the CLI command exists: `POST /api/replan` (AD-02), `POST /api/stress` (AD-03), `POST /api/demo` (U-06).
+Phase 4 endpoints (additive, `api_version` stays 1):
+
+| Method + path | Success | Body |
+|---|---|---|
+| `GET /api/stress?scenario=&seed=` | 200 / 404 | `{"summary": stress_summary.json, "rows": stress.csv records or null}` (§5.12); `scenario` is the scenario name; 404 with a detail when not on disk |
+| `POST /api/stress` | 202 / 400 | Request `{"scenario", "policy": "milp_markdown", "seed": 42, "n": 200}`; response `{"run_id": "<scenario>__stress__s<seed>", "status"}`; poll `GET /api/runs/{run_id}/status` with that id |
+| `GET /api/sensitivity?scenario=&seed=` | 200 / 404 | `{"records": [...sensitivity.csv rows...]}` (§5.12), or 404 when not on disk |
+| `POST /api/replan` | 202 / 400 / 404 | Request `{"run_id", "event": {…§6…}}`; invalid event 400, unknown run 404; response `{"run_id", "event_id", "status"}`; poll `GET /api/runs/{run_id}__replan__{event_id}/status` |
+| `GET /api/runs/{run_id}/replan/{event_id}` | 200 / 404 | `{"diff": diff.json (§5.13), "narration": narrator.template_narration(diff, metrics)}`; 404 until the replan has been written |
+
+`POST /api/runs` also accepts `flags.newsvendor` (MILP policies only; run id gets `__nv`). `POST /api/demo` (U-06) is still not exposed.
 
 ### 11.3 Run-queue state file
 

@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from freshroute.config import DEFAULT_SEED
+from freshroute.config import DEFAULT_SEED, MC_N
 
 
 class RunRequest(BaseModel):
@@ -14,3 +14,15 @@ class RunRequest(BaseModel):
     policy: str
     seed: int = DEFAULT_SEED
     flags: dict[str, bool] = {}
+
+
+class StressRequest(BaseModel):
+    scenario: str
+    policy: str = "milp_markdown"
+    seed: int = DEFAULT_SEED
+    n: int = MC_N
+
+
+class ReplanRequest(BaseModel):
+    run_id: str
+    event: dict

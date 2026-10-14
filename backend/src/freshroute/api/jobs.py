@@ -35,23 +35,30 @@ def _write(outputs: Path, job: dict) -> None:
     os.replace(tmp, p)
 
 
-def _work(outputs: Path, job: dict) -> None:
-    run_dir = outputs / job["run_id"]
+def _work(outputs: Path, job: dict, fn, done_file: Path) -> None:
     try:
-        cli.run(job["scenario"], job["policy"], job["seed"], str(run_dir))
-        ok = (run_dir / "metrics.json").is_file()
-        job.update(state="done" if ok else "error", error=None if ok else "no metrics.json")
-    except (Exception, SystemExit) as e:  # a failed run is a job in state error, never a crash
+        fn()
+        ok = done_file.is_file()
+        job.update(state="done" if ok else "error", error=None if ok else f"no {done_file.name}")
+    except (Exception, SystemExit) as e:  # a failed job is state error, never a crash
         job.update(state="error", error=str(e) or type(e).__name__)
     job["finished_utc"] = _now()
     _write(outputs, job)
 
 
-def submit(outputs: Path, run_id: str, scenario: str, policy: str, seed: int) -> dict:
-    """Write the running state and enqueue cli.run; returns the job record."""
-    job = {"api_version": API_VERSION, "run_id": run_id, "state": "running",
-           "scenario": scenario, "policy": policy, "seed": seed,
+def submit_call(outputs: Path, job_id: str, fn, done_file: Path, **meta) -> dict:
+    """Write the running state and enqueue `fn`; the job is done when `done_file` exists."""
+    job = {"api_version": API_VERSION, "run_id": job_id, "state": "running", **meta,
            "started_utc": _now(), "finished_utc": None, "error": None}
     _write(outputs, job)
-    _executor.submit(_work, outputs, dict(job))
+    _executor.submit(_work, outputs, dict(job), fn, done_file)
     return job
+
+
+def submit(outputs: Path, run_id: str, scenario: str, policy: str, seed: int,
+           newsvendor: bool = False) -> dict:
+    """Enqueue cli.run; returns the job record."""
+    run_dir = outputs / run_id
+    return submit_call(outputs, run_id, lambda: cli.run(scenario, policy, seed, str(run_dir),
+                                                        newsvendor=newsvendor),
+                       run_dir / "metrics.json", scenario=scenario, policy=policy, seed=seed)

@@ -42,16 +42,14 @@ export const api = {
   postRun: (body: PostRunRequest) => req<PostRunResponse>('/runs', post(body)),
   status: (id: string) => req<StatusResponse>(`/runs/${e(id)}/status`),
   // AD-05 / AD-06: a 404 with a specific detail = not on disk yet (the UI shows the CLI hint)
-  stress: (scenario: string, seed: number) => orExample(
-    req<StressResponse>(`/stress?scenario=${e(scenario)}&seed=${seed}`), exampleStress),
+  stress: (scenario: string, seed: number) =>
+    req<StressResponse>(`/stress?scenario=${e(scenario)}&seed=${seed}`),
   postStress: (body: PostStressRequest) => req<PostRunResponse>('/stress', post(body)),
-  sensitivity: (scenario: string, seed: number) => orExample(
-    req<SensitivityResponse>(`/sensitivity?scenario=${e(scenario)}&seed=${seed}`), exampleSensitivity),
-  postReplan: (body: PostReplanRequest) => orExample(
-    req<PostReplanResponse>('/replan', post(body)),
-    () => ({ run_id: body.run_id, event_id: body.event.event_id, status: 'running' as const })),
-  replanResult: (runId: string, eventId: string) => orExample(
-    req<ReplanResult>(`/runs/${e(runId)}/replan/${e(eventId)}`), exampleReplan),
+  sensitivity: (scenario: string, seed: number) =>
+    req<SensitivityResponse>(`/sensitivity?scenario=${e(scenario)}&seed=${seed}`),
+  postReplan: (body: PostReplanRequest) => req<PostReplanResponse>('/replan', post(body)),
+  replanResult: (runId: string, eventId: string) =>
+    req<ReplanResult>(`/runs/${e(runId)}/replan/${e(eventId)}`),
 }
 
 /** True when the error is "no such file on disk" (a live endpoint's 404), as opposed to a transport failure. */
@@ -76,46 +74,9 @@ export async function waitDone(runId: string): Promise<void> {
 export async function waitReplan(runId: string, eventId: string): Promise<ReplanResult> {
   for (let i = 0; i < POLL_MAX; i++) {
     await sleep(POLL_MS)
-    const s = await api.status(runId).catch(() => null)
+    const s = await api.status(`${runId}__replan__${eventId}`).catch(() => null)
     if (s?.state === 'error') throw new Error(`replan ${eventId} failed: ${s.error ?? 'unknown error'}`)
     try { return await api.replanResult(runId, eventId) } catch (err) { if (!notOnDisk(err)) throw err }
   }
   throw new Error(`replan ${eventId}: no result after ${POLL_MAX} polls`)
 }
-
-// ---- STUB (AD-05/AD-06 dev only) -------------------------------------------------------------
-// The stress / sensitivity / replan endpoints do not exist yet. When the ROUTE itself is missing
-// (FastAPI's generic 404/405, or the SPA's static 404, i.e. no specific detail) these calls fall back
-// to the committed format-example fixtures, marked `example: true` so the tabs show the
-// "format example, not measured" banner. Delete this block and the `orExample(...)` wrappers above
-// once the live endpoints land. Numbers come verbatim from the fixture files.
-import stressJson from '../../../backend/tests/fixtures/stress_summary_example.json?raw'
-import sensitivityCsv from '../../../backend/tests/fixtures/sensitivity_example.csv?raw'
-import diffJson from '../../../backend/tests/fixtures/diff_example.json?raw'
-
-const missingRoute = (err: unknown) => err instanceof HttpError && (err.status === 404 || err.status === 405)
-  && (err.detail === undefined || err.detail === 'Not Found' || err.detail === 'Method Not Allowed')
-
-async function orExample<T>(p: Promise<T>, example: () => T): Promise<T> {
-  try { return await p } catch (err) { if (missingRoute(err)) return example(); throw err }
-}
-
-function exampleStress(): StressResponse {
-  return { summary: JSON.parse(stressJson), rows: null, example: true }
-}
-
-function exampleSensitivity(): SensitivityResponse {
-  const [head, ...lines] = sensitivityCsv.trim().split(/\r?\n/)
-  const cols = head.split(',')
-  const records = lines.map(l => Object.fromEntries(l.split(',').map((v, i) =>
-    [cols[i], cols[i] === 'parameter' || cols[i] === 'policy' ? v : Number(v)])))
-  return { records: records as unknown as SensitivityResponse['records'], example: true }
-}
-
-function exampleReplan(): ReplanResult {
-  return {
-    diff: JSON.parse(diffJson), example: true,
-    narration: 'Format example: the server narrates diff.json here (narrator.template_narration) once POST /api/replan lands.',
-  }
-}
-// ---- end STUB ----------------------------------------------------------------------------------

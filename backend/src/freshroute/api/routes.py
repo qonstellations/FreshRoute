@@ -10,12 +10,14 @@ from pathlib import Path
 import pandas as pd
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
+from pydantic import ValidationError
 
-from freshroute import cli, config
+from freshroute import cli, config, narrator, replan, stress
 from freshroute.api import data_access as da
 from freshroute.api import jobs
-from freshroute.api.schemas import RunRequest
+from freshroute.api.schemas import ReplanRequest, RunRequest, StressRequest
 from freshroute.config import API_VERSION, SCHEMA_VERSION
+from freshroute.events import Event
 from freshroute.io import load_scenario
 
 router = APIRouter(prefix="/api")
@@ -147,16 +149,17 @@ def start_run(req: RunRequest) -> dict:
     if req.policy not in cli.POLICIES:
         raise HTTPException(400, f"unknown policy {req.policy!r}; available: "
                                  f"{', '.join(cli.POLICIES)}")
-    if req.flags.get("newsvendor"):
-        raise HTTPException(400, "flag 'newsvendor' is not implemented by the CLI yet")
+    nv = bool(req.flags.get("newsvendor"))
+    if nv and req.policy not in cli.NEWSVENDOR_POLICIES:
+        raise HTTPException(400, f"--newsvendor needs a MILP policy, not {req.policy!r}")
     try:
         name = load_scenario(req.scenario).name
     except (OSError, ValueError, KeyError) as e:
         raise HTTPException(400, f"scenario {req.scenario!r} failed to load: {e}") from e
-    run_id = f"{name}__{req.policy}__s{req.seed}"  # same id cli.run computes
+    run_id = f"{name}__{req.policy}__s{req.seed}{'__nv' if nv else ''}"  # id cli.run computes
     job = jobs.read_job(da.OUTPUTS, run_id)
     if not (job and job["state"] == "running"):
-        job = jobs.submit(da.OUTPUTS, run_id, req.scenario, req.policy, req.seed)
+        job = jobs.submit(da.OUTPUTS, run_id, req.scenario, req.policy, req.seed, nv)
     return {"run_id": run_id, "status": job["state"]}
 
 
@@ -168,3 +171,74 @@ def status(run_id: str) -> dict:
             raise HTTPException(404, f"no job or run {run_id!r}")
         job = {"state": "done", "started_utc": None, "finished_utc": None, "error": None}
     return {k: job.get(k) for k in ("state", "started_utc", "finished_utc", "error")}
+
+
+def _scenario_path(scenario: str) -> str:
+    """A bare scenario name (as served in metrics.json) resolves under data/scenarios/."""
+    bare = not any(c in scenario for c in ("/", chr(92), ":"))
+    return str(SCENARIOS / scenario) if bare and (SCENARIOS / scenario).is_dir() else scenario
+
+
+def _out_dir(scenario: str, kind: str, seed: int) -> Path:
+    return da.OUTPUTS / _segment(f"{scenario}__{kind}__s{seed}")
+
+
+@router.get("/stress")
+def stress_summary(scenario: str, seed: int) -> dict:
+    d = _out_dir(scenario, "stress", seed)
+    summary = da._read_json(d / "stress_summary.json")
+    if summary is None:
+        raise HTTPException(404, f"no stress run for {scenario!r} seed {seed}")
+    rows = _records(d / "stress.csv")["records"] if (d / "stress.csv").is_file() else None
+    return {"summary": summary, "rows": rows}
+
+
+@router.post("/stress", status_code=202)
+def start_stress(req: StressRequest) -> dict:
+    if req.policy not in cli.POLICIES or req.policy in cli.BLOCKED_POLICIES:
+        raise HTTPException(400, f"policy {req.policy!r} cannot be stressed")
+    try:
+        name = load_scenario(_scenario_path(req.scenario)).name
+    except (OSError, ValueError, KeyError) as e:
+        raise HTTPException(400, f"scenario {req.scenario!r} failed to load: {e}") from e
+    job_id = f"{name}__stress__s{req.seed}"
+    job = jobs.read_job(da.OUTPUTS, job_id)
+    if not (job and job["state"] == "running"):
+        d = da.OUTPUTS / job_id
+        job = jobs.submit_call(da.OUTPUTS, job_id, lambda: stress.run_stress(
+            _scenario_path(req.scenario), req.policy, req.n, req.seed, str(d)),
+            d / "stress_summary.json", scenario=req.scenario, policy=req.policy, seed=req.seed)
+    return {"run_id": job_id, "status": job["state"]}
+
+
+@router.get("/sensitivity")
+def sensitivity(scenario: str, seed: int) -> dict:
+    p = _out_dir(scenario, "sensitivity", seed) / "sensitivity.csv"
+    if not p.is_file():
+        raise HTTPException(404, f"no sensitivity run for {scenario!r} seed {seed}")
+    return {"records": _records(p)["records"]}
+
+
+@router.post("/replan", status_code=202)
+def start_replan(req: ReplanRequest) -> dict:
+    run_dir = _run_dir(req.run_id)
+    try:
+        ev = Event(**req.event)
+    except (ValidationError, TypeError) as e:
+        raise HTTPException(400, f"invalid event: {e}") from e
+    job_id = f"{req.run_id}__replan__{_segment(ev.event_id)}"
+    job = jobs.read_job(da.OUTPUTS, job_id)
+    if not (job and job["state"] == "running"):
+        job = jobs.submit_call(da.OUTPUTS, job_id, lambda: replan.replan_run(run_dir, ev),
+                               run_dir / "replan" / ev.event_id / "diff.json",
+                               event_id=ev.event_id)
+    return {"run_id": req.run_id, "event_id": ev.event_id, "status": job["state"]}
+
+
+@router.get("/runs/{run_id}/replan/{event_id}")
+def replan_result(run_id: str, event_id: str) -> dict:
+    d = _run_dir(run_id) / "replan" / _segment(event_id)
+    diff, metrics = da._read_json(d / "diff.json"), da._read_json(d / "metrics.json")
+    if diff is None or metrics is None:
+        raise HTTPException(404, f"no replan {event_id!r} for run {run_id!r}")
+    return {"diff": diff, "narration": narrator.template_narration(diff, metrics)}

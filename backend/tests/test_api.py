@@ -134,3 +134,59 @@ def test_run_listed_by_directory_name(client, tmp_path):
     ids = [r["run_id"] for r in client.get("/api/runs").json()["runs"]]
     assert ids == ["check_fifo"]
     assert client.get("/api/runs/check_fifo").status_code == 200
+
+
+REL_TINY = "backend/tests/fixtures/tiny_3batch"
+
+
+def _wait(client, job_id):
+    for _ in range(600):
+        s = client.get(f"/api/runs/{job_id}/status").json()
+        if s["state"] != "running":
+            return s
+        time.sleep(0.1)
+    raise AssertionError("job still running")
+
+
+def test_stress_404_then_post_then_get(client, tmp_path):
+    assert client.get("/api/stress?scenario=tiny_3batch&seed=42").status_code == 404
+    req = {"scenario": REL_TINY, "policy": "milp", "seed": 42, "n": 4}
+    r = client.post("/api/stress", json=req)
+    assert r.status_code == 202 and r.json()["run_id"] == "tiny_3batch__stress__s42"
+    assert _wait(client, r.json()["run_id"])["state"] == "done"
+    body = client.get("/api/stress?scenario=tiny_3batch&seed=42").json()
+    assert body["summary"]["n"] == 4 and body["rows"]
+    bad = {"scenario": REL_TINY, "policy": "nope"}
+    assert client.post("/api/stress", json=bad).status_code == 400
+
+
+def test_sensitivity_404_when_absent(client):
+    assert client.get("/api/sensitivity?scenario=tiny_3batch&seed=42").status_code == 404
+
+
+def test_replan_post_poll_get(client, tmp_path):
+    cli.run(TINY, "fifo", 42, str(tmp_path / RUN))
+    ev = {"event_id": "E-T1", "type": "price_shock", "target": "dest:D1|*",
+          "magnitude": 0.9, "at_h": 8}
+    assert client.get(f"/api/runs/{RUN}/replan/E-T1").status_code == 404
+    r = client.post("/api/replan", json={"run_id": RUN, "event": ev})
+    assert r.status_code == 202 and r.json()["event_id"] == "E-T1"
+    assert _wait(client, f"{RUN}__replan__E-T1")["state"] == "done"
+    got = client.get(f"/api/runs/{RUN}/replan/E-T1").json()
+    assert got["diff"]["event_id"] == "E-T1" and isinstance(got["narration"], str)
+
+
+def test_replan_bad_event_and_run(client, tmp_path):
+    cli.run(TINY, "fifo", 42, str(tmp_path / RUN))
+    bad = {"event_id": "E-X", "type": "nope", "target": "*", "magnitude": 1, "at_h": 0}
+    assert client.post("/api/replan", json={"run_id": RUN, "event": bad}).status_code == 400
+    assert client.post("/api/replan", json={"run_id": "nope", "event": bad}).status_code == 404
+
+
+def test_post_newsvendor_flag(client, tmp_path):
+    body = {"scenario": REL_TINY, "policy": "fifo", "seed": 42, "flags": {"newsvendor": True}}
+    assert client.post("/api/runs", json=body).status_code == 400  # MILP policies only
+    body["policy"] = "milp"
+    r = client.post("/api/runs", json=body)
+    assert r.status_code == 202 and r.json()["run_id"] == "tiny_3batch__milp__s42__nv"
+    assert _wait(client, r.json()["run_id"])["state"] == "done"
