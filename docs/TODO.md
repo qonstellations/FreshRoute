@@ -203,18 +203,18 @@ Decisions D-15 … D-23 in `DECISIONS.md`; target-state behaviour in `ARCHITECTU
 Priority order (and reverse cut order): **stress test → replan → newsvendor → narrator**. Each lands behind a flag; each must pass the validator.
 
 **P1**
-- [ ] **AD-01** · 0.5 h — `events.py` pydantic schema + a sample `diff.json` **committed first** (deliver by ~H18.5 so P3 can build the Replan tab against it).
-- [ ] **AD-02** · 2.5 h — `replan.py`: apply event, freeze `dispatch_h ≤ at_h`, residual scenario, re-solve, `diff.json`, ΔKPIs = old plan under event vs replanned. Tests: frozen shipments unchanged, validator 0 violations, time measured (< 5 s on the demo scenario). `POST /api/replan` lands with AD-06.
+- [x] **AD-01** · 0.5 h — `events.py` pydantic schema + a sample `diff.json` **committed first** (deliver by ~H18.5 so P3 can build the Replan tab against it). *Done 2026-10-14: `events.py` (pydantic, target checks, `apply_event`), 27 tests; `diff_example.json` lot id fixed.*
+- [x] **AD-02** · 2.5 h — `replan.py`: apply event, freeze `dispatch_h ≤ at_h`, residual scenario, re-solve, `diff.json`, ΔKPIs = old plan under event vs replanned. Tests: frozen shipments unchanged, validator 0 violations, time measured (< 5 s on the demo scenario). `POST /api/replan` lands with AD-06. *Done 2026-10-14: `freshroute replan`, `POST /api/replan`; measured on synthetic practice s42: 2.9-3.4 s per replan, 0 violations (frozen-only violations are `FROZEN_*` warnings, A-43). Caveat, measured: the 2 s solve cap means the replan nets less than do-nothing on delay/capacity events (-79k and -137k INR on practice) because the old plan keeps selling lots the validator rejects; with a 30 s cap it breaks even but misses 5 s (A-43).*
 
 **P2**
-- [ ] **AD-03** · 2.0 h — `stress.py`: 200 seeded realizations (fallback 50, then 3 named), **paired** with the baseline, P10–P90 bands and "% of scenarios where plan beats baseline", `stress_summary.json`. Time it.
-- [ ] **AD-04** · 1.0 h — `newsvendor.py`, `--newsvendor` flag, `demand_target` table, ablation row in the ladder output.
+- [x] **AD-03** · 2.0 h — `stress.py`: 200 seeded realizations (fallback 50, then 3 named), **paired** with the baseline, P10–P90 bands and "% of scenarios where plan beats baseline", `stress_summary.json`. Time it. *Done 2026-10-14: `freshroute stress`, `GET/POST /api/stress`; practice s42, n=200 in about 54 s; plan beats fefo on net in 100% and on spoilage in 70% of paired futures (synthetic data). Simulator now samples travel and RSL (A-42).*
+- [x] **AD-04** · 1.0 h — `newsvendor.py`, `--newsvendor` flag, `demand_target` table, ablation row in the ladder output. *Done 2026-10-14: `--newsvendor` on `run`/`ladder`, `demand_target.csv`, ablation row. Measured: it LOWERS net on practice s42 (1,655,781 to 1,577,091 INR) at base-case scoring (A-45); not yet run under stress.*
 
 **P3**
-- [ ] **AD-05** · 1.0 h — Fan chart + sensitivity table (Robustness tab, recharts) and `q10`/ε sliders.
-- [ ] **AD-06** · 1.25 h — Replan tab: dropdown of 5 canned events, **Apply**, diff view, ΔKPIs.
+- [x] **AD-05** · 1.0 h — Fan chart + sensitivity table (Robustness tab, recharts) and `q10`/ε sliders. *Done 2026-10-14: Robustness tab (hero, 200-dot matrix, bands, sensitivity sliders); rendered from a real `GET /api/stress` run (headless screenshot). Sensitivity table shows the CLI hint until `freshroute sensitivity` has been run.*
+- [x] **AD-06** · 1.25 h — Replan tab: dropdown of 5 canned events, **Apply**, diff view, ΔKPIs. *Done 2026-10-14: Replan tab + `POST /api/replan` / `GET /api/runs/{id}/replan/{event}`; the API flow was exercised live on practice (202, poll, diff, narration). The Apply click and the batch-flight animation were seen only in agent screenshots with reduced motion, not in a live browser.*
 - [x] **AD-07** · 0.5 h — **Template narration** (`narrator.template_narration`) over `diff.json`/`metrics.json` — works with no LLM. *Verified on the format-example fixture `backend/tests/fixtures/diff_example.json`; real `diff.json` pending AD-01/AD-02.*
-- [ ] **AD-08** · 0.25 h — Deck skeleton (6–7 slides, §10 below).
+- [x] **AD-08** · 0.25 h — Deck skeleton (6–7 slides, §10 below). *Done 2026-10-14: 7-slide Claude Slides skeleton (private artifact); only measured practice numbers on the demo slide, robustness slide is placeholders.*
 
 **Stretch (only if G4 conditions are all green)**
 - [ ] **AD-09** · P1 · ≤ 1.0 h, starts only after the G4 go decision (uses P1's Phase 5 time, before H-01), **must merge by H22.5 or be dropped** — LLM event parser (function calling → pydantic → dropdown fallback) + narrator over metrics/diff JSON with the "every number must appear in the JSON" guard. Template narration remains the default.
