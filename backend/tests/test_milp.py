@@ -146,3 +146,16 @@ def test_aggregation_fallback_valid(tmp_path):
     assert agg["groups"] < agg["batches"] == 60 and agg["validator_violations"] == 0
     assert not plan.solver["fallback_used"] and validate(s, plan.plan).violation_total == 0
     check_valid(plan, s)
+
+
+def test_aggregation_pools_fleet(tmp_path):
+    """U-02/A-46: identical vehicles pool into classes, trips land on concrete vehicles."""
+    from freshroute.generator import generate
+    from validator.validate import validate
+
+    s = load_scenario(generate("aggv", 7, 60, 3, 2, 12, tmp_path))
+    plan = MilpPolicy().plan(s, {"agg_threshold": 0})
+    agg = plan.solver["aggregation"]
+    assert agg["vehicle_classes"] < 12 and agg["unassigned_kg"] < config.FLOAT_TOL
+    assert set(plan.plan.vehicle_id) <= set(s.tables["vehicles"].vehicle_id)
+    assert not plan.solver["fallback_used"] and validate(s, plan.plan).violation_total == 0

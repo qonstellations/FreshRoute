@@ -229,7 +229,7 @@ Rejected rows are kept: reason cards read them.
   "timestamp_utc": "…"
 }
 ```
-`flags.newsvendor` is `true` only for `--newsvendor` runs (then `run_id` ends in `__nv`). `solver` is `null` for non-MILP policies. MILP runs also carry `size` (`{"vars", "constraints"}` of the model solved) and, only when the scale fallback ran (ARCHITECTURE §9.5, U-02), `aggregation` (`{"batches", "groups", "agg_arcs", "dropped_lines", "validator_violations"}`). Timestamp and `solve_seconds` are the only fields allowed to differ between identical runs.
+`flags.newsvendor` is `true` only for `--newsvendor` runs (then `run_id` ends in `__nv`). `solver` is `null` for non-MILP policies. MILP runs also carry `size` (`{"vars", "constraints"}` of the model solved) and, only when the scale fallback ran (ARCHITECTURE §9.5, U-02), `aggregation` (`{"batches", "groups", "vehicle_classes", "agg_arcs", "dropped_lines", "unassigned_kg", "validator_violations"}`). Timestamp and `solve_seconds` are the only fields allowed to differ between identical runs.
 
 ### 5.2 `plan.csv` — PK `shipment_id` (one row per batch × destination × trip line)
 
