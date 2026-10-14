@@ -7,25 +7,10 @@
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); }
-.layout { display: flex; min-height: 100vh; }
-aside { width: 260px; flex-shrink: 0; padding: 16px; background: var(--panel); border-right: 1px solid var(--border);
-  display: flex; flex-direction: column; gap: 10px; }
-aside h1 { margin: 0 0 8px; font-size: 1.3rem; color: var(--accent); }
-aside hr { width: 100%; border: 0; border-top: 1px solid var(--border); }
-label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--muted); }
-label.check { flex-direction: row; align-items: center; }
-select, input[type=number] { padding: 6px; font: inherit; color: var(--text); border: 1px solid var(--border); border-radius: 4px; }
 button { padding: 8px 12px; font: inherit; border: 1px solid var(--border); border-radius: 4px; background: var(--panel); cursor: pointer; }
-aside > button { background: var(--accent); color: #fff; border-color: var(--accent); }
 button:disabled { opacity: .6; cursor: default; }
-main { flex: 1; padding: 16px 24px; min-width: 0; }
 .banner { padding: 10px 12px; border-radius: 4px; margin-bottom: 8px; }
-.banner.warn { background: var(--warn-bg); }
-.banner.info { background: var(--info-bg); }
 .banner.error { background: var(--error-bg); color: var(--bad); font-weight: 600; }
-.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: 12px 0 16px; }
-.tabs button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; }
-.tabs button.active { border-bottom-color: var(--accent); color: var(--accent); font-weight: 600; }
 .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 8px; }
 .tile { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; }
 .tile-label { font-size: .85rem; color: var(--muted); }
@@ -37,7 +22,6 @@ main { flex: 1; padding: 16px 24px; min-width: 0; }
 .caption, .placeholder { color: var(--muted); font-size: .85rem; }
 table { border-collapse: collapse; margin: 8px 0; background: var(--panel); }
 th, td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; font-size: .9rem; }
-@media (max-width: 700px) { .layout { flex-direction: column; } aside { width: auto; border-right: 0; } }
 /* Plan tab */
 .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; }
 .section-head h2, .section-head h3 { margin: 0; }
@@ -73,3 +57,24 @@ dd { margin: 0; }
   background-size: 40px 40px; }
 .legend { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin: 6px 0 0; font-size: .85rem; color: var(--muted); }
 .legend i, i.dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+/* App shell (App.tsx, RunButton.tsx): aurora header, tab pill, Plan button sweep + burst */
+.shell-header { overflow: hidden; }
+.shell-header::before { content: ""; position: absolute; inset: -60% -10%; z-index: 0; pointer-events: none; opacity: .55;
+  background: radial-gradient(40% 60% at 20% 50%, #b2f2bb, transparent 70%),
+    radial-gradient(35% 55% at 60% 40%, #d8f5a2, transparent 70%),
+    radial-gradient(30% 50% at 90% 60%, #ffec99, transparent 70%);
+  animation: aurora 18s ease-in-out infinite alternate; }
+@keyframes aurora { to { transform: translate3d(8%, 6%, 0) scale(1.15); } }
+.wordmark { font-weight: 800; letter-spacing: -.02em; color: var(--mantine-color-green-9); }
+.shell-tabs { gap: 6px; }
+.shell-tab { font-weight: 600; font-size: var(--mantine-font-size-md); background: transparent !important; }
+.shell-tab[data-active] { color: var(--mantine-color-green-9) !important; }
+.tab-pill { position: absolute; inset: 0; z-index: -1; border-radius: var(--mantine-radius-xl); }
+.tab-pill-fill { position: absolute; inset: 0; border-radius: inherit; background: var(--mantine-color-green-1);
+  box-shadow: inset 0 0 0 1px var(--mantine-color-green-3); }
+.plan-btn-sweep { position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(105deg, transparent 20%, rgb(255 255 255 / .35) 45%, rgb(255 255 255 / .1) 60%, transparent 80%);
+  animation: sweep 1.4s linear infinite; }
+@keyframes sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+.burst-dot { position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; margin: -4.5px; border-radius: 50%; }
+@media (prefers-reduced-motion: reduce) { .shell-header::before, .plan-btn-sweep { animation: none; } }
