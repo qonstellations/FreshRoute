@@ -180,7 +180,34 @@ def main(argv: list[str] | None = None) -> None:
     dm.add_argument("--seed", type=int, default=DEMO_SEED)
     dm.add_argument("--out")
     dm.add_argument("--with-sensitivity", action="store_true", help="also sensitivity.csv (slow)")
+    rp = sub.add_parser("replan", help="replan a run for one event -> <run>/replan/<event_id>/")
+    rp.add_argument("--run", required=True, help="run dir (or a replan dir, to chain events)")
+    rp.add_argument("--event", required=True, help="event JSON (DATABASE.md section 6)")
+    rp.add_argument("--scenario", help="with --policy: create --run first if it has no plan")
+    rp.add_argument("--policy", choices=POLICIES)
+    rp.add_argument("--seed", type=int, default=DEFAULT_SEED)
+    rp.add_argument("--out")
     a = p.parse_args(argv)
+    if a.cmd == "replan":
+        from freshroute.replan import replan_run
+        t0 = time.perf_counter()
+        if not (Path(a.run) / "plan.csv").exists():
+            if not (a.scenario and a.policy):
+                raise SystemExit(f"{a.run} has no plan.csv; pass --scenario and --policy")
+            run(a.scenario, a.policy, a.seed, a.run)
+            t0 = time.perf_counter()  # the replan time excludes the base run
+        out = replan_run(a.run, a.event, a.out)
+        d = json.loads((out / "diff.json").read_text(encoding="utf-8"))
+        v = json.loads((out / "validation.json").read_text(encoding="utf-8"))
+        print(f"replan {d['event_id']} at h {d['at_h']:g}: {d['frozen_shipments']} frozen, "
+              f"{len(d['moved_batches'])} batches moved, {v['violation_total']} violation(s)")
+        for k, x in d["delta_kpis"].items():
+            print(f"  {k:<24}{d['kpis_old_plan_under_event'][k]:>16,.2f} -> "
+                  f"{d['kpis_replanned'][k]:>16,.2f}  ({x:+,.2f})")
+        print(f"wrote {out}  ({time.perf_counter() - t0:.2f} s wall)")
+        if v["violation_total"]:
+            sys.exit(1)
+        return
     if a.cmd == "demo":
         if demo(a.scenario, a.seed, a.out, a.with_sensitivity):
             sys.exit(1)

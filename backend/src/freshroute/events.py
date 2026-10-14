@@ -77,7 +77,7 @@ def load_event(path: str | Path) -> Event:
     return Event.model_validate(json.loads(Path(path).read_text(encoding="utf-8")))
 
 
-def _lane_mask(lanes, target: str):
+def lane_mask(lanes, target: str):
     m = None
     for col, want in zip(("origin", "dest_id", "mode"), target.split("|"), strict=True):
         hit = lanes[col] == want if want != "*" else lanes[col].notna()
@@ -95,7 +95,7 @@ def check_targets(sc: Scenario, ev: Event) -> None:
     """Raise EventError if the event's target names ids the scenario does not have."""
     t = sc.tables
     if ev.type == "route_delay":
-        if not _lane_mask(t["lanes"], ev.target).any():
+        if not lane_mask(t["lanes"], ev.target).any():
             raise EventError(f"{ev.event_id}: no lane matches {ev.target!r}")
         return
     kind, _, rest = ev.target.partition(":")
@@ -119,7 +119,7 @@ def apply_event(sc: Scenario, ev: Event) -> Scenario:
     t = {k: v.copy() for k, v in sc.tables.items()}
     m = ev.magnitude
     if ev.type == "route_delay":
-        hit = _lane_mask(t["lanes"], ev.target)
+        hit = lane_mask(t["lanes"], ev.target)
         t["lanes"].loc[hit, ["travel_h_p50", "travel_h_p90"]] += m
     elif ev.type == "capacity_drop":
         kind, _, ident = ev.target.partition(":")

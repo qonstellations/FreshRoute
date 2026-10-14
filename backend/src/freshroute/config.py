@@ -11,6 +11,7 @@ OVERSHIP_SLACK = 0.05  # [team]
 PHI_BALANCE = 0.5  # [team]
 MAX_UPLIFT = 0.5  # [team] A-11
 MILP_TIME_LIMIT_S = 30  # [doc]
+REPLAN_TIME_LIMIT_S = 2  # [team] AD-02 residual re-solve cap; replan wall < 5 s (G4), A-42
 MIP_REL_GAP = 0.01  # [team]
 AGG_RSL_BUCKET_H = 6  # [team]
 AGG_ARC_THRESHOLD = 100_000  # [team] U-02: candidate arcs above this -> aggregation fallback
