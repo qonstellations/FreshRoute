@@ -49,7 +49,9 @@ def test_committed_scenarios_match_generator(tmp_path):
     for name in COMMITTED:
         fresh = generate_committed(name, tmp_path)
         for f in sorted((root / name).iterdir()):
-            assert f.read_bytes() == (fresh / f.name).read_bytes(), (name, f.name)
+            # autocrlf checkouts turn committed LF into CRLF; compare content, not line endings
+            got = (fresh / f.name).read_bytes().replace(b"\r\n", b"\n")
+            assert f.read_bytes().replace(b"\r\n", b"\n") == got, (name, f.name)
 
 
 def _practice():
