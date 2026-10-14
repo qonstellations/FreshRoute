@@ -70,7 +70,12 @@ export interface Table { columns: string[]; records: Record<string, string | num
 
 export type ReasonCards = Record<string, unknown>[] | null // §5.9, typed when U-01 renders it
 
-export interface DispatchSheet { csv: Record<string, string | number | null>[]; text: string } // §5.10
+export interface DispatchRow { // §5.10 CSV columns, served in priority_rank order
+  vehicle_id: string; trip_id: string; dispatch_h: number; depart_clock: string
+  dest_id: string; dest_name: string; batch_id: string; commodity: string; kg: number
+  priority_rank: number; slack_h: number; arrive_by_h: number; note: string | null
+}
+export interface DispatchSheet { csv: DispatchRow[]; text: string } // §5.10
 
 export interface LadderEntry { policy: string; kpis: Kpis }
 export interface Ladder { // §5.11

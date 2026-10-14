@@ -1,5 +1,5 @@
 // Dashboard shell (ARCHITECTURE §16): sidebar (run picker, run form) + five tabs. Renders API JSON verbatim.
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { api } from './api/client'
 import { StatusBanner, SyntheticBanner } from './components/Banners'
 import { RunButton } from './components/RunButton'
@@ -18,7 +18,9 @@ const POLICIES = ['fifo', 'fefo', 'last_day_50', 'milp', 'milp_markdown']
 const FIXTURE_RUN_ID = 'EXAMPLE-SYNTHETIC'
 
 export default function App() {
-  const [tab, setTab] = useState<TabName>('Scoreboard')
+  // ?tab=plan opens a tab directly (screenshots, demo links)
+  const [tab, setTab] = useState<TabName>(() => (Object.keys(TABS) as TabName[]).find(
+    t => t.toLowerCase() === new URLSearchParams(location.search).get('tab')?.toLowerCase()) ?? 'Scoreboard')
   const [scenarios, setScenarios] = useState<ScenarioInfo[]>([])
   const [runs, setRuns] = useState<RunsList>({ runs: [], fixture: false })
   const [runId, setRunId] = useState<string | null>(null)
@@ -51,7 +53,8 @@ export default function App() {
 
   const fixture = runs.fixture || !!run?.fixture
   const info = run && scenarios.find(s => s.name === run.scenario || run.scenario.endsWith(`/${s.name}`))
-  const Tab = TABS[tab]
+  // runId = the outputs/ dir key (§11.2); it can differ from metrics.run_id
+  const Tab: (p: { run: RunDetail; runId: string }) => ReactNode = TABS[tab]
 
   return (
     <div className="layout">
@@ -90,7 +93,7 @@ export default function App() {
           {(Object.keys(TABS) as TabName[]).map(t =>
             <button key={t} className={t === tab ? 'active' : ''} onClick={() => setTab(t)}>{t}</button>)}
         </nav>
-        {run ? <Tab run={run} /> : <p className="placeholder">No run loaded.</p>}
+        {run && runId ? <Tab run={run} runId={runId} /> : <p className="placeholder">No run loaded.</p>}
       </main>
     </div>
   )
