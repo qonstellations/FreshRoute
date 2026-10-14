@@ -133,6 +133,30 @@ def test_plan_trips_export():
     assert (score.diff().dropna() <= TOL).all()
 
 
+def test_c6_slack_used_when_starved():
+    """H-01: starved destination uses C6 slack instead of crashing or violating.
+
+    D2 demand x0.05 + handling 200 INR/kg makes every D2 arc deeply negative
+    margin, so the MILP ships D1 only; C6 balance is met via slack (reported in
+    solver info), and the independent validator still sees 0 violations."""
+    from dataclasses import replace
+
+    from validator.validate import validate
+
+    t = {k: v.copy() for k, v in sc().tables.items()}
+    m = t["demand"].dest_id == "D2"
+    for c in ("demand_kg_p10", "demand_kg_p50", "demand_kg_p90"):
+        t["demand"].loc[m, c] = (t["demand"].loc[m, c] * 0.05).round()
+    t["destinations"].loc[t["destinations"].dest_id == "D2", "handling_cost_inr_kg"] = 200.0
+    s = replace(sc(), tables=t)
+    plan = MilpPolicy().plan(s)
+    assert len(plan.plan) > 0 and not plan.solver["fallback_used"]
+    assert plan.solver["slack_usage"], "C6 slack must cover the starved destination"
+    assert (plan.plan.dest_id == "D1").all()
+    assert validate(s, plan.plan).violation_total == 0
+    assert check_valid(plan, s)
+
+
 def test_aggregation_fallback_valid(tmp_path):
     """U-02: the scale fallback (forced via agg_threshold) yields a plan with 0 validator
     violations; the default threshold leaves tiny_3batch on the batch-level path."""
