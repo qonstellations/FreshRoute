@@ -448,6 +448,7 @@ freshroute run       --scenario data/scenarios/practice_01 --policy {organizer_b
                      --seed 42 [--newsvendor] [--no-markdown] --out outputs/<run_id>      → metrics.json (+ all run files)
 freshroute validate  --scenario … --plan outputs/<run_id>/plan.csv                        → validation.json
 freshroute ladder    --scenario … --seed 42                                               → ladder.json, waterfall.json
+freshroute sensitivity --scenario … --seed 42                                             → sensitivity.csv
 freshroute stress    --scenario … --policy milp_markdown --n 200 --seed 42                → stress_summary.json, stress.csv
 freshroute replan    --scenario … --run outputs/<run_id> --event event.json               → replan/<event_id>/
 freshroute demo      --scenario <demo> --seed 42                                          → everything the pitch needs
@@ -503,6 +504,7 @@ Toolchain (D-15): uv owns Python. `uv sync` installs the project plus the dev gr
 | `MC_N` / `MC_N_FALLBACK` | 200 / 50 | research doc |
 | `NEWSVENDOR_CLAMP` | [0.05, 0.95] | team assumption |
 | `NEWSVENDOR_MARKDOWN_REF` | 0.20 | team assumption |
+| `SENS_Q10` / `SENS_ELASTICITY_MULT` / `SENS_OVERSHIP_SLACK` / `SENS_DEMAND_MULT` | 1.5, 2, 3 / 1, 0.5 / 0, 0.05, 0.10 / 0.8, 1, 1.2 | team assumption (U-04 sensitivity values) |
 | `DEFAULT_SEED` | 42 | research doc (CLI example) |
 | `FLOAT_TOL` | 1e-6 | team assumption (kg and h comparisons) |
 | `API_HOST` / `API_PORT` | `127.0.0.1` / `8000` | team assumption (D-18) — loopback only; there is no auth (§21) |

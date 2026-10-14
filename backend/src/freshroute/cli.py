@@ -142,7 +142,17 @@ def main(argv: list[str] | None = None) -> None:
     lad.add_argument("--scenario", required=True)
     lad.add_argument("--seed", type=int, default=DEFAULT_SEED)
     lad.add_argument("--out")
+    sen = sub.add_parser("sensitivity", help="one-at-a-time sensitivity -> sensitivity.csv")
+    sen.add_argument("--scenario", required=True)
+    sen.add_argument("--seed", type=int, default=DEFAULT_SEED)
+    sen.add_argument("--out")
     a = p.parse_args(argv)
+    if a.cmd == "sensitivity":
+        from freshroute.sensitivity import run_sensitivity
+        out = run_sensitivity(a.scenario, a.seed, a.out)
+        print((out / "sensitivity.csv").read_text(encoding="utf-8"), end="")
+        print(f"wrote {out}")
+        return
     if a.cmd == "ladder":
         from freshroute.ladder import format_ladder, run_ladder
         out = run_ladder(a.scenario, a.seed, a.out)

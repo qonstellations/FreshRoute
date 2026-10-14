@@ -70,7 +70,8 @@ def _lookups(sc: Scenario, override: dict | None = None):
     return veh, lanes, dest, target
 
 
-def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None):
+def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None,
+           overship=OVERSHIP_SLACK):
     """Returns ((x, n) | None, info); None when there is no usable incumbent."""
     veh, lanes, dest, target = _lookups(sc, override)
     prob = pulp.LpProblem("freshroute_alloc", pulp.LpMaximize)
@@ -97,7 +98,7 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None
     for (d, c, a), idx in arcs.groupby(["dest_id", "commodity", "arrival_day"]).groups.items():
         tgt = float(target.get((d, c, a), 0.0))
         tot[d] = tot.get(d, 0.0) + tgt
-        prob += pulp.lpSum(x[i] for i in idx) <= tgt * (1 + OVERSHIP_SLACK)  # C5 (D-05)
+        prob += pulp.lpSum(x[i] for i in idx) <= tgt * (1 + overship)  # C5 (D-05)
     tot = {d: v for d, v in sorted(tot.items()) if v > FLOAT_TOL}
     by_d = arcs.groupby("dest_id").groups
     xd = {d: pulp.lpSum(x[i] for i in by_d[d]) for d in tot}
@@ -110,7 +111,7 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None
     prob.setObjective(prob.objective - pulp.lpSum(penalty * tot[d] * slack[d] for d in tot))
     # Warm start from the FEFO-greedy plan (C-04/G2): the incumbent is never worse than FEFO
     # under the MILP objective, even when the time limit stops the search early.
-    gx, gn = _greedy(sc, arcs, batches, override)
+    gx, gn = _greedy(sc, arcs, batches, override, overship)
     for var, val in zip(x, gx, strict=True):
         var.setInitialValue(val)
     for k, var in n.items():
@@ -152,10 +153,11 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None
     return (xv, nv), info
 
 
-def _greedy(sc: Scenario, arcs, batches, override: dict | None = None):
+def _greedy(sc: Scenario, arcs, batches, override: dict | None = None,
+            overship: float = OVERSHIP_SLACK):
     """FEFO-greedy over feasible arcs honouring C2-C5 (earliest-expiry batch first)."""
     veh, _, dest, target = _lookups(sc, override)
-    tgt = {k: v * (1 + OVERSHIP_SLACK) for k, v in target.items()}
+    tgt = {k: v * (1 + overship) for k, v in target.items()}
     recv: dict = {}
     load: dict = {}  # (v,d,day) -> kg left on already-opened trips
     trips_day: dict = {}
@@ -240,14 +242,15 @@ class MilpPolicy(Policy):
         ctx = ctx or {}
         arcs, batches, unship = _model_data(scenario)
         ov = ctx.get("demand_cap_override")
+        slack = ctx.get("overship_slack", OVERSHIP_SLACK)  # sensitivity (U-04)
         sol, info = _solve(scenario, arcs, batches, unship,
                            ctx.get("time_limit_s", MILP_TIME_LIMIT_S), ctx.get("gap", MIP_REL_GAP),
-                           override=ov)
+                           override=ov, overship=slack)
         info["fallback_used"] = sol is None
         if sol is None:
             info.update(slack_usage={}, mip_gap=None)
         # AGENTS.md rule 6: never crash. ponytail: greedy ignores C6 and replan residuals.
-        x, n = _greedy(scenario, arcs, batches, ov) if sol is None else sol
+        x, n = _greedy(scenario, arcs, batches, ov, slack) if sol is None else sol
         return _build_plan(scenario, arcs, x, n, info, self.name)
 
 
