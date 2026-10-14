@@ -193,8 +193,62 @@ def test_post_newsvendor_flag(client, tmp_path):
 
 
 def test_records_replaces_inf(tmp_path):
-    from freshroute.api import routes
+    from freshroute.api.services import outputs
 
     p = tmp_path / "t.csv"
     p.write_text("a,b\n1,inf\n2,-inf\n", encoding="utf-8")
-    assert routes._records(p)["records"] == [{"a": 1, "b": None}, {"a": 2, "b": None}]
+    assert outputs.records(p)["records"] == [{"a": 1, "b": None}, {"a": 2, "b": None}]
+
+
+@pytest.mark.parametrize("scenario", ["../secret", "backend/../../x", "/etc/passwd",
+                                      "C:" + chr(92) + "Windows", chr(92) * 2 + "host"])
+def test_scenario_traversal_and_absolute_rejected_400(client, scenario):
+    for url, body in (("/api/runs", {"scenario": scenario, "policy": "fifo"}),
+                      ("/api/stress", {"scenario": scenario, "policy": "fifo"})):
+        r = client.post(url, json=body)
+        assert r.status_code == 400 and "not allowed" in r.json()["detail"]
+
+
+def test_corrupt_output_json_is_500(client, tmp_path):
+    (tmp_path / "bad").mkdir()
+    (tmp_path / "bad" / "metrics.json").write_text("{}", encoding="utf-8")
+    (tmp_path / "bad" / "reason_cards.json").write_text("{not json", encoding="utf-8")
+    assert TestClient(app, raise_server_exceptions=False).get(
+        "/api/runs/bad/reason-cards").status_code == 500
+
+
+def test_concurrent_submit_runs_once(tmp_path):
+    import threading
+
+    from freshroute.api.jobs import JobQueue
+
+    q, gate, calls = JobQueue(workers=4), threading.Event(), []
+    done = tmp_path / "done.json"
+
+    def fn():
+        calls.append(1)
+        gate.wait(5)
+        done.write_text("{}")
+
+    ts = [threading.Thread(target=q.submit_if_idle, args=(tmp_path, "j", fn, done))
+          for _ in range(8)]
+    [t.start() for t in ts]
+    [t.join() for t in ts]
+    gate.set()
+    q._executor.shutdown(wait=True)
+    assert len(calls) == 1
+
+
+def test_job_error_keeps_traceback(tmp_path):
+    from freshroute.api import jobs
+
+    q = jobs.JobQueue(workers=1)
+
+    def boom():
+        raise RuntimeError("kaput")
+
+    q.submit_if_idle(tmp_path, "j", boom, tmp_path / "never")
+    q._executor.shutdown(wait=True)
+    job = jobs.read_job(tmp_path, "j")
+    assert job["state"] == "error" and job["error"] == "kaput"
+    assert "RuntimeError: kaput" in job["traceback"]

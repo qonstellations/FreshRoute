@@ -10,19 +10,30 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from freshroute.api.data_access import ROOT
-from freshroute.api.routes import router
+from freshroute.api.deps import ROOT, BadRequest, NotFound
+from freshroute.api.routers import ladder, meta, replan, runs
 from freshroute.config import API_CORS_ORIGINS, API_VERSION
 
 app = FastAPI(title="FreshRoute API", version=str(API_VERSION))
 app.add_middleware(CORSMiddleware, allow_origins=API_CORS_ORIGINS, allow_methods=["*"],
                    allow_headers=["*"])
-app.include_router(router)
+for _r in (meta, runs, ladder, replan):
+    app.include_router(_r.router)
 
 
-@app.exception_handler(ValueError)  # bad JSON/CSV on disk: 400, never a 500 (DATABASE 11.1)
-def _bad_data(_: Request, e: ValueError) -> JSONResponse:
+@app.exception_handler(NotFound)
+def _not_found(_: Request, e: NotFound) -> JSONResponse:
+    return JSONResponse({"detail": str(e)}, status_code=404)
+
+
+@app.exception_handler(BadRequest)
+def _bad_request(_: Request, e: BadRequest) -> JSONResponse:
     return JSONResponse({"detail": str(e)}, status_code=400)
+
+
+@app.exception_handler(ValueError)  # corrupt JSON/CSV on disk is a server fault, not a 400
+def _corrupt(_: Request, e: ValueError) -> JSONResponse:
+    return JSONResponse({"detail": f"unreadable output file: {e}"}, status_code=500)
 
 
 _dist = ROOT / "frontend" / "dist"

@@ -1,6 +1,6 @@
-"""Request bodies for the HTTP API (ARCHITECTURE.md section 16, DATABASE.md section 11.2).
+"""HTTP API models (ARCHITECTURE.md section 16, DATABASE.md section 11.2).
 
-Responses are files served verbatim, so they have no models here.
+Run/table payloads are files served verbatim, so only requests and small envelopes have models.
 """
 from __future__ import annotations
 
@@ -26,3 +26,25 @@ class StressRequest(BaseModel):
 class ReplanRequest(BaseModel):
     run_id: str
     event: dict
+
+
+class HealthResponse(BaseModel):
+    status: str
+    schema_version: int
+    api_version: int
+
+
+class SubmitResponse(BaseModel):
+    run_id: str
+    status: str
+
+
+class ReplanSubmitResponse(SubmitResponse):
+    event_id: str
+
+
+class StatusResponse(BaseModel):
+    state: str
+    started_utc: str | None
+    finished_utc: str | None
+    error: str | None
