@@ -11,7 +11,7 @@ import pandas as pd
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
-from freshroute import cli
+from freshroute import cli, config
 from freshroute.api import data_access as da
 from freshroute.api import jobs
 from freshroute.api.schemas import RunRequest
@@ -46,6 +46,21 @@ def _records(path: Path) -> dict:
 @router.get("/health")
 def health() -> dict:
     return {"status": "ok", "schema_version": SCHEMA_VERSION, "api_version": API_VERSION}
+
+
+@router.get("/config")
+def config_constants() -> dict:
+    """config.py public UPPERCASE constants, verbatim (costmodel.py has none: its coefficients
+    come from scenario tables)."""
+    out = {}
+    for k in sorted(vars(config)):
+        if k.isupper() and not k.startswith("_"):
+            try:
+                json.dumps(v := getattr(config, k))
+            except TypeError:
+                continue
+            out[k] = v
+    return out
 
 
 @router.get("/scenarios")

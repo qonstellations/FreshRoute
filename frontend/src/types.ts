@@ -3,6 +3,8 @@ export const API_VERSION = 1
 
 export interface Health { status: 'ok'; schema_version: number; api_version: number }
 
+export type ConfigConstants = Record<string, string | number | boolean | null | (string | number)[]> // GET /api/config
+
 export interface ScenarioInfo { name: string; source: string; horizon_days: number; window_mode: string }
 
 export type GeoRecord = Record<string, string | number | null> // §3.9, UI only

@@ -83,7 +83,8 @@ export default function App() {
           onDone={id => loadRuns(id)} onError={setError} />
       </aside>
       <main>
-        <SyntheticBanner show={fixture || info?.source === 'synthetic'} />
+        {/* shown unless the run's scenario is a listed one with a non-synthetic source (§16.1) */}
+        <SyntheticBanner show={fixture || (!!run && (!info || info.source === 'synthetic'))} />
         <StatusBanner fixture={fixture} manifest={run?.manifest ?? null} error={error} />
         <nav className="tabs">
           {(Object.keys(TABS) as TabName[]).map(t =>

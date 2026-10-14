@@ -38,6 +38,14 @@ def test_health(client):
                                                 "api_version": 1}
 
 
+def test_config_verbatim(client):
+    from freshroute import config
+    body = client.get("/api/config").json()
+    assert body["LAMBDA_SPOIL"] == config.LAMBDA_SPOIL
+    assert body["DISCOUNT_TIERS_PCT"] == list(config.DISCOUNT_TIERS_PCT)
+    assert body["API_VERSION"] == 1 and all(k.isupper() for k in body)
+
+
 def test_scenarios_sorted(client):
     names = [s["name"] for s in client.get("/api/scenarios").json()]
     assert names == sorted(names) and "small" in names

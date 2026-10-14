@@ -1,6 +1,6 @@
 // Thin fetch wrappers for DATABASE.md §11.2. Errors surface the API's {"detail"} text.
 import type {
-  DispatchSheet, GeoRecord, Health, Ladder, PostRunRequest, PostRunResponse, ReasonCards,
+  ConfigConstants, DispatchSheet, GeoRecord, Health, Ladder, PostRunRequest, PostRunResponse, ReasonCards,
   RunDetail, RunsList, ScenarioInfo, StatusResponse, Table, TableName,
 } from '../types'
 
@@ -17,6 +17,7 @@ const e = encodeURIComponent
 
 export const api = {
   health: () => req<Health>('/health'),
+  config: () => req<ConfigConstants>('/config'),
   scenarios: () => req<ScenarioInfo[]>('/scenarios'),
   geo: (name: string) => req<GeoRecord[]>(`/scenarios/${e(name)}/geo`),
   runs: () => req<RunsList>('/runs'),

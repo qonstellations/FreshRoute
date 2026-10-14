@@ -553,6 +553,7 @@ The dashboard's only door to the engine. The API **serves run artifacts verbatim
 | Method + path | Success | Body |
 |---|---|---|
 | `GET /api/health` | 200 | `{"status": "ok", "schema_version": 1, "api_version": 1}` |
+| `GET /api/config` | 200 | `{"NAME": value, …}` — every public UPPERCASE constant of `config.py` (`ARCHITECTURE.md` §19) whose value is JSON-serialisable, verbatim (tuples become lists), sorted by name. `costmodel.py` has no module constants (its coefficients come from the scenario tables), so nothing else is added. Additive in `api_version` 1 |
 | `GET /api/scenarios` | 200 | `[{"name", "source", "horizon_days", "window_mode"}]` — from `data/scenarios/*/scenario.json`, sorted by `name` |
 | `GET /api/scenarios/{name}/geo` | 200 / 404 | `geo.csv` as records (§3.9), or 404 when absent (the UI uses the colour table) |
 | `GET /api/runs` | 200 | `{"runs": [{"run_id", "scenario", "policy", "seed", "has_ladder"}], "fixture": false}` — `run_id` = the name of each `outputs/<dir>/` holding a `metrics.json` (the key every `/api/runs/{run_id}` endpoint resolves; it can differ from `metrics.run_id` when the CLI wrote to a custom `--out`), sorted; `fixture: true` (and `runs: []`) when no run is on disk; the UI then requests `GET /api/runs/<run_id of backend/tests/fixtures/metrics_example.json>` (e.g. `EXAMPLE-SYNTHETIC`) |
