@@ -22,6 +22,10 @@ from freshroute.io import load_scenario
 from freshroute.simulator import simulate
 
 POLICIES = ("fifo", "fefo", "last_day_50", "milp", "milp_markdown")
+# Recognised names that cannot run yet (C-06). Listed in --policy choices so the parser accepts
+# them and _policy() can explain the block, instead of argparse saying "invalid choice".
+BLOCKED_POLICIES = ("organizer_baseline",)
+POLICY_CHOICES = POLICIES + BLOCKED_POLICIES
 
 
 def _policy(name: str):
@@ -40,6 +44,14 @@ def _policy(name: str):
     if name == "milp_markdown":
         from freshroute.policies.milp import MilpMarkdownPolicy
         return MilpMarkdownPolicy()
+    if name == "organizer_baseline":
+        # C-06: implement this only from the organizers' published procedure. Inventing one and
+        # calling it official is the failure rule #1 exists to prevent (DECISIONS.md).
+        raise SystemExit(
+            "policy 'organizer_baseline' is not implemented: C-06 is blocked until the organizers "
+            "publish their baseline procedure and submission format (docs/TODO.md S-01, C-06). "
+            f"Available policies: {', '.join(POLICIES)}"
+        )
     raise SystemExit(f"unknown policy {name!r}; available: {', '.join(POLICIES)}")
 
 
@@ -117,7 +129,7 @@ def main(argv: list[str] | None = None) -> None:
     sub = p.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("run", help="run a policy on a scenario")
     r.add_argument("--scenario", required=True)
-    r.add_argument("--policy", required=True, choices=POLICIES)
+    r.add_argument("--policy", required=True, choices=POLICY_CHOICES)
     r.add_argument("--seed", type=int, default=DEFAULT_SEED)
     r.add_argument("--out")
     r.add_argument("--fail-on-violations", action="store_true", help="exit 1 if violations > 0")

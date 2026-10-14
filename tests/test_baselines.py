@@ -12,6 +12,22 @@ from freshroute.policies.last_day_50 import LastDay50Policy
 
 ROOT = Path(__file__).parents[1]
 SCENARIOS = [ROOT / "tests" / "fixtures" / "tiny_3batch", ROOT / "data" / "scenarios" / "practice"]
+
+
+def test_organizer_baseline_policy_names_its_blocker():
+    """C-06: asking for the official baseline must say *why* it is absent, not just "unknown"."""
+    assert "organizer_baseline" in cli.POLICY_CHOICES  # parser accepts it...
+    with pytest.raises(SystemExit) as e:  # ...so _policy explains the block
+        cli._policy("organizer_baseline")
+    msg = str(e.value)
+    assert "C-06" in msg and "S-01" in msg
+    assert "fifo" in msg and "milp_markdown" in msg  # still lists what does work
+
+
+def test_unknown_policy_lists_available():
+    with pytest.raises(SystemExit) as e:
+        cli._policy("nope")
+    assert "unknown policy" in str(e.value)
 DISC_CODES = {"DISCOUNT_CAP", "DISCOUNT_BELOW_SALVAGE", "DISCOUNT_NOT_MONOTONE"}
 
 
