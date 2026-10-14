@@ -74,6 +74,48 @@ def test_cli_run_writes_dispatch_sheet(tmp_path):
     assert not re.search(r"\d\.\d\d|day \d+\.\d", txt)  # phone-readable: <= 1 decimal, int days
 
 
+CODES = {"SHELF_LIFE", "WINDOW", "CAPACITY_BOUND", "DEMAND_CAP", "LOWER_MARGIN"}
+
+
+def test_build_cards_on_fixture():
+    import pandas as pd
+
+    from freshroute.discount import COLUMNS as DISCOUNT_COLUMNS
+    from freshroute.policies.milp import MilpPolicy
+    from freshroute.reasons import build_cards
+    sc = load_scenario(FIX)
+    r = MilpPolicy().plan(sc, {"seed": 42})
+    none = pd.DataFrame(columns=list(DISCOUNT_COLUMNS))
+    cards = build_cards(sc, r.plan, none)
+    assert [c["shipment_id"] for c in cards] == sorted(r.plan.shipment_id)
+    assert {c["batch_id"] for c in cards} == set(r.plan.batch_id)
+    for c in cards:
+        assert c["alternatives"] and c["runner_up"]["dest_id"] == c["alternatives"][0]["dest_id"]
+        for a in c["alternatives"]:
+            assert a["reason_code"] in CODES and a["dest_id"] != c["chosen"]["dest_id"]
+            # sign: chosen - alternative; only a capacity/demand-blocked option may beat it
+            if a["margin_delta_inr_kg"] < 0:
+                assert a["reason_code"] in {"CAPACITY_BOUND", "DEMAND_CAP"}
+            if a["reason_code"] == "LOWER_MARGIN":
+                assert a["margin_delta_inr_kg"] > 0
+        assert c["text"].startswith(f"Sent to {c['chosen']['dest_id']}, not ")
+    assert build_cards(sc, r.plan, none) == cards  # deterministic
+    assert build_cards(sc, r.plan.iloc[0:0], none) == []
+
+
+def test_cli_run_writes_reason_cards(tmp_path):
+    import json
+
+    import pandas as pd
+
+    from freshroute import cli
+    out = cli.run(str(FIX), "milp", 42, out=str(tmp_path / "a"))
+    first = (out / "reason_cards.json").read_text(encoding="utf-8")
+    assert len(json.loads(first)) == len(pd.read_csv(out / "plan.csv"))
+    again = cli.run(str(FIX), "milp", 42, out=str(tmp_path / "b"))
+    assert (again / "reason_cards.json").read_text(encoding="utf-8") == first
+
+
 def test_dispatch_sheet_empty_plan():
     sc = load_scenario(FIX)
     r = FifoPolicy().plan(sc)

@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from freshroute import dispatch_sheet
+from freshroute import dispatch_sheet, reasons
 from freshroute import metrics as M
 from freshroute.config import DEFAULT_SEED, OVERSHIP_SLACK, SCHEMA_VERSION
 from freshroute.discount import COLUMNS as DISCOUNT_COLUMNS
@@ -103,6 +103,8 @@ def run(scenario: str, policy: str, seed: int, out: str | None = None) -> Path:
     sheet, sheet_txt = dispatch_sheet.build(sc, plan, trips)
     sheet.to_csv(out_dir / "dispatch_sheet.csv", index=False)
     (out_dir / "dispatch_sheet.txt").write_text(sheet_txt, encoding="utf-8")
+    (out_dir / "reason_cards.json").write_text(
+        json.dumps(reasons.build_cards(sc, plan, discounts), indent=2) + "\n", encoding="utf-8")
     discounts.to_csv(out_dir / "discounts.csv", index=False)
     sim["ledger"].to_csv(out_dir / "sim_ledger.csv", index=False)
     sim["lots"].to_csv(out_dir / "sim_lots.csv", index=False)

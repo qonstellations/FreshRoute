@@ -337,16 +337,21 @@ Violation and warning code lists: ARCHITECTURE §11. `kpis.violations == violati
 {
   "shipment_id": "S0007", "batch_id": "B014", "commodity": "tomato",
   "chosen": {"dest_id": "PUNE", "vehicle_id": "V03", "mode": "reefer", "dispatch_h": 5.0, "arrival_h": 17.0,
-             "usable_life_at_arrival_h": 41.0, "slack_h": 17.0, "margin_inr_kg": 0.0},
+             "kg": 420.0, "usable_life_at_arrival_h": 41.0, "slack_h": 17.0, "margin_inr_kg": 0.0},
   "priority": {"rank": 3, "score": 0.0},
   "alternatives": [{"dest_id": "DELHI", "mode": "ambient", "dispatch_day": 0, "feasible": false,
-                    "reject_reason": "SHELF_LIFE", "usable_life_at_arrival_h": 9.0, "margin_inr_kg": 0.0,
+                    "reject_reason": "SHELF_LIFE", "usable_life_at_arrival_h": 9.0, "slack_h": -15.0,
+                    "margin_inr_kg": 0.0, "margin_delta_inr_kg": 0.0, "slack_delta_h": 32.0,
                     "reason_code": "SHELF_LIFE"}],
+  "runner_up": {"dest_id": "DELHI", "reason_code": "SHELF_LIFE", "margin_delta_inr_kg": 0.0,
+                "margin_delta_inr": 0.0, "slack_delta_h": 32.0},
   "discount": {"day": 2, "risk": 0.38, "tier_pct": 20, "capped_by": "none"},
   "text": "Sent to Pune, not Delhi: …"
 }
 ```
-`alternatives[].reason_code ∈ {SHELF_LIFE, WINDOW, CAPACITY_BOUND, DEMAND_CAP, LOWER_MARGIN}`. `discount` is `null` when none applies. Numbers above are format examples only.
+Written by `cli.run` for every run (`reasons.build_cards`); a list sorted by `shipment_id`, one card per `plan.csv` row. All numbers are copied from `plan.csv`, the feasibility arcs (§4.1) and `discounts.csv`; nothing is re-optimised. `chosen` is the plan row. `alternatives` holds, for every other destination × mode of the same batch, its best arc (feasible first, then highest `margin_inr_kg`, `slack_h`, earliest day, `vehicle_id`); arcs rejected as `NO_LANE`/`NOT_AVAILABLE` are not alternatives. Sorted feasible first, then margin descending; `alternatives[0]` is the runner-up, summarised in `runner_up` (`null` when there is no alternative).
+
+`alternatives[].reason_code ∈ {SHELF_LIFE, WINDOW, CAPACITY_BOUND, DEMAND_CAP, LOWER_MARGIN}`: an infeasible arc maps its `reject_reason` (`SHELF_LIFE`→`SHELF_LIFE`, `WINDOW`/`BEYOND_HORIZON`→`WINDOW`, `RAIL_SLOT`→`CAPACITY_BOUND`); a feasible arc is `LOWER_MARGIN` if its margin is below the chosen one, else `DEMAND_CAP` if the plan already ships ≥ `demand_kg_p50` to that destination × commodity × arrival day, else `CAPACITY_BOUND`. Deltas are **chosen − alternative**: `margin_delta_inr_kg` (₹/kg), `margin_delta_inr` = that × `chosen.kg` (₹), `slack_delta_h` (h). A positive margin delta means the chosen option earns more; a negative one only occurs with `DEMAND_CAP`/`CAPACITY_BOUND`. `discount` is the first applied, non-zero `discounts.csv` row of the shipment's lot (`tier_pct` = its `discount_pct`), `null` when none applies. Numbers above are format examples only.
 
 ### 5.10 Dispatch sheet — `dispatch_sheet.csv` and `dispatch_sheet.txt`
 
@@ -553,7 +558,7 @@ The dashboard's only door to the engine. The API **serves run artifacts verbatim
 | `GET /api/runs` | 200 | `{"runs": [{"run_id", "scenario", "policy", "seed", "has_ladder"}], "fixture": false}` — `run_id` = the name of each `outputs/<dir>/` holding a `metrics.json` (the key every `/api/runs/{run_id}` endpoint resolves; it can differ from `metrics.run_id` when the CLI wrote to a custom `--out`), sorted; `fixture: true` (and `runs: []`) when no run is on disk; the UI then requests `GET /api/runs/<run_id of backend/tests/fixtures/metrics_example.json>` (e.g. `EXAMPLE-SYNTHETIC`) |
 | `GET /api/runs/{run_id}` | 200 / 404 | `metrics.json` verbatim, plus `baseline` (see `data_access.load_baseline` ordering: ladder `official_baseline` → ladder `fefo` → sibling `fefo` run), `validation` (`validation.json` or `null`), `manifest` (`run_manifest.json` or `null`), `fixture` (`false`; `true` with the three wrappers `null` when this is the fixture run served because nothing is on disk) |
 | `GET /api/runs/{run_id}/tables/{table}` | 200 / 404 | `table ∈ {plan, trips, discounts, sim_ledger, sim_lots}` (§5.2–§5.6) as `{"columns": [...], "records": [...]}`; `?format=csv` returns the file as `text/csv` for download |
-| `GET /api/runs/{run_id}/reason-cards` | 200 | `reason_cards.json` (§5.9), or `null` when the run has none yet (nothing writes them before U-01) |
+| `GET /api/runs/{run_id}/reason-cards` | 200 | `reason_cards.json` (§5.9), or `null` when the run has none (runs written before U-01) |
 | `GET /api/runs/{run_id}/dispatch-sheet` | 200 | `{"csv": [...records...], "text": "..."}` (§5.10), or `null` when absent |
 | `GET /api/ladder?scenario=&seed=` | 200 / 404 | `{"ladder": …, "waterfall": …}` from §5.11, or 404 when not on disk |
 | `POST /api/runs` | 202 | Request `{"scenario": "data/scenarios/practice", "policy": "milp_markdown", "seed": 42, "flags": {"markdown": true, "newsvendor": false}}` → `{"run_id": "…__milp_markdown__s42", "status": "running"}`. `policy ∈ ` the CLI's `POLICIES`; an unknown policy or scenario is `400`. `organizer_baseline` is a *recognised* name that cannot run yet (C-06): the API accepts it in the request shape and answers `400` with the same explanation the CLI prints, rather than a bare "unknown policy". `scenario` is a scenario directory path (`data/scenarios/<name>`), resolved like the CLI's `--scenario`, i.e. against the API's working directory (the repo root). `flags.newsvendor = true` is `400` until the CLI has `--newsvendor`; `flags.markdown` is implied by the policy. A malformed body is FastAPI's `422`. Re-posting a run that is still `running` returns it without enqueueing again. |
