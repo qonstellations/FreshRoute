@@ -3,7 +3,7 @@
 import { Alert, Paper, Skeleton, Stack, Text } from '@mantine/core'
 import { IconAlertTriangle, IconClipboardOff, IconFileUnknown } from '@tabler/icons-react'
 import { m } from 'motion/react'
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { api } from '../api/client'
 import { DiscountCards, cardLayoutId } from '../components/plan/DiscountCards'
 import { Dispatch, rowLayoutId } from '../components/plan/Dispatch'
@@ -68,6 +68,14 @@ export function Plan({ run, runId, step }: { run: RunDetail; runId: string; step
 
   const folded = step === undefined ? undefined : step === 0
 
+  // Beat 1 brings the revealed dispatch sheet into view (Scoreboard scrolls its own beats the same way).
+  const sheetRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (step !== 1) return
+    const t = setTimeout(() => sheetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250)
+    return () => clearTimeout(t)
+  }, [step])
+
   return (
     <Stack gap="xl" pb="xl" className="plan">
       {error && <Alert color="red" icon={<IconAlertTriangle />} title="Load error">{error}</Alert>}
@@ -79,6 +87,7 @@ export function Plan({ run, runId, step }: { run: RunDetail; runId: string; step
           <ShelfLifeMap scenario={run.scenario.split(/[\\/]/).pop() ?? run.scenario} runId={runId} rows={sheet.csv}
             filter={dest} onPick={setDest} />
           <Reveal hidden={folded}>
+            <div ref={sheetRef} style={{ scrollMarginTop: 80 }} />
             <Dispatch sheet={sheet} runId={runId} onRow={openRow} filter={dest} onClear={() => setDest(undefined)} />
           </Reveal>
         </>
