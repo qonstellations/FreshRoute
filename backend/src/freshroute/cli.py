@@ -8,6 +8,7 @@ import json
 import platform
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from importlib import metadata
 from pathlib import Path
@@ -16,7 +17,13 @@ import pandas as pd
 
 from freshroute import dispatch_sheet, reasons
 from freshroute import metrics as M
-from freshroute.config import DEFAULT_SEED, OVERSHIP_SLACK, SCHEMA_VERSION
+from freshroute.config import (
+    DEFAULT_SEED,
+    DEMO_SCENARIO,
+    DEMO_SEED,
+    OVERSHIP_SLACK,
+    SCHEMA_VERSION,
+)
 from freshroute.discount import COLUMNS as DISCOUNT_COLUMNS
 from freshroute.io import load_scenario
 from freshroute.simulator import simulate
@@ -131,6 +138,26 @@ def format_kpis(m: dict) -> str:
             f"  violations   : {k['violations']}")
 
 
+def demo(scenario: str, seed: int, out: str | None = None, with_sensitivity: bool = False) -> int:
+    """`freshroute demo`: the ladder (every policy + ladder.json/waterfall.json) for the demo
+    scenario, optionally sensitivity; prints the scoreboard and wall time. Returns the
+    milp_markdown plan's validator violation count (non-zero exit when > 0)."""
+    from freshroute.ladder import PLAN, format_ladder, run_ladder
+    t0 = time.perf_counter()
+    lad_dir = run_ladder(scenario, seed, out)
+    print(format_ladder(lad_dir))
+    lad = json.loads((lad_dir / "ladder.json").read_text(encoding="utf-8"))
+    if with_sensitivity:  # ponytail: off by default, ~275 s on practice (U-04)
+        from freshroute.sensitivity import run_sensitivity
+        sen = run_sensitivity(scenario, seed,
+                              str(lad_dir.parent / f"{lad['scenario']}__sensitivity__s{seed}"))
+        print((sen / "sensitivity.csv").read_text(encoding="utf-8"), end="")
+    viol = next(e["kpis"]["violations"] for e in lad["ladder"] if e["policy"] == PLAN)
+    print(f"\n{PLAN} validation: {viol} violation(s)")
+    print(f"wrote {lad_dir.parent}  ({time.perf_counter() - t0:.1f} s wall)")
+    return viol
+
+
 def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(prog="freshroute")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -148,7 +175,16 @@ def main(argv: list[str] | None = None) -> None:
     sen.add_argument("--scenario", required=True)
     sen.add_argument("--seed", type=int, default=DEFAULT_SEED)
     sen.add_argument("--out")
+    dm = sub.add_parser("demo", help="ladder + waterfall on the demo scenario; the pitch numbers")
+    dm.add_argument("--scenario", default=DEMO_SCENARIO)
+    dm.add_argument("--seed", type=int, default=DEMO_SEED)
+    dm.add_argument("--out")
+    dm.add_argument("--with-sensitivity", action="store_true", help="also sensitivity.csv (slow)")
     a = p.parse_args(argv)
+    if a.cmd == "demo":
+        if demo(a.scenario, a.seed, a.out, a.with_sensitivity):
+            sys.exit(1)
+        return
     if a.cmd == "sensitivity":
         from freshroute.sensitivity import run_sensitivity
         out = run_sensitivity(a.scenario, a.seed, a.out)

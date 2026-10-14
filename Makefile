@@ -13,10 +13,12 @@ check:
 	uv run ruff check .
 	uv run pytest -q
 	npm --prefix frontend run build
-	uv run freshroute run --scenario backend/tests/fixtures/tiny_3batch --policy milp --out outputs/check_milp --fail-on-violations
+	# demo plan (config.DEMO_SCENARIO/DEMO_SEED): ~36 s, MILP hits its 30 s time limit (A-40)
+	uv run freshroute run --scenario data/scenarios/practice --policy milp_markdown --seed 42 --out outputs/check_demo --fail-on-violations
 
+# every pitch number: ladder + waterfall on config.DEMO_SCENARIO/DEMO_SEED; add --with-sensitivity (+~275 s)
 demo:
-	@echo "demo: not implemented yet (freshroute demo lands with U-06)"
+	uv run freshroute demo
 
 # dev: API with reload on :8000; run `make web` alongside for Vite on :5173 (proxies /api)
 api:

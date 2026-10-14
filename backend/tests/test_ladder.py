@@ -64,3 +64,15 @@ def test_g2_net_and_violations(seed, tmp_path, monkeypatch):
 def test_g2_spoilage(seed, tmp_path, monkeypatch):
     k = _g2_kpis(seed, tmp_path, monkeypatch)
     assert k["milp"]["spoilage_kg"] <= k["fefo"]["spoilage_kg"] + FLOAT_TOL
+
+
+def test_demo_writes_pitch_files(tmp_path, capsys):
+    """U-06: `freshroute demo` writes every ladder run + ladder/waterfall and exits 0."""
+    cli.main(["demo", "--scenario", TINY, "--seed", "42", "--out", str(tmp_path)])
+    for pol in ladder.LADDER + ladder.EXTRAS:
+        for f in ("metrics.json", "validation.json", "plan.csv", "reason_cards.json"):
+            assert (tmp_path / f"tiny_3batch__{pol}__s42" / f).is_file()
+    assert (tmp_path / "tiny_3batch__ladder__s42" / "ladder.json").is_file()
+    assert (tmp_path / "tiny_3batch__ladder__s42" / "waterfall.json").is_file()
+    out = capsys.readouterr().out
+    assert "milp_markdown validation: 0 violation(s)" in out and "s wall" in out
