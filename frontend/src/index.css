@@ -1,8 +1,8 @@
 :root {
-  --bg: #fef0d5; --panel: #fef0d5; --text: #0048ae; --muted: #0048ae99; --border: #0048ae80;
-  --accent: #0048ae; --good: #1f7a4d; --bad: #c0392b;
+  --bg: #fef0d5; --panel: #fef0d5; --text: #1f7a4d; --muted: #1f7a4db3; --border: #1f7a4d80;
+  --accent: #1f7a4d; --good: #1f7a4d; --bad: #c0392b;
   --warn-bg: #fff4d6; --info-bg: #e6f0fb; --error-bg: #fde8e6;
-  --ink: #0048ae; --cream: #fef0d5; --coal: #222;
+  --ink: #1f7a4d; --cream: #fef0d5; --coal: #222;
   font-family: "Kode Mono", monospace;
   color: var(--text); background: var(--bg);
 }
@@ -162,23 +162,6 @@ th, td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; f
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--mantine-color-green-6) 30%, transparent); }
 .story-on .mantine-AppShell-main { padding-bottom: 140px; } /* content never hides behind the bar */
 .keys-table td { border: 0; padding: 4px 8px; }
-:root[data-stage] { font-size: 118%; }
-/* dark: the shell tokens follow Mantine's dark palette, so body/table/caption stop being light */
-[data-mantine-color-scheme=dark] {
-  --bg: var(--mantine-color-body); --panel: var(--mantine-color-dark-6); --text: var(--mantine-color-text);
-  --muted: var(--mantine-color-dimmed); --border: var(--mantine-color-default-border);
-  --accent: var(--mantine-color-green-4); --good: var(--mantine-color-green-4); --bad: var(--mantine-color-red-4);
-  --warn-bg: var(--mantine-color-yellow-light); --info-bg: var(--mantine-color-blue-light); --error-bg: var(--mantine-color-red-light);
-}
-[data-mantine-color-scheme=dark] button:not([class*=mantine]) { color: var(--text); }
-[data-mantine-color-scheme=dark] .shell-header::before { opacity: .35;
-  background: radial-gradient(40% 60% at 20% 50%, #2b8a3e, transparent 70%),
-    radial-gradient(35% 55% at 60% 40%, #087f5b, transparent 70%),
-    radial-gradient(30% 50% at 90% 60%, #5c4a00, transparent 70%); }
-[data-mantine-color-scheme=dark] .wordmark { color: var(--mantine-color-green-3); }
-[data-mantine-color-scheme=dark] .shell-tab[data-active] { color: var(--mantine-color-green-2) !important; }
-[data-mantine-color-scheme=dark] .tab-pill-fill { background: color-mix(in srgb, var(--mantine-color-green-7) 45%, transparent);
-  box-shadow: inset 0 0 0 1px var(--mantine-color-green-5); }
 /* Robustness (AD-05): futures dot matrix in the hero; sensitivity slider cards */
 .futures { display: grid; grid-template-columns: repeat(40, 1fr); gap: 5px; margin-top: var(--mantine-spacing-lg); max-width: 760px; }
 .future { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -1px;
@@ -192,6 +175,14 @@ th, td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; f
 .flight-chip { padding: 6px 10px; margin-bottom: 6px; border-radius: var(--mantine-radius-md); background: var(--mantine-color-body);
   border: 1px solid var(--mantine-color-default-border); box-shadow: 0 2px 6px rgb(0 0 0 / .08); }
 .flight-chip[data-landed] { border-color: var(--mantine-color-green-5); box-shadow: 0 0 0 2px color-mix(in srgb, var(--mantine-color-green-5) 30%, transparent); }
-/* stage: brighter accents so greens survive a washed-out projector */
-:root[data-stage] .shell-header::before { opacity: .5; }
-:root[data-stage] { --mantine-primary-color-filled: var(--mantine-color-green-6); --mantine-primary-color-light-color: var(--mantine-color-green-3); }
+/* dark theme: deep green paper, cream ink (toggle in header, remembered per browser) */
+[data-mantine-color-scheme=dark] {
+  --bg: #10241a; --panel: #14291d; --text: #fef0d5; --muted: #fef0d5b3; --border: #fef0d580;
+  --accent: #4fbf7f; --ink: #4fbf7f; --cream: #fef0d5;
+  --warn-bg: var(--mantine-color-yellow-light); --info-bg: var(--mantine-color-blue-light);
+  --error-bg: var(--mantine-color-red-light);
+}
+[data-mantine-color-scheme=dark] .pick-card:hover { background: #1a3325; }
+[data-mantine-color-scheme=dark] .outline, [data-mantine-color-scheme=dark] .ghost { -webkit-text-stroke-color: var(--cream); }
+[data-mantine-color-scheme=dark] .sec-dark { background: #000; }
+/* projector fallback: brighter ink if washed out */

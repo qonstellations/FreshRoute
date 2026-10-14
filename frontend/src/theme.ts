@@ -2,10 +2,10 @@
 // Components import springs from here, not ad-hoc numbers.
 import { createTheme, type MantineColorsTuple } from '@mantine/core'
 
-// ink blue #0048ae ramp (filled = [8])
+// ink green #1f7a4d ramp (filled = [6] light / [8] dark)
 const ink: MantineColorsTuple = [
-  '#eef3fc', '#d8e4f8', '#b3cbf1', '#8aafe8', '#6489d4',
-  '#4569bd', '#2f55a8', '#1c4696', '#0b3c85', '#062f6c',
+  '#ecf6ef', '#d3e9da', '#aed8bc', '#83c295', '#55a66e',
+  '#2f8b52', '#1f7a4d', '#186641', '#124f34', '#0b3523',
 ];
 
 export const theme = createTheme({

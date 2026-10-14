@@ -7,9 +7,10 @@
 // for reduced-motion; ScrollTrigger.batch() for reveals with top-to-bottom
 // refreshPriority; scrub and toggleActions never mixed on one trigger.
 import {
-  Accordion, AppShell, Badge, Card, Group, NumberInput, Paper, Select, SimpleGrid, Stack, Switch, Text,
+  Accordion, ActionIcon, AppShell, Badge, Card, Group, NumberInput, Paper, Select, SimpleGrid, Stack, Switch, Text,
+  Tooltip, useMantineColorScheme,
 } from '@mantine/core'
-import { IconArrowDown, IconArrowUp, IconArrowUpRight, IconLeaf, IconTruck } from '@tabler/icons-react'
+import { IconArrowDown, IconArrowUp, IconArrowUpRight, IconLeaf, IconMoon, IconSun, IconTruck } from '@tabler/icons-react'
 import { gsap } from 'gsap'
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -72,6 +73,14 @@ function SectionHead({ n, tag, ghost, solid, sub, dark }: {
 
 export default function App() {
   const root = useRef<HTMLDivElement>(null)
+  const [dark, setDark] = useState(() => {
+    try { return localStorage.getItem('fr-theme') === 'dark' } catch { return false }
+  })
+  const { setColorScheme } = useMantineColorScheme()
+  useEffect(() => {
+    setColorScheme(dark ? 'dark' : 'light')
+    try { localStorage.setItem('fr-theme', dark ? 'dark' : 'light') } catch { /* private window */ }
+  }, [dark, setColorScheme])
 
   const [scenarios, setScenarios] = useState<ScenarioInfo[]>([])
   const [runs, setRuns] = useState<RunsList>({ runs: [], fixture: false })
@@ -165,6 +174,10 @@ export default function App() {
             <Group gap="xs">
               {synthetic && <Badge color="yellow" variant="filled" size="md"
                 styles={{ root: { color: '#222' } }}>DEMO DATA</Badge>}
+              <Tooltip label={dark ? 'Light theme' : 'Dark theme'}>
+                <ActionIcon variant="subtle" size="lg" aria-label="Toggle theme"
+                  onClick={() => setDark(v => !v)}>{dark ? <IconSun size={20} /> : <IconMoon size={20} />}</ActionIcon>
+              </Tooltip>
             </Group>
           </Group>
         </AppShell.Header>
