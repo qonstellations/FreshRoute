@@ -153,8 +153,8 @@ export interface PostReplanResponse { run_id: string; event_id: string; status: 
 export type ReplanKpis = Partial<Pick<Kpis, 'spoilage_kg' | 'demand_fulfillment_pct' | 'net_inr'>>
 export interface Diff { // §5.13 diff.json
   event_id: string; at_h: number; frozen_shipments: number
-  moved_batches: { batch_id: string; from: { dest_id: string; dispatch_day: number }
-    to: { dest_id: string; dispatch_day: number }; kg: number }[]
+  moved_batches: { batch_id: string; from: { dest_id: string | null; dispatch_day: number | null }
+    to: { dest_id: string | null; dispatch_day: number | null }; kg: number }[]
   discount_changes: { lot_id: string; day: number; from_pct: number; to_pct: number }[]
   kpis_old_plan_under_event: ReplanKpis; kpis_replanned: ReplanKpis; delta_kpis: ReplanKpis
   solve_seconds: number

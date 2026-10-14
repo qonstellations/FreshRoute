@@ -117,6 +117,11 @@ const KPI_TILES: { key: keyof ReplanKpis; label: string; unit: string; digits: n
   { key: 'demand_fulfillment_pct', label: 'Fulfilment (replanned)', unit: ' pp', digits: 1, show: v => `${fmt(v, 1)}%` },
 ]
 
+type Spot = { dest_id: string | null; dispatch_day: number | null } // null = left unshipped by the replan (§5.13)
+const destOf = (x: Spot) => x.dest_id ?? 'unshipped'
+const dayOf = (x: Spot) => (x.dispatch_day === null ? '' : ` · day ${x.dispatch_day}`)
+const where = (x: Spot) => `${destOf(x)}${dayOf(x)}`
+
 function DiffView({ r, step, at }: { r: ReplanResult; step?: number; at: (s: number) => boolean }) {
   const d = r.diff
   const kpiRef = useRef<HTMLDivElement>(null), flightRef = useRef<HTMLDivElement>(null)
@@ -150,8 +155,8 @@ function DiffView({ r, step, at }: { r: ReplanResult; step?: number; at: (s: num
                   <Table.Tbody>
                     {d.moved_batches.map(b => (
                       <Table.Tr key={b.batch_id}><Table.Td fw={600}>{b.batch_id}</Table.Td>
-                        <Table.Td>{b.from.dest_id} · day {b.from.dispatch_day}</Table.Td><Table.Td><IconArrowRight size={14} /></Table.Td>
-                        <Table.Td>{b.to.dest_id} · day {b.to.dispatch_day}</Table.Td><Table.Td ta="right">{fmt(b.kg, 1)}</Table.Td></Table.Tr>))}
+                        <Table.Td>{where(b.from)}</Table.Td><Table.Td><IconArrowRight size={14} /></Table.Td>
+                        <Table.Td>{where(b.to)}</Table.Td><Table.Td ta="right">{fmt(b.kg, 1)}</Table.Td></Table.Tr>))}
                   </Table.Tbody>
                 </Table>
                 {!d.moved_batches.length && <Text c="dimmed" size="sm">Every batch kept its destination.</Text>}
@@ -205,7 +210,7 @@ function Flights({ diff }: { diff: Diff }) {
     const t = setTimeout(() => setLanded(true), 600)
     return () => clearTimeout(t)
   }, [landed])
-  const dests = [...new Set(diff.moved_batches.flatMap(b => [b.from.dest_id, b.to.dest_id]))].sort()
+  const dests = [...new Set(diff.moved_batches.flatMap(b => [destOf(b.from), destOf(b.to)]))].sort()
   if (!dests.length) return null
   return (
     <>
@@ -214,11 +219,11 @@ function Flights({ diff }: { diff: Diff }) {
           {dests.map(dest => (
             <div key={dest} className="flight-col">
               <Group gap={6} mb={8}><IconTruck size={16} /><Text fw={700}>{dest}</Text></Group>
-              {diff.moved_batches.filter(b => (landed ? b.to : b.from).dest_id === dest).map(b => (
+              {diff.moved_batches.filter(b => destOf(landed ? b.to : b.from) === dest).map(b => (
                 <m.div key={b.batch_id} layoutId={`flight-${b.batch_id}`} transition={spring.bouncy}
                   className="flight-chip" data-landed={landed || undefined}>
                   <Text fw={700} size="sm">{b.batch_id}</Text>
-                  <Text size="xs" c="dimmed">{fmt(b.kg, 1)} kg · day {(landed ? b.to : b.from).dispatch_day}</Text>
+                  <Text size="xs" c="dimmed">{fmt(b.kg, 1)} kg{dayOf(landed ? b.to : b.from)}</Text>
                 </m.div>
               ))}
             </div>
