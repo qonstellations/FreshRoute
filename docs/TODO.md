@@ -194,6 +194,8 @@ Decisions D-15 … D-23 in `DECISIONS.md`; target-state behaviour in `ARCHITECTU
 
 **G3 result (2026-10-14):** passed. `make check` green (ruff, 168 passed + 1 xfailed, frontend build, demo plan practice/milp_markdown s42 validated with 0 violations). Pratham clicked through `make serve` live in a browser: Plan → scoreboard → waterfall → ladder → reason card → dispatch sheet, all animations working. UI restyled on Mantine + motion (D-24). Open going into Phase 4: U-02 over budget at batches+vehicles 10× (252 s; batches-only 10× now 23 s), U-07 blocked on S-01, C-06 blocked. Tagged `v0.1-spine`.
 
+**Post-G3 polish (2026-10-14, still Phase 3, no new scope in the engine):** presenter story mode (`P` or `?story=1`; →/Space/PageDown next beat, ←/PageUp back, `S` dark stage mode, `1–5` tabs, `?` help; beats in `frontend/src/lib/story.ts`), Scoreboard beats (ladder one policy per beat, spoilage melt), Plan beats (map → sheet → rank-1 reason card), offline SVG route network replacing Leaflet, tabs kept mounted with an interruptible transition (fixes the stutter on rapid tab changes), vendor chunk split. Robustness/Replan beats come with AD-05/AD-06.
+
 ---
 
 ## 7. Phase 4 — A+ add-ons (H18–H21)
