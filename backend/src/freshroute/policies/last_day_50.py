@@ -8,7 +8,7 @@ import pandas as pd
 
 from freshroute import costmodel as cm
 from freshroute.config import DISCOUNT_TIME_TRIGGER_H, FLOAT_TOL, LAST_DAY_DISCOUNT_PCT
-from freshroute.discount import COLUMNS, _lots
+from freshroute.discount import COLUMNS, lots
 from freshroute.io import Scenario
 from freshroute.policies.base import Plan, Policy
 from freshroute.policies.fifo import FifoPolicy
@@ -23,7 +23,7 @@ def last_day_discounts(scenario: Scenario, plan: pd.DataFrame) -> pd.DataFrame:
     rows: list[dict] = []
     if plan.empty:
         return pd.DataFrame(rows, columns=list(COLUMNS))
-    for lot in _lots(plan, t["batches"], t["commodities"]).itertuples():
+    for lot in lots(plan, t["batches"], t["commodities"]).itertuples():
         c = comm.loc[lot.commodity]
         for k in range(int(lot.arrival_day), min(horizon - 1, int(lot.expiry_h // 24)) + 1):
             hours_left = lot.expiry_h - max(24 * k, lot.arrival_h)

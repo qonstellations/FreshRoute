@@ -86,7 +86,7 @@ def discount_pct(
     return Decision(base, trig, chosen, capped_by, chosen > 0, dr)
 
 
-def _lots(plan: pd.DataFrame, batches: pd.DataFrame, comm: pd.DataFrame) -> pd.DataFrame:
+def lots(plan: pd.DataFrame, batches: pd.DataFrame, comm: pd.DataFrame) -> pd.DataFrame:
     p = plan.merge(batches[["batch_id", "commodity"]], on="batch_id")
     # arrival_day arrives as float when the arcs table had NaN rows; lot_id uses the int day
     p["lot_id"] = (p["batch_id"] + "@" + p["dest_id"] + "@"
@@ -114,7 +114,7 @@ def build_discounts(scenario, plan: pd.DataFrame) -> pd.DataFrame:
     rows: list[dict] = []
     if plan.empty:
         return pd.DataFrame(rows, columns=list(COLUMNS))
-    for lot in _lots(plan, t["batches"], t["commodities"]).itertuples():
+    for lot in lots(plan, t["batches"], t["commodities"]).itertuples():
         c = comm.loc[lot.commodity]
         a, last = int(lot.arrival_day), min(horizon - 1, int(lot.expiry_h // 24))
         days = range(a, last + 1)

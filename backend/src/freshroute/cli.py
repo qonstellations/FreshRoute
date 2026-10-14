@@ -28,6 +28,7 @@ from freshroute.config import (
 )
 from freshroute.discount import COLUMNS as DISCOUNT_COLUMNS
 from freshroute.io import load_scenario
+from freshroute.policies import REGISTRY, get_policy
 from freshroute.simulator import simulate
 from validator.validate import validate
 
@@ -45,21 +46,8 @@ ORGANIZER_BASELINE_BLOCKED = (  # also the API's 400 detail (DATABASE.md section
 
 
 def _policy(name: str):
-    if name == "fifo":
-        from freshroute.policies.fifo import FifoPolicy
-        return FifoPolicy()
-    if name == "fefo":
-        from freshroute.policies.fefo import FefoPolicy
-        return FefoPolicy()
-    if name == "last_day_50":
-        from freshroute.policies.last_day_50 import LastDay50Policy
-        return LastDay50Policy()
-    if name == "milp":
-        from freshroute.policies.milp import MilpPolicy
-        return MilpPolicy()
-    if name == "milp_markdown":
-        from freshroute.policies.milp import MilpMarkdownPolicy
-        return MilpMarkdownPolicy()
+    if name in REGISTRY:
+        return get_policy(name)
     if name == "organizer_baseline":
         # Implement this only from the organizers' published procedure. Inventing one and
         # calling it official is the failure AGENTS.md rule 1 exists to prevent.

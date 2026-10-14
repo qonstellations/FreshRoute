@@ -112,4 +112,4 @@ def test_diff_example_refers_to_a_valid_event():
     Event(event_id=d["event_id"], type="route_delay", target="*|D2|*", magnitude=6,
           at_h=d["at_h"])
     assert all(lot["lot_id"].count("@") == 2 and lot["lot_id"].rsplit("@", 1)[1].isdigit()
-               for lot in d["discount_changes"])  # lot_id day is an int (discount._lots)
+               for lot in d["discount_changes"])  # lot_id day is an int (discount.lots)

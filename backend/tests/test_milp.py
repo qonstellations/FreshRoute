@@ -5,8 +5,8 @@ import pandas as pd
 
 from freshroute import config
 from freshroute.io import load_scenario
-from freshroute.policies import milp
 from freshroute.policies.milp import MilpPolicy
+from freshroute.solvers import milp_model
 
 FIX = Path(__file__).parent / "fixtures" / "tiny_3batch"
 TOL = config.FLOAT_TOL
@@ -57,7 +57,7 @@ def test_tiny_time_limit_never_crashes():
 
 def test_greedy_fallback_valid(monkeypatch):
     s = sc()
-    monkeypatch.setattr(milp, "_solve", lambda *a, **k: (None, {"status": "forced"}))
+    monkeypatch.setattr(milp_model, "solve", lambda *a, **k: (None, {"status": "forced"}))
     plan = MilpPolicy().plan(s)
     assert plan.solver["fallback_used"] is True
     assert check_valid(plan, s)
@@ -73,7 +73,7 @@ def test_deterministic():
 def test_fefo_tiebreak_small():
     # section 9.2: eps/usable_life stays under 1 % of the median per-kg margin
     for path in (FIX, Path(__file__).parents[2] / "data" / "scenarios" / "practice"):
-        arcs, _, _ = milp._model_data(load_scenario(path))
+        arcs, _, _ = milp_model.model_data(load_scenario(path))
         tie = (config.EPS_FEFO / arcs.usable_life_at_arrival_h).max()
         assert tie < 0.01 * arcs.margin_inr_kg.median(), path
 
@@ -84,7 +84,7 @@ def test_solver_info_and_c6():
     assert plan.solver["mip_gap"] <= config.MIP_REL_GAP + TOL
     assert isinstance(plan.solver["slack_usage"], dict)
     com = s.tables["batches"].set_index("batch_id").commodity
-    arcs, _, _ = milp._model_data(s)
+    arcs, _, _ = milp_model.model_data(s)
     dem = s.tables["demand"].set_index(["dest_id", "commodity", "day"]).demand_kg_p50
     tot = {}
     for d, c, a in set(zip(arcs.dest_id, arcs.commodity, arcs.arrival_day, strict=True)):
@@ -98,7 +98,7 @@ def test_solver_info_and_c6():
 
 def test_no_incumbent_falls_back(monkeypatch):
     s = sc()
-    monkeypatch.setattr(milp, "_solve", lambda *a, **k: (None, {"status": "TimeLimit"}))
+    monkeypatch.setattr(milp_model, "solve", lambda *a, **k: (None, {"status": "TimeLimit"}))
     plan = MilpPolicy().plan(s)
     assert plan.solver["fallback_used"] is True and len(plan.plan) > 0
     assert plan.solver["slack_usage"] == {} and plan.solver["mip_gap"] is None
@@ -115,7 +115,7 @@ def test_demand_cap_override(monkeypatch):
     key = _kg_by_key(MilpPolicy().plan(s), s).idxmax()
     ctx = {"demand_cap_override": {key: 0.0}}
     assert _kg_by_key(MilpPolicy().plan(s, ctx), s).get(key, 0.0) <= TOL
-    monkeypatch.setattr(milp, "_solve", lambda *a, **k: (None, {"status": "forced"}))
+    monkeypatch.setattr(milp_model, "solve", lambda *a, **k: (None, {"status": "forced"}))
     assert _kg_by_key(MilpPolicy().plan(s, ctx), s).get(key, 0.0) <= TOL  # greedy honours it
 
 

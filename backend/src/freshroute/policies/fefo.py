@@ -6,13 +6,14 @@ from __future__ import annotations
 
 from freshroute.io import Scenario
 from freshroute.policies.base import Plan, Policy
-from freshroute.policies.milp import _build_plan, _greedy, _model_data
+from freshroute.solvers.greedy import fefo_greedy
+from freshroute.solvers.milp_model import build_plan, model_data
 
 
 class FefoPolicy(Policy):
     name = "fefo"
 
     def plan(self, scenario: Scenario, ctx: dict | None = None) -> Plan:
-        arcs, batches, _ = _model_data(scenario)
-        x, n = _greedy(scenario, arcs, batches)
-        return _build_plan(scenario, arcs, x, n, None, self.name)
+        arcs, batches, _ = model_data(scenario)
+        x, n = fefo_greedy(scenario, arcs, batches)
+        return build_plan(scenario, arcs, x, n, None, self.name)

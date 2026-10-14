@@ -1,7 +1,7 @@
 """Day-bucket simulator (ARCHITECTURE.md section 13; D-07, D-08, A-04..A-06).
 
 Executes a plan against a realization and returns the `sim` dict that metrics.compute
-consumes: `ledger`, `origin`, plus `lots` (sim_lots.csv). It never enforces windows or
+consumes: `ledger`, `origin`, plus `lots` (simlots.csv). It never enforces windows or
 capacities (the validator's job). All coefficients come from the scenario tables / config.
 """
 from __future__ import annotations
@@ -11,8 +11,8 @@ import math
 import pandas as pd
 
 from freshroute import costmodel as cm
+from freshroute import discount
 from freshroute.config import FLOAT_TOL
-from freshroute.discount import _lots
 from freshroute.shelflife import decay, usable_life_at_arrival
 
 
@@ -80,7 +80,7 @@ def simulate(scenario, plan: pd.DataFrame, discounts: pd.DataFrame, realization=
 
     lots, transit = [], []  # transit = arrives after the horizon
     if not plan.empty:
-        for r in _lots(plan, t["batches"], t["commodities"]).itertuples():
+        for r in discount.lots(plan, t["batches"], t["commodities"]).itertuples():
             lot = {"lot_id": r.lot_id, "batch_id": r.batch_id, "dest_id": r.dest_id,
                    "commodity": r.commodity, "arrival_h": r.arrival_h,
                    "arrival_day": int(r.arrival_day), "expiry_h": r.expiry_h,
