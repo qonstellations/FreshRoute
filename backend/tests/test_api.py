@@ -190,3 +190,11 @@ def test_post_newsvendor_flag(client, tmp_path):
     r = client.post("/api/runs", json=body)
     assert r.status_code == 202 and r.json()["run_id"] == "tiny_3batch__milp__s42__nv"
     assert _wait(client, r.json()["run_id"])["state"] == "done"
+
+
+def test_records_replaces_inf(tmp_path):
+    from freshroute.api import routes
+
+    p = tmp_path / "t.csv"
+    p.write_text("a,b\n1,inf\n2,-inf\n", encoding="utf-8")
+    assert routes._records(p)["records"] == [{"a": 1, "b": None}, {"a": 2, "b": None}]

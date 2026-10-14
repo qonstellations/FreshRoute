@@ -40,7 +40,7 @@ def _run_dir(run_id: str) -> Path:
 
 
 def _records(path: Path) -> dict:
-    df = pd.read_csv(path)
+    df = pd.read_csv(path).replace([float("inf"), float("-inf")], float("nan"))  # JSON-safe
     return {"columns": list(df.columns),
             "records": df.astype(object).where(df.notna(), None).to_dict(orient="records")}
 
