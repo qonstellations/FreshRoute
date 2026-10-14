@@ -11,14 +11,19 @@ button { padding: 8px 12px; font: inherit; border: 1px solid var(--border); bord
 button:disabled { opacity: .6; cursor: default; }
 .banner { padding: 10px 12px; border-radius: 4px; margin-bottom: 8px; }
 .banner.error { background: var(--error-bg); color: var(--bad); font-weight: 600; }
-.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 8px; }
-.tile { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; }
-.tile-label { font-size: .85rem; color: var(--muted); }
-.tile-value { font-size: 1.5rem; font-weight: 600; margin-top: 4px; }
-.tile-delta { font-size: .9rem; margin-top: 2px; }
-.tile-delta.good { color: var(--good); }
-.tile-delta.bad { color: var(--bad); }
-.tile-delta.neutral { color: var(--muted); }
+/* Scoreboard (D-24) */
+.odo { display: inline-flex; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.odo-digit { display: inline-block; height: 1.15em; line-height: 1.15em; overflow: hidden; }
+.odo-col { display: flex; flex-direction: column; }
+.odo-col > span { height: 1.15em; }
+.kpi-tile { height: 100%; will-change: transform; }
+.kpi-paper { position: relative; overflow: hidden; transition: box-shadow .2s; }
+.kpi-tile:hover .kpi-paper { box-shadow: 0 14px 32px rgb(16 24 40 / .14); }
+.kpi-shine { position: absolute; inset: -50%; pointer-events: none; opacity: 0; transition: opacity .25s;
+  background: radial-gradient(circle at 50% 50%, rgb(255 255 255 / .7), transparent 40%); mix-blend-mode: soft-light; }
+.kpi-tile:hover .kpi-shine { opacity: 1; }
+.hero { background: linear-gradient(120deg, var(--mantine-color-green-8), var(--mantine-color-teal-6)); }
+.num { font-variant-numeric: tabular-nums; }
 .caption, .placeholder { color: var(--muted); font-size: .85rem; }
 table { border-collapse: collapse; margin: 8px 0; background: var(--panel); }
 th, td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; font-size: .9rem; }
