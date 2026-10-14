@@ -25,6 +25,8 @@ module-name = ["freshroute", "validator"]  # D-17: validator installed alongside
 
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]
+# third-party: fastapi.testclient imports starlette's httpx client (not our code)
+filterwarnings = ["ignore:Using `httpx` with `starlette.testclient` is deprecated"]
 
 [tool.ruff]
 line-length = 100
