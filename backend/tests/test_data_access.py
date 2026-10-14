@@ -1,11 +1,7 @@
 import json
-import sys
 from pathlib import Path
 
-import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "app"))
-import data_access  # noqa: E402
+from freshroute.api import data_access
 
 
 def test_fixture_fallback_has_tile_fields(tmp_path):
@@ -67,12 +63,3 @@ def test_baseline_ladder_preferred_and_fefo_when_official_null(tmp_path):
     _write(tmp_path / "x__ladder__s42" / "ladder.json", lad)
     assert data_access.load_baseline("x", 42, tmp_path)["policy"] == "organizer_baseline"
 
-
-def test_app_script_runs_without_exceptions():
-    pytest.importorskip("streamlit")  # RF-01 dropped streamlit; RF-02 deletes app/
-    from streamlit.testing.v1 import AppTest
-
-    at = AppTest.from_file(str(Path(__file__).resolve().parents[2] / "app" / "streamlit_app.py"))
-    at.run(timeout=30)
-    assert not at.exception
-    assert any("SYNTHETIC DATA" in w.value for w in at.warning)

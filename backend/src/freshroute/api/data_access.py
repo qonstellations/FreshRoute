@@ -1,13 +1,13 @@
 """Read-only access to run outputs for the dashboard (ARCHITECTURE §16, DATABASE §5.14).
 
-The app never computes a KPI; it only loads what the pipeline wrote.
+The API never computes a KPI; it only loads what the pipeline wrote.
 """
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[4]  # backend/src/freshroute/api/ -> repo root
 OUTPUTS = ROOT / "outputs"
 FIXTURE = ROOT / "backend" / "tests" / "fixtures" / "metrics_example.json"
 
