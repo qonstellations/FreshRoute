@@ -2,6 +2,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
 import data_access  # noqa: E402
 
@@ -67,6 +69,7 @@ def test_baseline_ladder_preferred_and_fefo_when_official_null(tmp_path):
 
 
 def test_app_script_runs_without_exceptions():
+    pytest.importorskip("streamlit")  # RF-01 dropped streamlit; RF-02 deletes app/
     from streamlit.testing.v1 import AppTest
 
     at = AppTest.from_file(str(Path(__file__).resolve().parents[1] / "app" / "streamlit_app.py"))
