@@ -124,7 +124,8 @@ def _frozen_trips(old_trips: pd.DataFrame, frozen: pd.DataFrame) -> pd.DataFrame
     return tr
 
 
-def _validate(world: Scenario, plan, disc, frozen) -> ValidationReport:
+def _validate(world: Scenario, plan: pd.DataFrame, disc: pd.DataFrame,
+              frozen: pd.DataFrame) -> ValidationReport:
     """Independent validator on the whole plan in the changed world. A violation the frozen
     shipments already cause on their own (in-transit delay, capacity drop on a trip that has
     left) cannot be replanned away: it is reported as a FROZEN_<code> warning (A-43)."""
@@ -140,7 +141,8 @@ def _validate(world: Scenario, plan, disc, frozen) -> ValidationReport:
     return ValidationReport(keep, warn)
 
 
-def _score(world, plan, disc, frozen, run_id, policy, seed):
+def _score(world: Scenario, plan: pd.DataFrame, disc: pd.DataFrame, frozen: pd.DataFrame,
+           run_id: str, policy: str, seed: int) -> tuple[dict, ValidationReport]:
     report = _validate(world, plan, disc, frozen)
     sim = simulate(world, plan, disc)
     sim.update(run_id=run_id, policy=policy, seed=seed, violations=report.violation_total)
@@ -157,7 +159,7 @@ def _alloc(plan: pd.DataFrame) -> dict:
     return out
 
 
-def _moved(old_live: pd.DataFrame, new_live: pd.DataFrame) -> list[dict]:
+def _moved_batches(old_live: pd.DataFrame, new_live: pd.DataFrame) -> list[dict]:
     """Batches whose main undispatched allocation changed; dest_id None = unshipped."""
     a, b = _alloc(old_live), _alloc(new_live)
     out = []
@@ -218,7 +220,7 @@ def replan(world0: Scenario, old_plan: pd.DataFrame, old_trips: pd.DataFrame,
     k_new = {k: m_new["kpis"][k] for k in KPI_KEYS}
     diff = {
         "event_id": ev.event_id, "at_h": ev.at_h, "frozen_shipments": len(frozen),
-        "moved_batches": _moved(old[~is_frozen], new),
+        "moved_batches": _moved_batches(old[~is_frozen], new),
         "discount_changes": _discount_changes(old_disc, disc),
         "kpis_old_plan_under_event": k_old, "kpis_replanned": k_new,
         "delta_kpis": {k: k_new[k] - k_old[k] for k in KPI_KEYS},

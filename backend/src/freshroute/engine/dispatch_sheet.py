@@ -7,6 +7,7 @@ import pandas as pd
 
 from freshroute.config import HOURS_PER_DAY
 from freshroute.data.io import Scenario
+from freshroute.engine.reasons import fmt_num
 
 COLUMNS = (
     "vehicle_id", "trip_id", "dispatch_h", "depart_clock", "dest_id", "dest_name", "batch_id",
@@ -22,7 +23,7 @@ def _clock(h: float) -> str:
 
 def _n(x: float) -> str:
     """Readable number for a phone message: one decimal at most."""
-    return f"{round(x, 1):g}"
+    return fmt_num(x, 1)
 
 
 def build(scenario: Scenario, plan: pd.DataFrame, trips: pd.DataFrame) -> tuple[pd.DataFrame, str]:

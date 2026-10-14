@@ -11,6 +11,7 @@ import math
 import pandas as pd
 
 from freshroute.config import FLOAT_TOL
+from freshroute.data.io import Scenario
 from freshroute.domain import costmodel as cm
 from freshroute.domain import discount
 from freshroute.domain.shelflife import decay, usable_life_at_arrival
@@ -22,7 +23,8 @@ def _price(ser: pd.Series | None, day: int) -> float:
     return float(ser[ser.index <= day].iloc[-1])
 
 
-def _realize(scenario, plan: pd.DataFrame, discounts: pd.DataFrame, real: dict):
+def _realize(scenario: Scenario, plan: pd.DataFrame, discounts: pd.DataFrame,
+             real: dict) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Re-time plan lines under sampled `travel_h` / `rsl_h` (ARCH 14.1, A-42): same dispatch,
     new arrival and usable life (section 7). Discount rows follow their lot to its new id."""
     if plan.empty or not (real.get("travel_h") or real.get("rsl_h")):
@@ -58,7 +60,8 @@ def _realize(scenario, plan: pd.DataFrame, discounts: pd.DataFrame, real: dict):
     return p, discounts
 
 
-def simulate(scenario, plan: pd.DataFrame, discounts: pd.DataFrame, realization=None) -> dict:
+def simulate(scenario: Scenario, plan: pd.DataFrame, discounts: pd.DataFrame,
+             realization: dict | None = None) -> dict:
     """realization: None = base (p50 demand, plan's own arrival/life), or a dict with optional
     "demand_kg": {(dest_id, commodity, day): kg}, "travel_h": {(origin, dest_id, mode): h} and
     "rsl_h": {batch_id: h} overrides (A-28, A-42)."""

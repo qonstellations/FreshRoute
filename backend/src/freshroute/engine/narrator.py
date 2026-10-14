@@ -11,7 +11,7 @@ def _where(x: dict) -> str:
     return "unshipped" if x["dest_id"] is None else f"{x['dest_id']} day {x['dispatch_day']}"
 
 
-def _moved(m: dict) -> str:
+def _describe_move(m: dict) -> str:
     return f"{m['batch_id']} moved {_where(m['from'])} -> {_where(m['to'])} ({m['kg']:,.0f} kg)"
 
 
@@ -22,7 +22,7 @@ def template_narration(diff: dict, metrics: dict) -> str:
     out = [f"Event {diff['event_id']} at hour {diff['at_h']:g}: "
            f"{diff.get('frozen_shipments', 0)} shipments already dispatched stay frozen."]
     if moved:
-        lines = "; ".join(_moved(m) for m in moved[:_SHOW_MOVES])
+        lines = "; ".join(_describe_move(m) for m in moved[:_SHOW_MOVES])
         more = f"; +{len(moved) - _SHOW_MOVES} more" if len(moved) > _SHOW_MOVES else ""
         out.append(f"Replan moved {len(moved)} batches: {lines}{more}.")
     else:

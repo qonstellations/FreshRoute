@@ -32,8 +32,13 @@ _PHRASES = {
 }
 
 
+def fmt_num(x: float, ndigits: int | None = None) -> str:
+    """Compact number text: general format, optionally rounded to ndigits first."""
+    return f"{x if ndigits is None else round(x, ndigits):g}"
+
+
 def _n(x: float) -> str:
-    return f"{x:g}"
+    return fmt_num(x)
 
 
 def render_text(card: dict) -> str:

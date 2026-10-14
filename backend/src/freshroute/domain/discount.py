@@ -15,6 +15,7 @@ from freshroute.config import (
     DISCOUNT_TIME_TRIGGER_H,
     FLOAT_TOL,
 )
+from freshroute.data.io import Scenario
 from freshroute.domain import costmodel as cm
 
 COLUMNS = (
@@ -101,7 +102,7 @@ def lots(plan: pd.DataFrame, batches: pd.DataFrame, comm: pd.DataFrame) -> pd.Da
     return g.sort_values(["dest_id", "commodity", "expiry_h", "lot_id"], kind="stable")
 
 
-def build_discounts(scenario, plan: pd.DataFrame) -> pd.DataFrame:
+def build_discounts(scenario: Scenario, plan: pd.DataFrame) -> pd.DataFrame:
     """discounts.csv rows (one per lot-day) using p50 demand and FEFO residual demand."""
     t = scenario.tables
     comm = t["commodities"].set_index("commodity")

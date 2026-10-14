@@ -19,6 +19,7 @@ from __future__ import annotations
 import pandas as pd
 
 from freshroute.config import SCHEMA_VERSION
+from freshroute.data.io import Scenario
 from freshroute.domain import costmodel as cm
 
 
@@ -26,7 +27,7 @@ def _pct(num: float, den: float) -> float:
     return 100.0 * num / den if den > 0 else 0.0
 
 
-def compute(scenario, plan: pd.DataFrame, discounts: pd.DataFrame, sim: dict) -> dict:
+def compute(scenario: Scenario, plan: pd.DataFrame, discounts: pd.DataFrame, sim: dict) -> dict:
     t = scenario.tables
     led = sim["ledger"].copy()
     org = sim["origin"].copy()
