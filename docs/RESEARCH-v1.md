@@ -2,6 +2,8 @@
 
 **Build Variant A, the solver-first "ShelfSense" engine. After its scoreboard works, add the two cheapest pieces of Variant B: a demand-quantile stress test and a one-click disruption replan. Don't build the full agentic stack.** Spoilage, fulfillment, net economics and feasibility together make up 70 of the 100 rubric points. They are deterministic metrics computed against the organizers' cost model and hidden scenarios. A correct optimizer plus an honest simulator wins those points; agentic polish does not.
 
+> **Historical document.** This is the pre-build research note, kept for provenance and for its source list. Its toolchain suggestions (Streamlit, pydeck, plotly, `statsforecast`, `pip`/venv) are superseded by `DECISIONS.md` D-15 … D-23 and by the layout in `ARCHITECTURE.md` §5: uv, `backend/` (FastAPI) and `frontend/` (React). Nothing here describes the system as built.
+
 ## TL;DR
 - **Pick A+:** an explainable MILP allocation built on HiGHS, using a pre-filtered shelf-life feasibility check and a disclosed, tiered markdown rule. Measure it against an attribution ladder of baselines (FIFO → FEFO-greedy → MILP → MILP + markdown). Then bolt on a stress test and a replan button. Its expected rubric score is about 80–84 out of 100, with the lowest execution risk of the three variants.
 - **The ambitious Variant B (forecasting + an OptiGuide-style LLM copilot) has the highest ceiling, about 85, but a risk-adjusted score of only about 74.** Recent benchmarks show LLM agents still fail most end-to-end operations-research tasks. Use the LLM only as an interface and narrator, never as the formulator.

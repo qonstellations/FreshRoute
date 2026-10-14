@@ -17,8 +17,8 @@ FreshRoute is a hub-level decision tool for perishable produce: given batches wi
 | Role | Person | Owns (primary) | Reviews PRs from |
 |---|---|---|---|
 | **P1 — Optimization lead** | ____________ | `shelflife.py`, `feasibility.py`, `policies/milp.py`, `events.py`, `replan.py`, reason-card fields | **P3** |
-| **P2 — Simulation, metrics & validation** | ____________ | `cli.py`, `config.py`, `schema.py`, `io.py`, `costmodel.py`, `simulator.py`, `metrics.py`, `ladder.py`, `stress.py`, `newsvendor.py`, baselines, `validator/`, `Makefile`, tests infrastructure | **P1** |
-| **P3 — Product, UI & AI/pitch** | ____________ | `generator.py`, `adapters/organizer.py`, `discount.py`, `dispatch_sheet.py`, `narrator.py`, `app/`, README (P3 coordinates; P1 writes assumptions + cost-model mapping, P2 writes quickstart + results — V-03/V-04), deck, demo script, video | **P2** |
+| **P2 — Simulation, metrics & validation** | ____________ | `cli.py`, `config.py`, `schema.py`, `io.py`, `costmodel.py`, `simulator.py`, `metrics.py`, `ladder.py`, `stress.py`, `newsvendor.py`, baselines, `validator`, `api/` (FastAPI), `uv.lock`, `Makefile`, tests infrastructure | **P1** |
+| **P3 — Product, UI & AI/pitch** | ____________ | `generator.py`, `adapters/organizer.py`, `discount.py`, `dispatch_sheet.py`, `narrator.py`, `frontend/` (React), README (P3 coordinates; P1 writes assumptions + cost-model mapping, P2 writes quickstart + results — V-03/V-04), deck, demo script, video | **P2** |
 
 Full module-by-module ownership: `ARCHITECTURE.md` §6. Review rotation is circular (P2 reviews P1, P3 reviews P2, P1 reviews P3) so nobody merges unreviewed and everyone sees the interfaces.
 
@@ -46,20 +46,23 @@ Full module-by-module ownership: `ARCHITECTURE.md` §6. Review rotation is circu
 
 ```bash
 git clone <repo-url> freshroute && cd freshroute
-python -m venv .venv
-source .venv/bin/activate            # Windows: .venv\Scripts\activate
-pip install -r requirements.txt      # use the venv; no --break-system-packages needed inside it
-make setup                           # installs the package in editable mode, runs a smoke test
-make test                            # fast unit tests (aim: well under a minute)
-make run-stub                        # freshroute run --scenario tests/fixtures/tiny_3batch --policy milp --seed 42
-make app                             # Streamlit dashboard
-make check                           # ruff + pytest + validate the demo plan  (run before every push)
-make demo                            # THE one command all slide numbers come from
+uv sync                             # creates .venv from uv.lock (Python 3.11, D-15/D-22)
+npm ci --prefix frontend            # frontend deps from package-lock.json (Node 22+)
+make setup                          # both of the above, plus an editable install of the backend
+make test                           # fast unit tests (aim: well under a minute)
+make run-stub                       # freshroute run --scenario tests/fixtures/tiny_3batch --policy milp --seed 42
+make api                            # FastAPI on http://127.0.0.1:8000/docs
+make web                            # Vite dev server on http://localhost:5173 (proxies /api)
+make serve                          # build the SPA and serve it from the API — the demo URL
+make check                          # ruff + pytest + frontend build + validate the demo plan (before every push)
+make demo                           # THE one command all slide numbers come from
 ```
+
+**There is no `pip install` and no `requirements.txt`** (D-15). Anything Python runs through `uv run`; anything Node runs through `npm --prefix frontend run …`. `uv sync` is the only install step, and `uv lock --check` fails if `pyproject.toml` and `uv.lock` disagree.
 
 No `make` (e.g. plain Windows)? Run the commands written in the comments at the top of the `Makefile`.
 
-Core dependencies: `pandas`, `numpy`, `scipy>=1.9`, `pulp`, `highspy`, `pydantic>=2`, `streamlit`, `pydeck`, `plotly`, `pytest`, `ruff`. Optional: an LLM client (only for the AD-09 stretch). `statsforecast` is **not** used in this build.
+Core dependencies: `pandas`, `numpy`, `scipy>=1.9`, `pulp`, `highspy`, `pydantic>=2`, `fastapi`, `uvicorn`; dev group `pytest`, `ruff`, `httpx`; frontend `react`, `recharts`, `react-leaflet`. Optional: an LLM client (only for the AD-09 stretch). `statsforecast` is **not** used in this build.
 
 Environment variables (never committed): `LLM_API_KEY` (and provider name) if AD-09 is attempted. Put them in `.env`, which is git-ignored.
 
@@ -71,8 +74,8 @@ Environment variables (never committed): `LLM_API_KEY` (and provider name) if AD
 
 - **Branches:** `p1/feat-milp-objective`, `p2/fix-validator-window`, `p3/ui-waterfall` — `<person>/<type>-<topic>`.
 - **Commits** (conventional): `type(scope): summary (TASK-ID)`
-  - types: `feat fix test docs chore refactor perf`
-  - scopes: `gen sim metrics validator milp feas discount stress replan newsvendor ui narrator cli io cost docs`
+  - types: `feat fix test docs chore refactor perf build`
+  - scopes: `gen sim metrics validator milp feas discount stress replan newsvendor ui api frontend narrator cli io cost docs`
   - example: `feat(milp): add unshipped-expiry penalty (C-01)`
 - **Pull requests:** keep them small (aim under ~300 changed lines; one task ID per PR). Title starts with the task ID. Reviewer responds within ~10 minutes; if the reviewer is unavailable for 10 minutes, pair-review on a call and merge — don't let PRs wait.
 - **Before opening:** rebase on `main`, run `make check`, update docs if a contract changed (§7).
@@ -99,7 +102,7 @@ Review checklist: does it match the contract? does a test prove it? any literal 
 
 ## 6. Code standards
 
-- Python **3.10+** (one pinned version in `.python-version`). Format and lint with **ruff**; type hints on all public functions.
+- Python **3.10+** for the package floor; the team develops on the single version pinned in `.python-version` (3.11, D-22). Format and lint with **ruff**; type hints on all public functions.
 - **Units in names and docstrings:** `_kg`, `_h`, `_inr`, `_inr_kg`, `_c`, `_pct` (0–100), `_frac` (0–1). Percent → fraction conversion happens **only** in `io.py` (D-06).
 - **Column names** come from constants in `schema.py`; no stringly-typed column names scattered around.
 - **No magic numbers:** tunables in `config.py`, coefficients from the dataset. Every default in `config.py` has a comment saying whether it comes from the research doc or is a team assumption.
@@ -108,7 +111,9 @@ Review checklist: does it match the contract? does a test prove it? any literal 
 - **Float tolerance:** compare with `FLOAT_TOL` from `config.py` (default 1e-6), never `==` on floats.
 - **Logging, not print,** in library code. Warnings from data loading are counted and shown (`DATABASE.md` §7).
 - **Errors:** fail loudly on bad input at load time; **never** swallow exceptions in the pipeline. Solver trouble is handled by the documented fallbacks (`ARCHITECTURE.md` §9.5), and fallbacks are recorded in the manifest and shown in the UI.
-- **UI rule:** `app/` only reads `outputs/` (via `data_access.py`) and calls CLI functions; it never computes a KPI.
+- **API rule:** `freshroute/api/` serves `outputs/` files verbatim and may enqueue `cli.run`/`ladder.run_ladder`. It never computes, derives or aggregates a KPI; a response field is either a field in a run file or one of the documented wrappers (`DATABASE.md` §11.1).
+- **Frontend rule:** `frontend/` renders the JSON it is given. No KPI maths in components; the only arithmetic is a display delta between two stored numbers and it lives in `frontend/src/lib/delta.ts`. Types mirror `DATABASE.md` §11.2 in `frontend/src/types.ts`.
+- **Frontend standards:** TypeScript strict mode, functional components, one `fetch` wrapper in `src/api/client.ts`, no global state library, no router until a page needs one. `npm run build` (which runs `tsc`) is the gate — `make check` runs it.
 - **Docs in code:** each module starts with a 3–5 line docstring naming the section of `ARCHITECTURE.md` it implements.
 
 ---
@@ -118,16 +123,17 @@ Review checklist: does it match the contract? does a test prove it? any literal 
 **Contracts** = anything another person's code or the UI depends on:
 - table/column definitions and file formats (`DATABASE.md`)
 - `metrics.json`, `plan.csv`, `validation.json`, `reason_cards.json`, `diff.json`, event schema
+- the HTTP API: endpoints, request/response shapes, `api_version` (`DATABASE.md` §11)
 - CLI commands/flags and `make` targets
 - function signatures listed in `ARCHITECTURE.md` §6
 
 **To change a contract:**
 1. Update the relevant document **in the same PR** as the code.
 2. Post `CONTRACT: <what changed, who is affected>` in the team chat before merging.
-3. Bump `schema_version` if a file/JSON format changed, and update `tests/fixtures/metrics_example.json` so the UI keeps working.
+3. Bump `schema_version` if a file/JSON format changed, `api_version` if an endpoint changed, and update `tests/fixtures/metrics_example.json` plus `frontend/src/types.ts` so the UI keeps working.
 4. The affected owner approves the PR.
 
-**IDs:** `A-xx` = assumption, `D-xx` = decision, `AD-xx` = A+ add-on task; other task prefixes are in the `TODO.md` ID legend.
+**IDs:** `A-xx` = assumption, `D-xx` = decision, `AD-xx` = A+ add-on task, `RF-xx` = toolchain/UI refactor task; other task prefixes are in the `TODO.md` ID legend.
 
 **Assumptions and decisions:** a new modelling assumption goes in `ARCHITECTURE.md` §20 (next free `A-xx`); a design decision goes in `DECISIONS.md` (next free `D-xx`). If the organizers' documents contradict an assumption, update the row and the code — theirs wins.
 
@@ -154,6 +160,8 @@ Review checklist: does it match the contract? does a test prove it? any literal 
 | Newsvendor | Critical-ratio value, clamp, `c_u ≤ 0` ⇒ target 0 (AD-04) |
 | Edge cases | Zero capacity, all-expired batch, demand spike, missing demand day, single destination — no crash, validated plan (U-05) |
 | Narrator | Guard rejects a narration containing a number not in the JSON (AD-09) |
+| HTTP API | `fastapi.testclient.TestClient`: `/api/health`; run list + fixture fallback; a response equals the file on disk byte for byte; `POST /api/runs` → 202 → poll status → `done` with `metrics.json` written; unknown run/scenario/policy → 404/400, never 500; table + CSV endpoints (RF-06) |
+| Frontend | `npm run build` (runs `tsc` in strict mode) in `make check`; a golden-path click-through on the demo scenario before G3 and at G5 (RF-07, H-04) |
 
 Bug found? Write the failing test first when it takes less than five minutes.
 
@@ -181,10 +189,12 @@ Bug found? Write the failing test first when it takes less than five minutes.
 
 ---
 
-## 11. Demo hygiene (from H12 onward)
+## 11. Demo hygiene (from H18 onward)
 
 - Every slide number comes from `make demo` on the frozen tag — never from a one-off run.
 - Rehearse on the demo laptop with Wi-Fi off. Keep `outputs/demo_backup/` and the video (in two places) ready.
+- Start the demo with **`make serve`** and leave the browser on the URL it prints. Nothing else needs starting: the CLI, the engine and the API all run in one process, and no page fetches anything from the internet.
+- If the SPA will not load, the numbers are still safe: `make demo` prints the scoreboard in the terminal, and the video covers the click-through.
 - The golden path is fixed: **Plan → scoreboard → one reason card → one discount card → one canned disruption → stress bands.** No live debugging on stage; if something breaks, switch to the video.
 - Say only what was measured (plan time, replan time, % of futures where we beat the baseline).
 
@@ -206,5 +216,7 @@ Bug found? Write the failing test first when it takes less than five minutes.
 - **MILP doesn't beat FEFO →** compare objective coefficients to the simulator (C-04) before tuning anything.
 - **Organizer cost model differs →** change `costmodel.py`/`config.py`/adapter only; update `ARCHITECTURE.md` §7 and §20 in the same PR.
 - **Solver slow or failing →** time limit + incumbent + FEFO fallback + aggregation (`ARCHITECTURE.md` §9.5); record it in the manifest.
+- **`uv.lock` out of date →** never hand-edit it; run `uv lock`, commit `pyproject.toml` and `uv.lock` together, and re-run `make check`. A teammate whose `.venv` disagrees should delete it and `uv sync`.
+- **`import validator` fails after a pull →** the package is installed from `backend/src` (D-17); `uv sync --reinstall-package freshroute` fixes a stale editable install.
 - **Merge conflict in a shared file →** the person who merged second resolves it, and tells the other.
 - **Disagreement on an approach →** timebox to 5 minutes; the module owner decides; log it in `DECISIONS.md` if it matters.

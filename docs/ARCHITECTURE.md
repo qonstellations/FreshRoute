@@ -39,10 +39,10 @@ Expected rubric result for A+ is ~82–84/100. That is a judgement-based project
 | Spoilage reduction (20) | Feasibility pre-filter removes "doomed" dispatches; FEFO tie-break; markdown clears the tail | `feasibility.py`, `policies/milp.py`, `discount.py` |
 | Demand fulfillment (15) | Objective rewards sell-through; balance constraint stops one destination being starved | `policies/milp.py` (C5, C6), `metrics.py` |
 | Net economic outcome (20) | Objective is the organizers' cost terms; one cost model for all policies | `costmodel.py`, `simulator.py` |
-| Allocation feasibility (15) | Infeasible arcs have no variable; independent validator reports 0 violations | `feasibility.py`, `validator/` |
+| Allocation feasibility (15) | Infeasible arcs have no variable; independent validator reports 0 violations | `feasibility.py`, `validator` |
 | Robustness & sensitivity (10) | MC bands, q10/ε sensitivity, replan | `stress.py`, `replan.py`, sensitivity harness |
 | Engineering & reproducibility (10) | One seeded command, tests, run manifest, fresh-clone test | `cli.py`, `tests/`, `run_manifest.json` |
-| Explainability & commercial (10) | Reason cards, dispatch sheet, positioning slide | `reasons.py`, `dispatch_sheet.py`, `app/` |
+| Explainability & commercial (10) | Reason cards, dispatch sheet, positioning slide | `reasons.py`, `dispatch_sheet.py`, `frontend/` |
 
 Total = 20+15+20+15+10+10+10 = **100**. The first four rows (70 pts) are deterministic metrics against the organizers' cost model and hidden scenarios: **a correct optimizer plus an honest simulator wins those points; polish does not.**
 
@@ -52,14 +52,15 @@ Total = 20+15+20+15+10+10+10 = **100**. The first four rows (70 pts) are determi
 
 1. **Organizer overrides ours.** All coefficients live in `costmodel.py` / `config.py` / the dataset. No literals elsewhere.
 2. **Feasible by construction, verified independently.** Infeasible (batch, destination, vehicle, day) arcs get no decision variable; the independent validator re-checks the final plan.
-3. **Validator independence.** `validator/` re-implements the feasibility maths from the spec and imports **only** `freshroute.schema` and `freshroute.io` (plus stdlib/pandas/numpy). A test enforces this.
+3. **Validator independence.** `validator` (package `backend/src/validator/`) re-implements the feasibility maths from the spec and imports **only** `freshroute.schema` and `freshroute.io` (plus stdlib/pandas/numpy). A test enforces this.
 4. **One simulator scores everything.** FIFO, FEFO, MILP, MILP+markdown, organizer baseline all go through the same `simulator.py` and `costmodel.py`.
 5. **Deterministic.** Same scenario + same seed + same flags ⇒ byte-identical `metrics.json` (apart from the timestamp/runtime fields in `run_manifest.json`).
 6. **The LLM never decides.** It may translate a sentence into a schema-validated event and narrate metrics JSON it was given. HiGHS decides.
 7. **Add-ons are flags, not forks.** `--newsvendor`, `--no-markdown`, `stress`, `replan` can each be switched off without breaking the spine.
 8. **Never return "infeasible", never crash on a scenario.** Soft-constraint slacks, solve time limit, and a FEFO-greedy fallback plan (see §9.5).
-9. **Offline demo.** All demo data is local; no live API; backup video queued.
-10. **Measured numbers only.** Every number on a slide comes from `make demo` output with a fixed seed. Label synthetic data as synthetic.
+9. **The UI shows, the engine decides.** `freshroute.api` serves `outputs/` files verbatim and may enqueue an engine run; `frontend/` renders the JSON it is given. Neither computes a KPI (D-18).
+10. **Offline demo.** All demo data is local; no live API; backup video queued.
+11. **Measured numbers only.** Every number on a slide comes from `make demo` output with a fixed seed. Label synthetic data as synthetic.
 
 ---
 
@@ -86,15 +87,18 @@ Total = 20+15+20+15+10+10+10 = **100**. The first four rows (70 pts) are determi
  stress.py (A+) ─────► simulator.py ──► sim_ledger.csv ──► metrics.py ──► metrics.json
  replan.py (A+) ──────────┘                                    ▲
                                                                │
-                              validator/ (independent) ──► validation.json
+                              validator (independent) ──► validation.json
                                               │
                           reasons.py · dispatch_sheet.py ──► reason_cards.json · dispatch_sheet.*
                                               │
                                               ▼
-                          app/ (Streamlit) — reads outputs/ only, never recomputes metrics
+                 freshroute/api/ (FastAPI) ──► serves outputs/ verbatim, may enqueue a run
+                                              │
+                                              ▼
+                 frontend/ (React SPA) ──► renders the JSON it is given, never recomputes a KPI
 ```
 
-The UI is a **viewer**: it shows what the engine wrote to `outputs/<run_id>/` and triggers CLI functions for "Plan" and "Replan". It never computes a KPI itself, which keeps every number traceable to `run_manifest.json`.
+The UI is a **viewer**: it shows what the engine wrote to `outputs/<run_id>/` and triggers engine functions for "Plan" and "Replan" through the API (D-18, D-21). It never computes a KPI itself, which keeps every number traceable to `run_manifest.json`.
 
 ---
 
@@ -104,24 +108,29 @@ The UI is a **viewer**: it shows what the engine wrote to `outputs/<run_id>/` an
 freshroute/
 ├── README.md  AGENTS.md  DECISIONS.md
 ├── docs/                       # ARCHITECTURE.md  DATABASE.md  TODO.md  CONTRIBUTING.md  RESEARCH-v1.md
-├── Makefile  pyproject.toml  requirements.txt  .python-version  .gitignore
+├── Makefile  pyproject.toml  uv.lock  .python-version  .gitignore      # uv only, no requirements.txt (D-15)
 ├── data/
 │   ├── organizer/              # raw organizer files (gitignored unless rules allow committing)
 │   ├── agmarknet/              # cached CSV snapshot (Agmarknet via data.gov.in)
 │   └── scenarios/<name>/       # our 8 CSV tables (+ optional geo.csv) + scenario.json
-├── src/freshroute/
-│   ├── cli.py  config.py  schema.py  io.py  events.py
-│   ├── costmodel.py  shelflife.py  feasibility.py
-│   ├── generator.py  discount.py  simulator.py  metrics.py  ladder.py
-│   ├── stress.py  replan.py  newsvendor.py
-│   ├── reasons.py  dispatch_sheet.py  narrator.py
-│   ├── adapters/organizer.py
-│   └── policies/  base.py  fifo.py  fefo.py  last_day_50.py  organizer_baseline.py  milp.py
-├── validator/                  # top-level package, INDEPENDENT of src/freshroute logic
-│   └── validate.py  rules.py
-├── app/                        # Streamlit: streamlit_app.py  data_access.py  components/
+├── backend/                    # everything server-side (D-16)
+│   ├── src/freshroute/
+│   │   ├── cli.py  config.py  schema.py  io.py  events.py
+│   │   ├── costmodel.py  shelflife.py  feasibility.py
+│   │   ├── generator.py  discount.py  simulator.py  metrics.py  ladder.py
+│   │   ├── stress.py  replan.py  newsvendor.py
+│   │   ├── reasons.py  dispatch_sheet.py  narrator.py
+│   │   ├── api/                # FastAPI: serves outputs/ verbatim, may enqueue a run (§16, D-18)
+│   │   │   └── app.py  data_access.py  routes.py  schemas.py  jobs.py
+│   │   ├── adapters/organizer.py
+│   │   └── policies/  base.py  fifo.py  fefo.py  last_day_50.py  organizer_baseline.py  milp.py
+│   ├── src/validator/          # second top-level package, INDEPENDENT of freshroute logic (D-17)
+│   │   └── validate.py  rules.py
+│   └── tests/                  # fixtures/tiny_3batch/  fixtures/metrics_example.json  test_*.py
+├── frontend/                   # React SPA: Vite + TypeScript + recharts + react-leaflet (D-19)
+│   ├── package.json  package-lock.json  vite.config.ts  tsconfig.json  index.html
+│   └── src/  main.tsx  App.tsx  api/  components/  pages/  lib/  types.ts
 ├── scripts/                    # build_prices.py (Agmarknet → prices.csv)
-├── tests/                      # fixtures/tiny_3batch/  fixtures/metrics_example.json  test_*.py
 └── outputs/                    # gitignored, EXCEPT outputs/demo_backup/ (committed at freeze)
 ```
 
@@ -141,12 +150,14 @@ Owners: **P1** = Optimization lead · **P2** = Simulation, metrics & validation 
 | `policies/fifo.py`, `fefo.py`, `last_day_50.py`, `organizer_baseline.py` | P2 | Baselines (§12) |
 | `discount.py` | P3 | Tiered markdown rule (§10), pure function + tests |
 | `simulator.py`, `metrics.py`, `ladder.py` | P2 | Execution, KPIs, attribution ladder, waterfall data |
-| `validator/` | P2 | Independent constraint checker (§11) |
+| `validator` (`backend/src/validator/`) | P2 | Independent constraint checker (§11) |
 | `reasons.py` | P1 (fields) / P3 (templates) | Reason-card fields and rendered text |
 | `stress.py`, `newsvendor.py` | P2 | Monte Carlo + sensitivity; quantile demand targets |
 | `events.py`, `replan.py` | P1 | Event schema (pydantic), apply, freeze, re-solve, diff |
 | `generator.py`, `adapters/organizer.py` | P3 | Practice-data generator; organizer-format adapter (P2 owns the *export* of plans in the organizer's submission format) |
-| `dispatch_sheet.py`, `narrator.py`, `app/` | P3 | Dispatch sheet, narration (template first, LLM optional), dashboard |
+| `dispatch_sheet.py`, `narrator.py` | P3 | Dispatch sheet, narration (template first, LLM optional) |
+| `api/` (FastAPI) | P2 | HTTP surface over `outputs/` and the run queue; never a KPI (§16, D-18, D-21) |
+| `frontend/` (React) | P3 | Dashboard: scoreboard, plan, robustness, replan, trust (§16, D-19) |
 
 Key function contracts (names are the contract; internals are free):
 
@@ -205,7 +216,7 @@ Net            = Revenue − Transport − Handling − Spoilage cost
 
 **Spoilage %** = `spoiled_kg / Σ batches.qty_kg × 100`.
 
-**Feasibility score** = number of **hard** violations reported by `validator/` (never by optimizer code).
+**Feasibility score** = number of **hard** violations reported by `validator` (never by optimizer code).
 
 **Carry-over.** Stock still unexpired at horizon end (at origin or at destinations) is neither spoiled nor valued; it is reported as `carryover_kg` so nothing is hidden (A-06).
 
@@ -309,7 +320,7 @@ Shelf price (D-08): the simulator uses **one shelf price per destination × comm
 
 ---
 
-## 11. Independent validator (`validator/`)
+## 11. Independent validator (`backend/src/validator/`)
 
 Inputs: scenario tables, `plan.csv`, `discounts.csv`. Output: `validation.json` with `violations` (hard) and `warnings` (soft).
 
@@ -318,7 +329,7 @@ Inputs: scenario tables, `plan.csv`, `discounts.csv`. Output: `validation.json` 
 
 **Warnings** (reported, not counted): `DEMAND_CAP_EXCEEDED` (over `target·(1+overship_slack)`), `SLACK_USED`, `FALLBACK_PLAN_USED`.
 
-Independence rules: re-implement `decay`/usable-life from §7 (do not import `shelflife.py`); allowed imports are stdlib, pandas, numpy, `freshroute.schema`, `freshroute.io`. Tests: (a) an AST test fails if `validator/` imports any other `freshroute` module; (b) for each hard-violation code, inject one known violation into a clean fixture plan and assert exactly that code appears; (c) a randomized test asserts `validator` and `shelflife.py` agree on usable life.
+Independence rules: re-implement `decay`/usable-life from §7 (do not import `shelflife.py`); allowed imports are stdlib, pandas, numpy, `freshroute.schema`, `freshroute.io`, `validator` itself. Tests: (a) an AST test fails if the `validator` package imports any other `freshroute` module; (b) for each hard-violation code, inject one known violation into a clean fixture plan and assert exactly that code appears; (c) a randomized test asserts `validator` and `shelflife.py` agree on usable life. The package lives beside `freshroute` in the same src root only so it is importable from an installed console script (D-17); sharing a directory does not weaken the rule.
 
 ---
 
@@ -402,18 +413,30 @@ Reason codes for the runner-up: `SHELF_LIFE`, `WINDOW`, `CAPACITY_BOUND`, `DEMAN
 
 ---
 
-## 16. Dashboard (`app/`, Streamlit)
+## 16. Dashboard (`frontend/`, React SPA over `backend/src/freshroute/api/`)
 
 | Area | Contents |
 |---|---|
 | Sidebar | scenario picker, seed, flags (markdown on/off, newsvendor on/off), `q10` slider, ε multiplier, **Plan** button |
 | Scoreboard | 4 KPI tiles (spoilage kg and %, fulfillment %, net ₹, violations: baseline n vs ours), min fill rate, waterfall, attribution ladder, validator panel |
-| Plan | priority-ordered dispatch table, reason card drawer, discount cards, shelf-life countdown map (pydeck; colour table is the fallback) |
+| Plan | priority-ordered dispatch table, reason card drawer, discount cards, shelf-life countdown map (react-leaflet; colour table is the fallback) |
 | Robustness | MC fan chart / bands, % scenarios beating baseline, sensitivity table |
 | Replan | 5 canned events dropdown (+ NL box if stretch done), apply, diff view, ΔKPIs, narration |
 | Trust | assumptions, cost-model coefficients, `run_manifest.json` (seed, git SHA, scenario hash, solver status) |
 
-Data access only through `app/data_access.py` (reads `outputs/`). Demo runs live from local data; `outputs/demo_backup/` and the recorded video are the fallbacks.
+### 16.1 Layers and the rules between them
+
+```
+frontend/ (React, TS)  ──HTTP──►  freshroute/api/ (FastAPI)  ──in-process──►  cli.run / ladder.run_ladder
+       renders JSON verbatim            serves outputs/ verbatim                    writes outputs/<run_id>/
+```
+
+- **The engine still decides.** The API may *trigger* an engine function and may serve files the engine wrote. It never computes, derives or aggregates a KPI (D-18). The frontend never computes a KPI either; the only arithmetic it may do is a display delta between two stored numbers, and that lives in one helper (`frontend/src/lib/delta.ts`).
+- **Read path:** every screen is a projection of a run directory under `outputs/`. Missing files are absent keys, never invented values. The synthetic-data banner is driven by `scenario.json → source` and is always shown when `source = synthetic`.
+- **Write path:** `POST /api/runs` enqueues one run and returns immediately (202). One serialized worker thread runs it so two HiGHS solves never compete for the same laptop; the status file `outputs/.api/jobs/<run_id>.json` tells the frontend whether to poll, show the result or show an error (D-21). `metrics.json` on disk is the definition of "done", so state survives an API restart.
+- **Endpoint contract:** `DATABASE.md` §11. Types on the frontend mirror it; a field added there is added to `frontend/src/types.ts` in the same change.
+- **Dev vs demo:** in development Vite proxies `/api` to `127.0.0.1:8000`; in the demo FastAPI serves `frontend/dist` from the same origin (D-20), so there is one URL, no CORS and nothing to start twice.
+- Demo runs live from local data; `outputs/demo_backup/` and the recorded video are the fallbacks.
 
 ---
 
@@ -432,7 +455,20 @@ freshroute demo      --scenario <demo> --seed 42                                
 
 Flag semantics: `--no-markdown` skips the §10 markdown stage, so `--policy milp_markdown --no-markdown` ≡ `--policy milp`; `--newsvendor` swaps the demand cap for the §14.3 target. `run_manifest.json → flags.markdown` records the effective setting.
 
-`make setup · test · check · demo · app · run-stub`. `make check` = ruff + pytest + validate the demo plan. `make demo` is **the one command** every pitch number comes from. (No `make` on Windows? Run the commands written in the Makefile comments.)
+`make setup · test · check · demo · api · web · serve · run-stub`. `make check` = ruff + pytest + frontend type/build + validate the demo plan. `make demo` is **the one command** every pitch number comes from. (No `make` on Windows? Run the commands written in the Makefile comments.)
+
+Toolchain (D-15): uv owns Python. `uv sync` installs the project plus the dev group from `uv.lock`; `uv run <cmd>` is the only way anything is executed; `uv lock --check` fails if `pyproject.toml` and `uv.lock` disagree; `uv python pin` sets `.python-version` (D-22). There is no `requirements.txt` and no `pip install` in any recipe.
+
+| Target | What it does |
+|---|---|
+| `make setup` | `uv sync` + `npm ci` in `frontend/` |
+| `make test` | `uv run pytest -q` |
+| `make check` | ruff + pytest + `npm run build` (tsc) + validate the demo plan |
+| `make demo` | the one command behind every reported number (still the CLI, never HTTP) |
+| `make api` | `uv run uvicorn freshroute.api.app:app --reload` on `127.0.0.1:8000` |
+| `make web` | Vite dev server on `5173`, proxying `/api` |
+| `make serve` | build `frontend/dist`, then run the API serving it — **the demo URL is one command** |
+| `make run-stub` | `freshroute run --scenario tests/fixtures/tiny_3batch --policy milp --seed 42` |
 
 ---
 
@@ -441,7 +477,9 @@ Flag semantics: `--no-markdown` skips the §10 markdown stage, so `--policy milp
 - Seeds: generator seed, MC base seed, tie-breaking seed; defaults 42.
 - `run_manifest.json` records: `schema_version`, git SHA, seed, policy, flags, scenario path + SHA-256 of the sorted scenario CSV bytes, package versions, solver status, `mip_gap`, `solve_seconds`, `slack_usage`, `fallback_used`, timestamp.
 - Determinism test (C-08): run twice → identical `metrics.json`.
-- Fresh-clone test (R-01): clone into a new directory on another machine, `make setup && make demo`, compare headline numbers.
+- Dependency versions come from `uv.lock` (Python) and `package-lock.json` (Node); both are committed and neither is edited by hand.
+- Fresh-clone test (R-01): clone into a new directory on another machine, `make setup && make demo`, compare headline numbers. The clone needs Node 22+ for `npm ci`; the demo laptop checklist (R-02) covers that.
+- The API and the frontend are outside the determinism contract: they read run directories and never recompute them, so a given `outputs/` renders identically every time.
 
 ---
 
@@ -467,6 +505,9 @@ Flag semantics: `--no-markdown` skips the §10 markdown stage, so `--policy milp
 | `NEWSVENDOR_MARKDOWN_REF` | 0.20 | team assumption |
 | `DEFAULT_SEED` | 42 | research doc (CLI example) |
 | `FLOAT_TOL` | 1e-6 | team assumption (kg and h comparisons) |
+| `API_HOST` / `API_PORT` | `127.0.0.1` / `8000` | team assumption (D-18) — loopback only; there is no auth (§21) |
+| `API_CORS_ORIGINS` | `["http://localhost:5173"]` | team assumption — dev only; the demo is same-origin (D-20) |
+| `JOB_WORKERS` | 1 | team assumption (D-21) — solves are serialized so the demo laptop never runs two HiGHS jobs at once |
 
 ---
 
@@ -531,9 +572,10 @@ Anything marked **confirm** must be checked against the organizers' documents at
 | Replan breaks constraints mid-demo | Validator runs inside `replan`; failing replan falls back to precomputed scenario loaded instantly |
 | MC too slow | 200 → 50 → 3 named scenarios |
 | LLM hallucination | Schema validation, number guard, template narration, dropdown fallback |
-| Solver install fails on demo laptop | `outputs/demo_backup/` + recorded video |
-| Streamlit crash during demo | Recorded video; `make demo` printed scoreboard |
-| Network down at venue | Demo is fully local; nothing calls the internet |
+| Solver install fails on demo laptop | `outputs/demo_backup/` + recorded video; `make serve` from a previously built `frontend/dist` |
+| Frontend fails to build or the API will not start | Recorded video; `make demo` printed scoreboard; `frontend/dist` rebuilt from the lockfile (`npm ci && npm run build`) |
+| Node missing on the demo laptop | R-02 checklist covers it; the CLI, `make demo` and every reported number work without the frontend at all |
+| Network down at venue | Demo is fully local; nothing calls the internet (the API serves the SPA from disk, so no CDN, no font or map tile is fetched — Leaflet tiles degrade to the colour-table fallback) |
 
 ---
 
@@ -545,9 +587,10 @@ Anything marked **confirm** must be checked against the organizers' documents at
 | Replan | < 5 s (gate G4); say only the measured time in the pitch | AD-02 |
 | MC 200 scenarios (evaluate only) | measure; if too slow, drop to 50 | AD-03 |
 | `make demo` end-to-end | team target ~5 min; measure | U-06 |
+| `make serve` to first paint | not a budget item; dev-only numbers, never quoted in the pitch | RF-07 |
 
 ---
 
 ## 23. Decision log
 
-Moved to the repo-root `DECISIONS.md` (D-01 … D-13). Add new decisions there.
+Moved to the repo-root `DECISIONS.md` (D-01 … D-23). Add new decisions there.

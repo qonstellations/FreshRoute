@@ -5,7 +5,9 @@ Check items off as they land on `main`. Task IDs are stable — reference them i
 
 > Companion docs: `ARCHITECTURE.md` (how it works) · `DATABASE.md` (data contracts) · `CONTRIBUTING.md` (how we work).
 > **Rule #1: the organizers' cost model and dataset format override ours.** S-02 exists to make that mapping explicit.
-> **ID legend:** `PRE` pre-event · `S` scaffolding · `F` foundations · `C` core engine · `U` product surface · `AD` A+ add-ons · `H` hardening · `V` wrap-up · `R` release/rehearsal · `G0–G7` gates. **`A-xx` always means an *assumption*** (`ARCHITECTURE.md` §20) and `D-xx` a *decision* (`DECISIONS.md`) — never a task.
+> **ID legend:** `PRE` pre-event · `S` scaffolding · `F` foundations · `C` core engine · `RF` toolchain/UI refactor · `U` product surface · `AD` A+ add-ons · `H` hardening · `V` wrap-up · `R` release/rehearsal · `G0–G7` gates. **`A-xx` always means an *assumption*** (`ARCHITECTURE.md` §20) and `D-xx` a *decision* (`DECISIONS.md`) — never a task.
+
+> **Clock (D-23):** the 20 h clock restarts at the refactor (Phase 2.5, ~5 h of wall clock / ~8 person-hours). Every gate after G2 shifts by six hours: **G3 H12 → H18, G4 H15 → H21, G5 (freeze) H17 → H23, G6 H18 → H24, G7 H20 → H26.**
 
 ---
 
@@ -15,7 +17,7 @@ Check items off as they land on `main`. Task IDs are stable — reference them i
 |---|---|---|
 | **P1 — Optimization lead** | Aarush | shelf-life maths, feasibility filter, MILP, replan, reason-card fields, LLM narrator (stretch) |
 | **P2 — Simulation, metrics & validation** | Omcar | repo/CLI skeleton, cost model, simulator, metrics, independent validator, baselines, ladder, Monte Carlo, newsvendor, determinism/perf |
-| **P3 — Product, UI & AI/pitch** | Pratham | generator/adapter, discount rule, Streamlit dashboard, dispatch sheet, template narration, deck, demo script, video |
+| **P3 — Product, UI & AI/pitch** | Pratham | generator/adapter, discount rule, React frontend, dispatch sheet, template narration, deck, demo script, video |
 
 (Research doc's 4-role plan merged for a team of 3: UI + product/pitch + AI = P3.)
 
@@ -23,26 +25,31 @@ Check items off as they land on `main`. Task IDs are stable — reference them i
 
 ## 1. Timeline at a glance
 
+Phases 0–2 are done (G2 passed). The toolchain/UI refactor sits between them and Phase 3, and shifts every later gate (D-23).
+
 | Phase | Hours | Name | Gate at end |
 |---|---|---|---|
 | 0 | H0–H2 | **Scaffolding & contracts** | **G0** (H2) |
 | 1 | H2–H5 | Foundations: validator, metrics, simulator, feasibility, generator | **G1** (H5) |
 | 2 | H5–H9 | Core engine: MILP, markdown, baselines, ladder | **G2** (H9) |
-| 3 | H9–H12 | Product surface + spine hardening | **G3** (H12) — tag `v0.1-spine` |
-| 4 | H12–H15 | A+ add-ons: stress test, replan, newsvendor | **G4** (H15) |
-| 5 | H15–H17 | Hardening, dry runs, **FEATURE FREEZE** | **G5** (H17) — tag `v1.0-freeze` |
-| 6 | H17–H18 | Backup video, README, final numbers | **G6** (H18) |
-| 7 | H18–H20 | Fresh-clone test, rehearsal ×3, submission | **G7** (H20) |
+| 2.5 | H9–H14 | **Toolchain & UI refactor** (uv, `backend/`+`frontend/`, FastAPI, React) | no gate — `make check` green |
+| 3 | H14–H18 | Product surface + spine hardening | **G3** (H18) — tag `v0.1-spine` |
+| 4 | H18–H21 | A+ add-ons: stress test, replan, newsvendor | **G4** (H21) |
+| 5 | H21–H23 | Hardening, dry runs, **FEATURE FREEZE** | **G5** (H23) — tag `v1.0-freeze` |
+| 6 | H23–H24 | Backup video, README, final numbers | **G6** (H24) |
+| 7 | H24–H26 | Fresh-clone test, rehearsal ×3, submission | **G7** (H26) |
 
-Budget: 3 people × 20 h = 60 person-hours. Research-doc rule of thumb: ~40 % engine/simulation/validation, ~25 % UI, ~15 % robustness & replan, ~20 % pitch/demo hardening/docs. Do a 10-minute checkpoint at every gate (what's green, what's red, cut or continue).
+Budget: the clock is ~26 h for 3 people (~78 person-hours, up from 60). Research-doc rule of thumb: ~40 % engine/simulation/validation, ~25 % UI, ~15 % robustness & replan, ~20 % pitch/demo hardening/docs. Do a 10-minute checkpoint at every gate (what's green, what's red, cut or continue).
 
-Hours per person per phase (estimates; sums to 20 h each):
+Hours per person per phase (estimates; P1 20.5, P2 24, P3 24):
 
-| | P0 | P1 | P2 | P3 | P4 | P5 | P6 | P7 |
-|---|---|---|---|---|---|---|---|---|
-| P1 | 2.0 | 3.0 | 4.0 | 3.0 | 3.0 | 2.0 | 1.0 | 2.0 |
-| P2 | 2.0 | 3.0 | 4.0 | 3.0 | 3.0 | 2.0 | 1.0 | 2.0 |
-| P3 | 2.0 | 3.0 | 4.0 | 3.0 | 3.0 | 2.0 | 1.0 | 2.0 |
+| | P0 | P1 | P2 | RF | P3 | P4 | P5 | P6 | P7 |
+|---|---|---|---|---|---|---|---|---|---|
+| P1 | 2.0 | 3.0 | 4.0 | 0.5 | 3.0 | 3.0 | 2.0 | 1.0 | 2.0 |
+| P2 | 2.0 | 3.0 | 4.0 | 4.0 | 3.0 | 3.0 | 2.0 | 1.0 | 2.0 |
+| P3 | 2.0 | 3.0 | 4.0 | 3.5 | 3.0 | 3.0 | 2.0 | 1.0 | 2.0 |
+
+The `RF` column is the refactor code work (Phase 2.5): P2 4.0 h, P3 3.5 h. P1 only reviews it. Add ~1 h shared for the RF-00 docs pass that everyone signs off.
 
 P1's Phase 5 figure includes up to 1.0 h for the optional AD-09 stretch; if AD-09 is dropped at G4, that hour becomes bug-fix buffer, not new scope.
 
@@ -52,7 +59,7 @@ Plan one real meal break around H8–H9 and a short break roughly every 4 h. Nob
 
 ## 2. Before H0 (pre-event)
 
-- [ ] **PRE-01** · all — Create the repo, add everyone, agree on one Python version (3.10+; write it to `.python-version`). Everyone installs `scipy>=1.9`, `pulp`, `highspy`, `pandas`, `numpy`, `pydantic>=2`, `streamlit`, `pydeck`, `plotly`, `pytest`, `ruff` in a virtual environment and confirms a toy MILP solves through **both** PuLP→HiGHS and `scipy.optimize.milp`. (`statsforecast` is **not** needed — out of scope for the 20 h build.)
+- [ ] **PRE-01** · all — Create the repo, add everyone, agree on one Python version. *(Superseded by D-15/D-22: the toolchain is uv with 3.11 pinned in `.python-version`; `uv sync` installs `scipy>=1.9`, `pulp`, `highspy`, `pandas`, `numpy`, `pydantic>=2`, `fastapi`, `uvicorn` plus the dev group `pytest`, `ruff`, `httpx`, and the dashboard installs with `npm ci --prefix frontend`. Everyone confirms a toy MILP solves through **both** PuLP→HiGHS and `scipy.optimize.milp`. `statsforecast` is **not** needed.)*
 - [ ] **PRE-02** · P3 — Download an **Agmarknet CSV snapshot** (data.gov.in, "Variety-wise Daily Market Prices Data of Commodity") for tomato, onion, banana, potato, spinach for 2–3 representative mandis → `data/agmarknet/agmarknet_snapshot.csv`. Never depend on the live API (the sample key reportedly caps at 10 records/request — unverified). *If missed:* use a static price table in the generator and do not spend event hours on it.
 - [ ] **PRE-03** · P3 — Re-verify every ₹ crore figure you plan to put on a slide against the official PIB page. The tomato ₹5,921.15 crore figure (PIB release 2081044) has been **fact-checked by Pratham**; any *other* ₹ figure still needs the same check.
 - [ ] **PRE-04** · all — Choose the **demo laptop**; test HDMI/projector; install a screen recorder; confirm everything runs with Wi-Fi off.
@@ -63,13 +70,13 @@ Plan one real meal break around H8–H9 and a short break roughly every 4 h. Nob
 
 ## 3. Phase 0 — Scaffolding & contracts (H0–H2)
 
-Goal: by H2 everyone can run `make setup && make test && make run-stub && make app`, and the written contracts are signed off. No feature code before G0.
+Goal: by H2 everyone can run `make setup && make test && make run-stub` and open the dashboard, and the written contracts are signed off. No feature code before G0.
 
 - [ ] **S-01** · all · 0.5 h — **Read the organizers' material** (rubric, dataset, baseline, cost model, submission format, rules) and answer the **open questions** below in writing.
 - [ ] **S-02** · all · 0.5 h — **Contract sign-off.** Fill the mapping table (`DATABASE.md` §8) into the README; compare the organizers' cost model with `ARCHITECTURE.md` §7 and list every coefficient or formula in `costmodel.py` / `config.py` that must change; confirm discount rule, hard-constraint list, window mode, horizon, origin handling cost; copy the assumption log (`ARCHITECTURE.md` §20) into the README and mark each **confirm** item resolved or still open. *Done when:* a commit `docs: sign off cost model and contracts` exists and all three agree.
-- [x] **S-03** · P2 · 1.0 h — **Repo skeleton.** Create the layout in `ARCHITECTURE.md` §5, `Makefile` (`setup test check demo app run-stub`), `pyproject.toml`/`requirements.txt` with pinned versions, `.gitignore` (outputs, data/organizer, `.env`, `.venv`), ruff + pytest config, `config.py`, `schema.py` (column-name constants), CLI skeleton so `freshroute run --scenario X --policy milp --seed 42` writes a stub `metrics.json`, plus the **input CSVs for `tests/fixtures/tiny_3batch/`** (3 batches, 2 destinations, 1 vehicle; valid per `DATABASE.md`; expected outputs come at F-04). *Done when:* `make test` passes with one placeholder test and `make run-stub` loads the fixture.
+- [x] **S-03** · P2 · 1.0 h — **Repo skeleton.** Create the layout in `ARCHITECTURE.md` §5, `Makefile` (`setup test check demo app run-stub`), `pyproject.toml`/`requirements.txt` with pinned versions, `.gitignore` (outputs, data/organizer, `.env`, `.venv`), ruff + pytest config, `config.py`, `schema.py` (column-name constants), CLI skeleton so `freshroute run --scenario X --policy milp --seed 42` writes a stub `metrics.json`, plus the **input CSVs for `tests/fixtures/tiny_3batch/`** (3 batches, 2 destinations, 1 vehicle; valid per `DATABASE.md`; expected outputs come at F-04). *Done when:* `make test` passes with one placeholder test and `make run-stub` loads the fixture. *(The `Makefile` targets, `requirements.txt` and the layout in this task are superseded by RF-01/RF-03.)*
 - [x] **S-04** · P1 · 1.0 h — **Solver smoke test + decision D-02.** Solve a toy MILP via PuLP→HiGHS and `scipy.optimize.milp`; verify the **time-limit and MIP-gap options actually work** in the chosen API; record the decision. Create `shelflife.py` with the `decay` / `usable_life_at_arrival` signatures and a stub test of the worked example (`ARCHITECTURE.md` §7.1).
-- [x] **S-05** · P3 · 1.0 h — **Streamlit shell** that renders from `tests/fixtures/metrics_example.json` (hand-written from `DATABASE.md` §5.7). Add a README quickstart stub. *Done when:* `make app` shows placeholder KPI tiles.
+- [x] **S-05** · P3 · 1.0 h — **Dashboard shell** that renders from `tests/fixtures/metrics_example.json` (hand-written from `DATABASE.md` §5.7). Add a README quickstart stub. *Done when:* the dashboard shows placeholder KPI tiles. *(Built in Streamlit; replaced by RF-05 — React shell against `GET /api/runs`.)*
 
 **Open questions to resolve at H0** (S-01):
 1. Exact cost model: revenue, transport, handling (incl. any **origin** handling), spoilage and disposal, how discounts are accounted.
@@ -81,7 +88,7 @@ Goal: by H2 everyone can run `make setup && make test && make run-stub && make a
 7. Rules: are AI coding assistants / external data / open-source libraries allowed? Pitch length (we assume 3:00) and live-demo vs video requirements; venue network and hardware.
 8. Are rail lanes, P10/P90 columns and events present in the real data?
 
-**Gate G0 (H2):** cost model signed off in writing · `make setup && make test && make run-stub && make app` work on all three laptops · `tests/fixtures/tiny_3batch/` inputs and `metrics_example.json` committed · open questions answered or logged as assumptions.
+**Gate G0 (H2):** cost model signed off in writing · `make setup && make test && make run-stub` work on all three laptops and the dashboard opens · `tests/fixtures/tiny_3batch/` inputs and `metrics_example.json` committed · open questions answered or logged as assumptions.
 *If red:* do not start Phase 1 work that depends on the missing contract — resolve it first.
 
 ---
@@ -137,7 +144,28 @@ Order matters: **validator and metrics before the optimizer.**
 
 ---
 
-## 6. Phase 3 — Product surface & spine hardening (H9–H12)
+## 5b. Phase 2.5 — Toolchain & UI refactor (RF-00 … RF-07, ~8 h)
+
+Decisions D-15 … D-23 in `DECISIONS.md`; target-state behaviour in `ARCHITECTURE.md` §5/§16/§17; API contract in `DATABASE.md` §11. **Docs land first (RF-00), then code, one task per commit.** The engine is not modified: the acceptance test is that `metrics.json` for `tiny_3batch` and `practice`, seed 42, is byte-identical before and after.
+
+- [x] **RF-00** · all · 1.0 h — **Docs pass.** Rename `Docs/` → `docs/`; rewrite `ARCHITECTURE.md` §2/§3/§4/§5/§6/§11/§16/§17/§18/§19/§21/§22/§23; add the HTTP API contract as `DATABASE.md` §11; update `CONTRIBUTING.md` §2/§4/§5/§6/§7/§8/§11/§13, `AGENTS.md`, `README.md`, `DECISIONS.md` (D-15 … D-23) and this section. *Done when:* no doc describes Streamlit, `app/`, `requirements.txt` or the old layout.
+
+**P2**
+- [ ] **RF-01** · 0.5 h — **uv.** `uv python pin 3.11`; `pyproject.toml` → runtime deps without `streamlit`/`pydeck`/`plotly`, plus `fastapi`/`uvicorn`; `[dependency-groups] dev = [pytest, ruff, httpx]`; build backend `uv_build` with `module-root = "backend/src"`; `uv lock`; delete `requirements.txt`; Makefile on `uv run`; `.gitattributes` for `uv.lock` and `package-lock.json`. *Done when:* `uv sync && uv run pytest -q` works on a fresh clone and `make check` is unchanged in result.
+- [ ] **RF-03** · 1.25 h — **Split directories** (D-16, D-17). `git mv src backend/src`, `git mv validator backend/src/validator`, `git mv tests backend/tests`; fix `testpaths`, `pythonpath` and ruff `src`; `parents[1]` → `parents[2]` in the six tests that reach the repo root; AST test → `backend/src/validator`. *Done when:* `uv run freshroute run …` (console script, not `python -m`) works and `import validator` needs no `PYTHONPATH`.
+- [ ] **RF-04** · 1.5 h — **FastAPI** (D-18, D-21). `freshroute/api/{app,data_access,routes,schemas,jobs}.py`; every endpoint of `DATABASE.md` §11.2; `outputs/.api/jobs/<run_id>.json`; one worker thread; CORS + loopback from `config.py`; mount `frontend/dist` when it exists. *Done when:* `/docs` lists the endpoints, `POST /api/runs` returns 202 and finishes, and the scoreboard payload equals `metrics.json` byte for byte.
+- [ ] **RF-06** · 0.75 h — **API tests** with `fastapi.testclient.TestClient`: health, fixture fallback, run list, verbatim payload, 202 → poll → done on `tiny_3batch`, 404/400 paths, table + CSV endpoints. Replaces the Streamlit `AppTest` and the old `test_data_access.py`.
+
+**P3**
+- [ ] **RF-02** · 0.5 h — **Strip Streamlit.** `git rm -r app`; delete the `AppTest`; port the `data_access` tests to the API reader. *Known cost:* no dashboard for the two commits between this and RF-05; the scoreboard comes back in RF-05.
+- [ ] **RF-05** · 2.0 h — **React shell** (D-19). Vite + TS strict; `src/api/client.ts`, `src/types.ts`, `src/lib/delta.ts`; `KpiTile`, `RunPicker`, `RunButton`, `ValidatorPanel`, `SyntheticBanner`, `StatusBanner`; tabs Scoreboard/Plan/Robustness/Replan/Trust. Ports **C-12** (4 KPI tiles with baseline deltas, min fill, validator panel, synthetic banner, fixture fallback) and the **C-13** render. recharts and react-leaflet land with U-08 … U-11 and AD-05.
+- [ ] **RF-07** · 0.5 h — **Wiring.** `make setup` = `uv sync` + `npm ci`; `make api` / `make web` / `make serve`; `make check` adds `npm run build`; R-02 checklist gains "Node 22+"; golden-path click-through on all three laptops.
+
+**Definition of done for the phase:** `make check` green · `metrics.json` byte-identical before/after · `grep -ri streamlit` finds nothing tracked · one URL shows the scoreboard from `outputs/` · `grep` finds no `pip install` and no `requirements.txt`.
+
+---
+
+## 6. Phase 3 — Product surface & spine hardening (H14–H18)
 
 **P1**
 - [ ] **U-01** · 1.0 h — Reason-card fields: rejected alternatives with reason codes, chosen-vs-runner-up margin and slack (`reason_cards.json`, `DATABASE.md` §5.9).
@@ -151,71 +179,71 @@ Order matters: **validator and metrics before the optimizer.**
 - [ ] **U-07** · 0.25 h — First dry run of an organizer-format scenario through the adapter.
 
 **P3**
-- [ ] **U-08** · 0.75 h — Waterfall and attribution-ladder charts.
-- [ ] **U-09** · 0.75 h — Dispatch sheet CSV + WhatsApp-style text + UI table (priority-ordered, slack in hours).
-- [ ] **U-10** · 0.5 h — Reason-card UI (click a shipment → card) and discount cards.
-- [ ] **U-11** · 0.75 h — Shelf-life countdown map (pydeck, colour by hours left) with colour-coded-table fallback.
+- [ ] **U-08** · 0.75 h — Waterfall and attribution-ladder charts (recharts, from `GET /api/ladder`).
+- [ ] **U-09** · 0.75 h — Dispatch sheet CSV + WhatsApp-style text + UI table (priority-ordered, slack in hours), from `GET /api/runs/{id}/dispatch-sheet`.
+- [ ] **U-10** · 0.5 h — Reason-card drawer (click a shipment → card) and discount cards, from `GET /api/runs/{id}/reason-cards`.
+- [ ] **U-11** · 0.75 h — Shelf-life countdown map (react-leaflet over `geo.csv`, colour by hours left) with colour-coded-table fallback.
 - [ ] **U-12** · 0.25 h — "Trust" tab: assumptions, coefficients, run manifest.
 
-**Gate G3 (H12):** end-to-end click-through works — press **Plan** → scoreboard → waterfall → ladder → click a batch for its reason card → dispatch sheet · `make check` green · merge and tag **`v0.1-spine`**. From here on, add-ons must not break the spine.
+**Gate G3 (H18):** end-to-end click-through works — press **Plan** → scoreboard → waterfall → ladder → click a batch for its reason card → dispatch sheet · `make check` green · merge and tag **`v0.1-spine`**. From here on, add-ons must not break the spine.
 *If red:* cut per §9 before starting Phase 4.
 
 ---
 
-## 7. Phase 4 — A+ add-ons (H12–H15)
+## 7. Phase 4 — A+ add-ons (H18–H21)
 
 Priority order (and reverse cut order): **stress test → replan → newsvendor → narrator**. Each lands behind a flag; each must pass the validator.
 
 **P1**
-- [ ] **AD-01** · 0.5 h — `events.py` pydantic schema + a sample `diff.json` **committed first** (deliver by ~H12.5 so P3 can build the Replan tab against it).
-- [ ] **AD-02** · 2.5 h — `replan.py`: apply event, freeze `dispatch_h ≤ at_h`, residual scenario, re-solve, `diff.json`, ΔKPIs = old plan under event vs replanned. Tests: frozen shipments unchanged, validator 0 violations, time measured (< 5 s on the demo scenario).
+- [ ] **AD-01** · 0.5 h — `events.py` pydantic schema + a sample `diff.json` **committed first** (deliver by ~H18.5 so P3 can build the Replan tab against it).
+- [ ] **AD-02** · 2.5 h — `replan.py`: apply event, freeze `dispatch_h ≤ at_h`, residual scenario, re-solve, `diff.json`, ΔKPIs = old plan under event vs replanned. Tests: frozen shipments unchanged, validator 0 violations, time measured (< 5 s on the demo scenario). `POST /api/replan` lands with AD-06.
 
 **P2**
 - [ ] **AD-03** · 2.0 h — `stress.py`: 200 seeded realizations (fallback 50, then 3 named), **paired** with the baseline, P10–P90 bands and "% of scenarios where plan beats baseline", `stress_summary.json`. Time it.
 - [ ] **AD-04** · 1.0 h — `newsvendor.py`, `--newsvendor` flag, `demand_target` table, ablation row in the ladder output.
 
 **P3**
-- [ ] **AD-05** · 1.0 h — Fan chart + sensitivity table (Robustness tab) and `q10`/ε sliders.
+- [ ] **AD-05** · 1.0 h — Fan chart + sensitivity table (Robustness tab, recharts) and `q10`/ε sliders.
 - [ ] **AD-06** · 1.25 h — Replan tab: dropdown of 5 canned events, **Apply**, diff view, ΔKPIs.
 - [ ] **AD-07** · 0.5 h — **Template narration** (`narrator.template_narration`) over `diff.json`/`metrics.json` — works with no LLM.
 - [ ] **AD-08** · 0.25 h — Deck skeleton (6–7 slides, §10 below).
 
 **Stretch (only if G4 conditions are all green)**
-- [ ] **AD-09** · P1 · ≤ 1.0 h, starts only after the G4 go decision (uses P1's Phase 5 time, before H-01), **must merge by H16.5 or be dropped** — LLM event parser (function calling → pydantic → dropdown fallback) + narrator over metrics/diff JSON with the "every number must appear in the JSON" guard. Template narration remains the default.
+- [ ] **AD-09** · P1 · ≤ 1.0 h, starts only after the G4 go decision (uses P1's Phase 5 time, before H-01), **must merge by H22.5 or be dropped** — LLM event parser (function calling → pydantic → dropdown fallback) + narrator over metrics/diff JSON with the "every number must appear in the JSON" guard. Template narration remains the default.
 
-**Gate G4 (H15):** stress bands render in the UI · replan completes in < 5 s with 0 validator violations and frozen invariants holding · `--newsvendor` produces an ablation result · go/no-go on AD-09 decided (go only if all of the above are green).
+**Gate G4 (H21):** stress bands render in the UI · replan completes in < 5 s with 0 validator violations and frozen invariants holding · `--newsvendor` produces an ablation result · go/no-go on AD-09 decided (go only if all of the above are green).
 *If red:* apply the cut list (§9): fall back to precomputed named scenarios / a precomputed replan loaded instantly.
 
 ---
 
 ## 8. Phases 5–7 — Hardening, freeze, wrap-up
 
-### Phase 5 — Hardening and dry runs (H15–H17)
+### Phase 5 — Hardening and dry runs (H21–H23)
 - [ ] **H-01** · P1 · 1.0 h — MILP edge cases (zero capacity, all-expired batch, demand spike, infeasible balance → slack used, no crash) and replan edge cases (event after everything is dispatched; event before the first dispatch; two events in a row).
 - [ ] **H-02** · P2 · 1.5 h — **10 random seeds, no crashes**; determinism re-check; 10× performance; dry run of the organizers' format/hidden-scenario flow end-to-end including the submission export.
 - [ ] **H-03** · P2 · 0.5 h — Commit **`outputs/demo_backup/`** (a complete demo run) and prepare the `v1.0-freeze` tag.
-- [ ] **H-04** · P3 · 0.75 h — Run the **golden-path click-through 5×** on the demo scenario; lock seed and scenario; confirm offline operation.
+- [ ] **H-04** · P3 · 0.75 h — Run the **golden-path click-through 5×** on the demo scenario via `make serve`; lock seed and scenario; confirm offline operation (Wi-Fi off, `npm ci`-built assets only).
 - [ ] **H-05** · P3 · 1.25 h — Complete the deck draft and the demo script (§10).
-- [ ] *(AD-09 stretch continues here until H16.5 — P1.)*
+- [ ] *(AD-09 stretch continues here until H22.5 — P1.)*
 
-**Gate G5 — FEATURE FREEZE (H17):** no crashes on 10 random seeds · edge cases pass · determinism verified · `make check` green · `outputs/demo_backup/` committed · tag **`v1.0-freeze`**. After this: bug fixes only, each approved by a second person.
+**Gate G5 — FEATURE FREEZE (H23):** no crashes on 10 random seeds · edge cases pass · determinism verified · `make check` green · `outputs/demo_backup/` committed · tag **`v1.0-freeze`**. After this: bug fixes only, each approved by a second person.
 
-### Phase 6 — Wrap-up (H17–H18)
+### Phase 6 — Wrap-up (H23–H24)
 - [ ] **V-01** · P3 · 0.5 h — Record the **backup demo video** (local run, golden path + replan). Save it in two places (laptop + USB/another machine).
 - [ ] **V-02** · P3 · 0.5 h — Finalize deck with **measured** numbers from `make demo` only.
 - [ ] **V-03** · P1 · 1.0 h — README: **Assumptions** (A-xx with status), **Cost-model mapping** (§8 table), sources with verified/secondhand labels.
-- [ ] **V-04** · P2 · 1.0 h — README: quickstart, the one command, reproducibility (seeds, manifest), **Results table** copied from `make demo`, test instructions.
+- [ ] **V-04** · P2 · 1.0 h — README: quickstart, the one command, reproducibility (seeds, manifest, `uv.lock`), **Results table** copied from `make demo`, test instructions.
 
-**Gate G6 (H18):** backup video saved in two places · README complete (assumptions, mapping, quickstart, results) · every slide number traceable to `make demo` output.
+**Gate G6 (H24):** backup video saved in two places · README complete (assumptions, mapping, quickstart, results) · every slide number traceable to `make demo` output.
 
-### Phase 7 — Verify, rehearse, submit (H18–H20)
-- [ ] **R-01** · P2 · 0.5 h — **Fresh-clone test** on a different machine: clone → `make setup` → `make demo`; headline numbers must match.
-- [ ] **R-02** · P3 · 0.5 h — Demo-laptop setup: browser/zoom, notifications off, Wi-Fi off test, app launched, video queued.
+### Phase 7 — Verify, rehearse, submit (H24–H26)
+- [ ] **R-01** · P2 · 0.5 h — **Fresh-clone test** on a different machine: clone → `uv sync` + `npm ci` → `make setup` → `make demo`; headline numbers must match.
+- [ ] **R-02** · P3 · 0.5 h — Demo-laptop setup: browser/zoom, notifications off, Wi-Fi off test, `make serve` launched on the demo URL, video queued. **Confirm Node 22+ is installed** (`npm ci` needs it at setup; the CLI and `make demo` do not).
 - [ ] **R-03** · P1 · 0.5 h — Q&A drill (§11) — everyone answers every question once.
 - [ ] **R-04** · all · 1.0 h — **Rehearse the pitch 3× with a timer; each run under 3:00.** After each run, one minute of feedback.
 - [ ] **R-05** · all · 0.5 h — Submission checklist (§13). **Last 30 minutes: no code changes.**
 
-**Gate G7 (H20):** submitted · fresh-clone test passed · three timed rehearsals under 3:00.
+**Gate G7 (H26):** submitted · fresh-clone test passed · three timed rehearsals under 3:00.
 
 ---
 
@@ -224,7 +252,7 @@ Priority order (and reverse cut order): **stress test → replan → newsvendor 
 Cut from the top; **never** cut the "never" list.
 
 1. AD-09 LLM narrator / natural-language box (keep template narration + 5-event dropdown).
-2. Pydeck map (→ colour-coded table).
+2. Leaflet map (→ colour-coded table).
 3. Newsvendor (AD-04).
 4. Sensitivity beyond `q10` slider and ε vs ε/2.
 5. Live replan (→ precomputed scenario loaded instantly, per research fallback).
@@ -263,6 +291,7 @@ Do **not** attach the ₹5,921 crore to the market-stage slice alone (it is the 
 Competitor claims, if cited, are **vendor-reported and unaudited**: Afresh (US; $34M raise April 2026; "up to 25 % shrink reduction"), Wasteless (expiry-anchored shelf markdowns; "40 % waste reduction at Edeka Hamburg"). Celcius Logistics (India): ₹250 crore Series B, May 2025. Skip Ninjacart's tonnage — the figure is dated (~2019).
 
 **Demo hygiene**
+- [ ] Start with `make serve` before walking on stage; the browser is already on the URL. Nothing calls the internet.
 - [ ] Run live from local data; backup video queued; `outputs/demo_backup/` ready.
 - [ ] Keep the demo to one golden path; no live debugging on stage.
 - [ ] Value must be clear within ~30 seconds; a simple demo the judges understand beats a clever one they can't.
@@ -291,7 +320,7 @@ Competitor claims, if cited, are **vendor-reported and unaudited**: Afresh (US; 
 | Net economic outcome (20) | Net ₹ + reconciling waterfall | C-07, U-08 |
 | Allocation feasibility (15) | Independent validator: baseline n vs ours **0** | F-04, C-12 |
 | Robustness & sensitivity (10) | MC bands, % scenarios beating baseline, `q10`/ε sensitivity, replan | AD-03, U-04, AD-02 |
-| Engineering & reproducibility (10) | One seeded command, tests, manifest, fresh-clone pass | U-06, C-08, R-01 |
+| Engineering & reproducibility (10) | One seeded command, tests, manifest, locked deps (`uv.lock` + `package-lock.json`), fresh-clone pass | U-06, C-08, R-01 |
 | Explainability & commercial (10) | Reason cards, dispatch sheet, positioning slide | U-01, U-09, V-02 |
 
 ---
@@ -303,5 +332,5 @@ Competitor claims, if cited, are **vendor-reported and unaudited**: Afresh (US; 
 - [ ] README: assumptions, cost-model mapping, quickstart, results, sources (verified vs secondhand labelled).
 - [ ] Deck exported; backup video playable from two places; `outputs/demo_backup/` present.
 - [ ] No secrets or restricted organizer data in git; `.env` ignored.
-- [ ] Demo laptop: charged, Wi-Fi-off run tested, app pre-launched.
+- [ ] Demo laptop: charged, Wi-Fi-off run tested, `make serve` pre-launched on the demo URL, Node 22+ installed.
 - [ ] Everyone knows who presents which beat and who handles Q&A.

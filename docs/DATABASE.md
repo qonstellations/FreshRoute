@@ -13,7 +13,7 @@
 - **No database server.** CSV files are the tables; pandas holds them in memory. JSON holds run-level documents.
 - Why: reproducible, diffable in git, trivial to swap in hidden scenarios, zero setup on the demo laptop.
 - **Source of truth for inputs:** `data/scenarios/<name>/*.csv` + `scenario.json` (or organizer files converted by the adapter).
-- **Source of truth for results:** `outputs/<run_id>/` (never edited by hand; the UI only reads it).
+- **Source of truth for results:** `outputs/<run_id>/` (never edited by hand; the API serves it and the UI only reads it). The API's own bookkeeping lives in `outputs/.api/` and is never a source of truth (D-18, D-21).
 - `schema_version` (integer, currently **1**) is stored in `scenario.json` and `run_manifest.json`. Bump it on any contract change.
 
 ---
@@ -152,7 +152,7 @@ Every `(dest, commodity, day)` with `demand_kg_p50 > 0` needs a price. If missin
 
 ### 3.9 `geo` — optional, **UI only** (PK `node_id`)
 
-Our addition for the shelf-life countdown map. The optimizer never reads it. If absent, the UI falls back to a colour-coded table.
+Our addition for the shelf-life countdown map. The optimizer never reads it. If absent, the UI falls back to a colour-coded table. The map reads it through `GET /api/scenarios/{name}/geo` (§11).
 
 | Column | Type | Rule |
 |---|---|---|
@@ -426,8 +426,11 @@ outputs/<run_id>/             run_manifest.json plan.csv trips.csv discounts.csv
                               reason_cards.json dispatch_sheet.csv dispatch_sheet.txt
                               [ladder.json waterfall.json stress.csv stress_summary.json sensitivity.csv]
                               [replan/<event_id>/…]
-outputs/demo_backup/          committed copy of the demo run (fallback if the solver fails on demo day)
+outputs/.api/jobs/              API run-queue state only (§11); gitignored with the rest of outputs/
+outputs/demo_backup/            committed copy of the demo run (fallback if the solver fails on demo day)
 ```
+
+Run-directory contents are unchanged by the API refactor, so `schema_version` stays **1**; the HTTP layer has its own `api_version` (§11).
 
 ---
 
@@ -524,3 +527,49 @@ erDiagram
 Text form: `batches.commodity → commodities` · `demand.(dest_id, commodity) → destinations, commodities` · `prices.(dest_id, commodity) → destinations, commodities` · `lanes.dest_id → destinations` · `batches.origin_hub = lanes.origin = vehicles.origin` (soft link, hubs have no table) · `vehicles.mode = lanes.mode` (soft link) · `events.target` references lanes / vehicles / destinations by the syntax in §6 · `plan.batch_id → batches` · `plan.dest_id → destinations` · `plan.vehicle_id → vehicles` · `plan.trip_id → trips` · `discounts.lot_id` derived from plan.
 
 Hubs are identified only by the string used in `batches.origin_hub`, `lanes.origin`, `vehicles.origin`; `geo.csv` (optional) gives them coordinates.
+
+---
+
+## 11. HTTP API (`/api`, FastAPI)
+
+The dashboard's only door to the engine. The API **serves run artifacts verbatim** and **enqueues engine runs**; it never computes a KPI (ARCHITECTURE §16, D-18). Contract version: `api_version = 1`; changing an endpoint shape bumps it and updates `frontend/src/types.ts` in the same change.
+
+### 11.1 Rules
+
+- **Verbatim by default.** A field in a response is the field in the file. The API adds at most three wrappers: `baseline` (the ladder/fefo comparison), `validation` and `manifest` (companion files of the same run), and `fixture` (the placeholder flag when nothing is on disk).
+- **Nothing is computed.** No KPI, no delta, no average, no aggregation over tables. If a number is not in a file, it is not in the response.
+- **Never a 500 from bad data.** A scenario that fails to load is a `400` with `{"detail": "..."}`; a run that fails is a job in state `error`, not an exception.
+- **Loopback, no auth.** Binds `API_HOST`/`API_PORT` (§19 of `ARCHITECTURE.md`); CORS is dev-only.
+
+### 11.2 Endpoints
+
+| Method + path | Success | Body |
+|---|---|---|
+| `GET /api/health` | 200 | `{"status": "ok", "schema_version": 1, "api_version": 1}` |
+| `GET /api/scenarios` | 200 | `[{"name", "source", "horizon_days", "window_mode"}]` — from `data/scenarios/*/scenario.json`, sorted by `name` |
+| `GET /api/scenarios/{name}/geo` | 200 / 404 | `geo.csv` as records (§3.9), or 404 when absent (the UI uses the colour table) |
+| `GET /api/runs` | 200 | `{"runs": [{"run_id", "scenario", "policy", "seed", "has_ladder"}], "fixture": false}` — `run_id`s from `outputs/*/metrics.json`, sorted; `fixture: true` when the list is empty and `tests/fixtures/metrics_example.json` is being served |
+| `GET /api/runs/{run_id}` | 200 / 404 | `metrics.json` verbatim, plus `baseline` (see `data_access.load_baseline` ordering: ladder `official_baseline` → ladder `fefo` → sibling `fefo` run), `validation` (`validation.json` or `null`), `manifest` (`run_manifest.json` or `null`) |
+| `GET /api/runs/{run_id}/tables/{table}` | 200 / 404 | `table ∈ {plan, trips, discounts, sim_ledger, sim_lots}` (§5.2–§5.6) as `{"columns": [...], "records": [...]}`; `?format=csv` returns the file as `text/csv` for download |
+| `GET /api/runs/{run_id}/reason-cards` | 200 | `reason_cards.json` (§5.9), or `null` when the run has none yet (nothing writes them before U-01) |
+| `GET /api/runs/{run_id}/dispatch-sheet` | 200 | `{"csv": [...records...], "text": "..."}` (§5.10), or `null` when absent |
+| `GET /api/ladder?scenario=&seed=` | 200 / 404 | `{"ladder": …, "waterfall": …}` from §5.11, or 404 when not on disk |
+| `POST /api/runs` | 202 | Request `{"scenario": "data/scenarios/practice", "policy": "milp_markdown", "seed": 42, "flags": {"markdown": true, "newsvendor": false}}` → `{"run_id": "…__milp_markdown__s42", "status": "running"}`. `policy ∈ ` the CLI's `POLICIES`; an unknown policy or scenario is `400` |
+| `GET /api/runs/{run_id}/status` | 200 / 404 | `{"state": "running" \| "done" \| "error", "started_utc", "finished_utc", "error"}` |
+
+Added later, same shape, only when the CLI command exists: `POST /api/replan` (AD-02), `POST /api/stress` (AD-03), `POST /api/demo` (U-06).
+
+### 11.3 Run-queue state file
+
+`outputs/.api/jobs/<run_id>.json`, written by the API only:
+
+```json
+{"api_version": 1, "run_id": "…", "state": "running", "scenario": "…", "policy": "milp_markdown",
+ "seed": 42, "started_utc": "…", "finished_utc": null, "error": null}
+```
+
+`state` is `running` while the worker thread holds the job, `done` when `outputs/<run_id>/metrics.json` exists, `error` with `error` set otherwise. It is deleted when `outputs/<run_id>/` is deleted. One worker thread (`JOB_WORKERS = 1`), so two solves never run at once on the demo laptop.
+
+### 11.4 Frontend types
+
+`frontend/src/types.ts` mirrors §11.2 field for field. A number shown in the UI must be traceable to a field named in this section or in §3–§5.

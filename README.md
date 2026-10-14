@@ -5,9 +5,11 @@
 FreshRoute is a hub-level decision tool for perishable produce. Given batches with remaining shelf life, destinations with demand and delivery windows, and vehicles with capacities, it decides **which batch goes where, when, and at what markdown**.
 
 - **Spine:** shelf-life feasibility pre-filter → allocation MILP (HiGHS) → disclosed tiered markdown rule, scored by one seeded simulator and checked by an independent validator.
+- **Surface:** a FastAPI service over the engine's own output files, and a React dashboard that renders them.
 - **A+ add-ons (each behind a flag):** Monte Carlo stress test with P10–P90 bands, event-driven replan with a diff view, newsvendor demand target. An LLM narrator is stretch only; it never decides.
 
 > **Status:** Phases 0–2 built (gate G2 passed on synthetic data): validator, simulator, metrics, feasibility, MILP (full objective, C6 balance, FEFO warm start), baselines fifo / fefo / last_day_50, `milp_markdown`, calibrated generator, attribution ladder + waterfall (`freshroute ladder`), determinism test, perf harness, scoreboard tab, reason-card templates, dispatch-sheet skeleton. C-06 (organizer baseline) is blocked on the organizer doc. Sections marked *TBD* are filled by the tasks named next to them.
+> **In flight:** the toolchain/UI refactor (`docs/TODO.md` Phase 2.5, RF-00 … RF-07): uv for Python, and Streamlit replaced by `backend/` (FastAPI) + `frontend/` (React). The engine is untouched by it.
 > **Data:** practice scenarios are **synthetic** and always labelled so. Real-world loss statistics are context, not model inputs.
 
 ## Documentation
@@ -26,15 +28,21 @@ FreshRoute is a hub-level decision tool for perishable produce. Given batches wi
 
 ## Quickstart *(TBD — V-04)*
 
+Install (uv owns Python; Node 22+ for the dashboard):
+
+```bash
+uv sync                # Python env from uv.lock, including the dev group
+npm ci --prefix frontend
+```
+
 Commands (see `docs/CONTRIBUTING.md` §4):
 
 ```bash
-python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-make setup && make test
 make run-stub    # freshroute run on tests/fixtures/tiny_3batch (full pipeline, prints the 4 KPIs)
 make demo        # (V-04, not built yet) the one command every reported number comes from (seed 42)
-make app         # Streamlit dashboard (shows tests/fixtures/metrics_example.json when outputs/ is empty)
+make api         # FastAPI on http://127.0.0.1:8000 (docs at /docs)
+make web         # Vite dev server on http://localhost:5173, proxying /api
+make serve       # build the dashboard and serve it from the API — one URL, the demo path
 ```
 
 ## Assumptions and cost-model mapping *(S-02 written on defaults; finalized at V-03)*
