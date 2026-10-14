@@ -118,3 +118,45 @@ export interface StatusResponse {
   state: 'running' | 'done' | 'error'
   started_utc: string | null; finished_utc: string | null; error: string | null
 }
+
+// ---- AD-05 / AD-06 (DATABASE §5.12, §5.13, §6; endpoints per §11.2 "added later") ----
+/** Client-only marker set by the format-example stub in api/client.ts; never sent by the API. */
+export type Example = { example?: true }
+
+export interface Band { p10: number; p50: number; p90: number }
+export type StressKpi = 'net_inr' | 'spoilage_kg' | 'demand_fulfillment_pct'
+export interface StressSummary { // §5.12 stress_summary.json
+  n: number; base_seed: number; plan: string; baseline: string
+  bands: Record<StressKpi, { plan: Band; baseline: Band }>
+  share_plan_beats_baseline: { net_inr: number; spoilage_kg: number } // 0–1, paired
+}
+export interface StressRow { // §5.12 stress.csv
+  scenario_i: number; policy: string; spoilage_kg: number; spoilage_pct: number
+  demand_fulfillment_pct: number; min_dest_fill_pct: number; net_inr: number
+}
+export interface StressResponse extends Example { summary: StressSummary; rows: StressRow[] | null }
+export interface PostStressRequest { scenario: string; policy: string; seed: number; n: number }
+
+export interface SensitivityRow { // §5.12 sensitivity.csv
+  parameter: string // q10 | elasticity_multiplier | overship_slack | demand_multiplier
+  value: number; policy: string; net_inr: number; spoilage_kg: number; demand_fulfillment_pct: number
+}
+export interface SensitivityResponse extends Example { records: SensitivityRow[] }
+
+export type EventType = 'route_delay' | 'capacity_drop' | 'demand_spike' | 'new_order' | 'price_shock'
+export interface ReplanEvent { // §6
+  event_id: string; type: EventType; target: string; magnitude: number; at_h: number; note?: string
+}
+export interface PostReplanRequest { run_id: string; event: ReplanEvent }
+export interface PostReplanResponse { run_id: string; event_id: string; status: 'running' }
+
+export type ReplanKpis = Partial<Pick<Kpis, 'spoilage_kg' | 'demand_fulfillment_pct' | 'net_inr'>>
+export interface Diff { // §5.13 diff.json
+  event_id: string; at_h: number; frozen_shipments: number
+  moved_batches: { batch_id: string; from: { dest_id: string; dispatch_day: number }
+    to: { dest_id: string; dispatch_day: number }; kg: number }[]
+  discount_changes: { lot_id: string; day: number; from_pct: number; to_pct: number }[]
+  kpis_old_plan_under_event: ReplanKpis; kpis_replanned: ReplanKpis; delta_kpis: ReplanKpis
+  solve_seconds: number
+}
+export interface ReplanResult extends Example { diff: Diff; narration: string }
