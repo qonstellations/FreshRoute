@@ -51,12 +51,20 @@ def build_arcs(scenario: Scenario, realization: dict | None = None) -> pd.DataFr
     batches = t["batches"].sort_values("batch_id")
     vehicles = t["vehicles"].sort_values("vehicle_id")
 
+    # per-iteration pandas lookups hoisted into dicts (values and float ops unchanged)
+    com_by = {r.Index: r for r in com.itertuples()}
+    dest_rows = [(r.Index, r) for r in dests.itertuples()]
+    lane_by = {r.Index: r for r in lanes.itertuples()}
+    price_by = prices.to_dict()
+    slots_by: dict = {}
+    vehs = list(vehicles.itertuples())
+
     rows = []
     for b in batches.itertuples():
-        c = com.loc[b.commodity]
+        c = com_by[b.commodity]
         rsl = rsl_over.get(b.batch_id, b.remaining_shelf_life_h)
-        for dest_id, d in dests.iterrows():
-            for v in vehicles.itertuples():
+        for dest_id, d in dest_rows:
+            for v in vehs:
                 for day in range(horizon):
                     row = dict.fromkeys(COLUMNS, _NAN)
                     row.update(batch_id=b.batch_id, dest_id=dest_id, vehicle_id=v.vehicle_id,
@@ -64,7 +72,7 @@ def build_arcs(scenario: Scenario, realization: dict | None = None) -> pd.DataFr
                     key = (v.origin, dest_id, v.mode)
                     day_end = (day + 1) * HOURS_PER_DAY
                     ready = max(b.available_from_h, v.available_from_h)
-                    if b.origin_hub != v.origin or key not in lanes.index:
+                    if b.origin_hub != v.origin or key not in lane_by:
                         reason = "NO_LANE"
                     elif v.max_trips_day == 0 or ready >= day_end - FLOAT_TOL:
                         reason = "NOT_AVAILABLE"
@@ -74,15 +82,18 @@ def build_arcs(scenario: Scenario, realization: dict | None = None) -> pd.DataFr
                         row["reject_reason"] = reason
                         rows.append(row)
                         continue
-                    ln = lanes.loc[key]
+                    ln = lane_by[key]
                     dispatch_h = max(day * HOURS_PER_DAY + disp_hour, ready)
                     if v.mode == "rail":
                         # pandas reads a lone slot as float ("6.0")
-                        slots = sorted(float(s) for s in str(ln.departure_slots).split("|"))
+                        slots = slots_by.get(key)
+                        if slots is None:
+                            slots = slots_by[key] = sorted(
+                                float(s) for s in str(ln.departure_slots).split("|"))
                         dispatch_h = _next_slot(dispatch_h, slots)
                         if dispatch_h >= day_end - FLOAT_TOL:
                             reason = "RAIL_SLOT"
-                    travel = travel_over.get(key, ln.travel_h_p50)
+                    travel = travel_over.get(key, float(ln.travel_h_p50))
                     arrival_h = dispatch_h + travel
                     arrival_day = int(math.floor(arrival_h / HOURS_PER_DAY + FLOAT_TOL))
                     usable = usable_life_at_arrival(
@@ -90,7 +101,7 @@ def build_arcs(scenario: Scenario, realization: dict | None = None) -> pd.DataFr
                         b.storage_temp_c, ln.transit_temp_c, c.ref_temp_c, c.q10)
                     slack = usable - c.min_sell_window_h
                     clock = arrival_h % HOURS_PER_DAY if daily else arrival_h
-                    price = prices.get((dest_id, b.commodity, arrival_day), _NAN)
+                    price = price_by.get((dest_id, b.commodity, arrival_day), _NAN)
                     row.update(
                         dispatch_h=dispatch_h, arrival_h=arrival_h, arrival_day=arrival_day,
                         usable_life_at_arrival_h=usable, slack_h=slack, price_inr_kg=price,
