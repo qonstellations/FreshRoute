@@ -73,33 +73,44 @@ def _lookups(sc: Scenario, override: dict | None = None):
     return veh, lanes, dest, target
 
 
+def _classes(veh: pd.DataFrame, fleet: pd.DataFrame | None):
+    """Trip classes per arc vehicle: (class table, {arc vehicle_id: [class ids]}). Identity
+    (every vehicle its own class) unless the section 9.5 fallback pools the fleet."""
+    f = veh.assign(lane_class=veh.index) if fleet is None else fleet
+    return f, {v: list(g.index) for v, g in f.groupby("lane_class", sort=True)}
+
+
 def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None,
-           overship=OVERSHIP_SLACK, used=None, warm=None):
+           overship=OVERSHIP_SLACK, used=None, warm=None, fleet=None):
     """Returns ((x, n) | None, info); None when there is no usable incumbent. `used` (replan,
     section 14.2): {"trips": {(v, day): n}, "recv": {(d, day): kg}} already taken by frozen
     shipments, subtracted from C3 and C4, plus "fill": {d: kg} counted in C6; `warm`: old plan
-    rows offered as the warm start."""
+    rows offered as the warm start. n is keyed by (trip class, dest, day); C2 caps an arc
+    vehicle's kg by the trips of all its classes (`fleet`, section 9.5; identity otherwise)."""
     veh, lanes, dest, target = _lookups(sc, override)
+    f, cls = _classes(veh, fleet)
     trips_used, recv_used = (used or {}).get("trips", {}), (used or {}).get("recv", {})
     fill_used = (used or {}).get("fill", {})  # frozen kg per dest, counted in C6 fill
     prob = pulp.LpProblem("freshroute_alloc", pulp.LpMaximize)
     x = [prob.add_variable(f"x{i}", 0, None, cat="Continuous") for i in range(len(arcs))]
     vdt = sorted({(a.vehicle_id, a.dest_id, a.dispatch_day) for a in arcs.itertuples()})
-    n = {k: prob.add_variable(f"n_{k[0]}_{k[1]}_{k[2]}", 0, None, cat="Integer") for k in vdt}
+    nk = sorted({(c, d, day) for v, d, day in vdt for c in cls[v]})
+    n = {k: prob.add_variable(f"n_{k[0]}_{k[1]}_{k[2]}", 0, None, cat="Integer") for k in nk}
     u = {bid: prob.add_variable(f"u_{bid}", 0, None, cat="Continuous") for bid in batches.index}
-    fixed = {k: float(lanes.loc[(veh.origin[k[0]], k[1], veh["mode"][k[0]])].cost_fixed_inr_trip)
-             for k in vdt}
+    fixed = {k: float(lanes.loc[(f.origin[k[0]], k[1], f["mode"][k[0]])].cost_fixed_inr_trip)
+             for k in nk}
     prob += (pulp.lpSum(float(c) * xi for c, xi in zip(arcs.coef, x, strict=True))
-             - pulp.lpSum(fixed[k] * n[k] for k in vdt)
+             - pulp.lpSum(fixed[k] * n[k] for k in nk)
              - pulp.lpSum(LAMBDA_SPOIL * unship[b] * u[b] for b in u))
     by_b = arcs.groupby("batch_id").groups
     for bid in batches.index:  # C1 stock balance; arc-less batches too, so u = qty (C-04)
         prob += pulp.lpSum(x[i] for i in by_b.get(bid, [])) + u[bid] == float(batches.qty_kg[bid])
     for (v, d, day), idx in arcs.groupby(["vehicle_id", "dest_id", "dispatch_day"]).groups.items():
-        prob += pulp.lpSum(x[i] for i in idx) <= float(veh.capacity_kg[v]) * n[(v, d, day)]  # C2
-    for v, day in sorted({(k[0], k[2]) for k in vdt}):  # C3 trips per day
-        prob += (pulp.lpSum(n[k] for k in vdt if k[0] == v and k[2] == day)
-                 <= max(0, int(veh.max_trips_day[v]) - trips_used.get((v, day), 0)))
+        prob += pulp.lpSum(x[i] for i in idx) <= pulp.lpSum(  # C2
+            float(f.capacity_kg[c]) * n[(c, d, day)] for c in cls[v])
+    for c, day in sorted({(k[0], k[2]) for k in nk}):  # C3 trips per day
+        prob += (pulp.lpSum(n[k] for k in nk if k[0] == c and k[2] == day)
+                 <= max(0, int(f.max_trips_day[c]) - trips_used.get((c, day), 0)))
     for (d, _a), idx in arcs.groupby(["dest_id", "arrival_day"]).groups.items():  # C4 (D-05)
         prob += (pulp.lpSum(x[i] for i in idx)
                  <= max(0.0, float(dest.receive_cap_kg_day[d]) - recv_used.get((d, _a), 0.0)))
@@ -143,7 +154,7 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None
     # (section 14.2) starts from the old plan's undispatched rows instead while they still
     # satisfy every constraint: fewest moves, and the old plan was itself optimized.
     if warm is None or not start(*_warm(arcs, warm, veh)):
-        start(*_greedy(sc, arcs, batches, override, overship, used))
+        start(*_greedy(sc, arcs, batches, override, overship, used, fleet))
     t0 = time.perf_counter()
     stats = prob.solve(pulp.HiGHS(msg=False, timeLimit=time_limit_s, gapRel=gap, warmStart=True))
     info = {"status": str(stats.status), "solve_seconds": time.perf_counter() - t0,
@@ -164,7 +175,7 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None
         econ = arcs.margin_inr_kg - arcs.spoil_inr_kg
         info["objective_inr"] = float(
             sum(float(c) * xi for c, xi in zip(econ, xv, strict=True))
-            - sum(fixed[k] * nv[k] for k in vdt) - sum(unship[b] * u[b].value() for b in u))
+            - sum(fixed[k] * nv[k] for k in nk) - sum(unship[b] * u[b].value() for b in u))
     except Exception:  # noqa: BLE001  no incumbent
         return None, info
     if any(v is None or math.isnan(v) for v in xv):
@@ -175,9 +186,11 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None
 
 
 def _greedy(sc: Scenario, arcs, batches, override: dict | None = None,
-            overship: float = OVERSHIP_SLACK, used: dict | None = None):
+            overship: float = OVERSHIP_SLACK, used: dict | None = None,
+            fleet: pd.DataFrame | None = None):
     """FEFO-greedy over feasible arcs honouring C2-C5 (earliest-expiry batch first)."""
     veh, _, dest, target = _lookups(sc, override)
+    f, cls = _classes(veh, fleet)
     tgt = {k: v * (1 + overship) for k, v in target.items()}
     recv: dict = dict((used or {}).get("recv", {}))  # (d, day) keys only; frozen arrivals
     load: dict = {}  # (v,d,day) -> kg left on already-opened trips
@@ -191,18 +204,20 @@ def _greedy(sc: Scenario, arcs, batches, override: dict | None = None,
             ["coef", "dest_id", "vehicle_id", "dispatch_day"], ascending=[False, True, True, True])
         for i, a in sub.iterrows():
             kd, ka = (a.dest_id, a.commodity, a.arrival_day), (a.dest_id, a.arrival_day)
-            k, vd = (a.vehicle_id, a.dest_id, a.dispatch_day), (a.vehicle_id, a.dispatch_day)
+            k = (a.vehicle_id, a.dest_id, a.dispatch_day)
             while left > FLOAT_TOL:
                 room = min(tgt.get(kd, 0.0) - recv.get(kd, 0.0),
                            float(dest.receive_cap_kg_day[a.dest_id]) - recv.get(ka, 0.0))
                 if room <= FLOAT_TOL:
                     break
-                if load.get(k, 0.0) <= FLOAT_TOL:  # open a trip
-                    if trips_day.get(vd, 0) >= int(veh.max_trips_day[a.vehicle_id]):
+                if load.get(k, 0.0) <= FLOAT_TOL:  # open a trip on the first class with a slot
+                    c = next((c for c in cls[a.vehicle_id] if trips_day.get((c, a.dispatch_day), 0)
+                              < int(f.max_trips_day[c])), None)
+                    if c is None:
                         break
-                    trips_day[vd] = trips_day.get(vd, 0) + 1
-                    n[k] = n.get(k, 0) + 1
-                    load[k] = load.get(k, 0.0) + float(veh.capacity_kg[a.vehicle_id])
+                    trips_day[(c, a.dispatch_day)] = trips_day.get((c, a.dispatch_day), 0) + 1
+                    n[(c, *k[1:])] = n.get((c, *k[1:]), 0) + 1
+                    load[k] = load.get(k, 0.0) + float(f.capacity_kg[c])
                 q = min(left, room, load[k])
                 x[i] += q
                 recv[kd] = recv.get(kd, 0.0) + q
@@ -286,8 +301,59 @@ def _aggregate(sc: Scenario) -> tuple[Scenario, dict[str, pd.DataFrame]]:
                      "remaining_shelf_life_h": float(g.remaining_shelf_life_h.min()),
                      "rsl_p10_h": float(g.rsl_p10_h.min()), "rsl_p90_h": float(g.rsl_p90_h.min()),
                      "storage_temp_c": float(g.storage_temp_c.max())})
-    agg = replace(sc, tables={**sc.tables, "batches": pd.DataFrame(rows, columns=b.columns)})
-    return agg, members
+    # Fleet (A-46): vehicles sharing (origin, mode, available_from_h) have identical arcs, so
+    # one lane-class row carries the arcs; its trips come from capacity classes (C2/C3 only).
+    v = sc.tables["vehicles"]
+    v = v[v.max_trips_day > 0].sort_values("vehicle_id")
+    lanes, classes, vmem = [], [], {}
+    for i, (_, g) in enumerate(v.groupby(["origin", "mode", "available_from_h"], sort=True)):
+        lid = f"L{i + 1:03d}"
+        lanes.append({**g.iloc[0].to_dict(), "vehicle_id": lid,
+                      "capacity_kg": float(g.capacity_kg.max()),
+                      "max_trips_day": int(g.max_trips_day.sum())})
+        for cap, cg in sorted(g.groupby("capacity_kg"), key=lambda kv: -kv[0]):  # big first
+            cid = f"{lid}K{len(classes) + 1:03d}"
+            vmem[cid] = cg
+            classes.append({"class_id": cid, "origin": cg.origin.iloc[0],
+                            "mode": cg["mode"].iloc[0], "capacity_kg": float(cap),
+                            "max_trips_day": int(cg.max_trips_day.sum()), "lane_class": lid})
+    fleet = pd.DataFrame(classes, columns=["class_id", "origin", "mode", "capacity_kg",
+                                           "max_trips_day", "lane_class"]).set_index("class_id")
+    agg = replace(sc, tables={**sc.tables, "batches": pd.DataFrame(rows, columns=b.columns),
+                              "vehicles": pd.DataFrame(lanes, columns=v.columns)})
+    return agg, members, fleet, vmem
+
+
+def _split_fleet(lines: pd.DataFrame, n: dict, fleet: pd.DataFrame, vmem: dict,
+                 frozen: dict | None = None):
+    """Hand each class's trips to member vehicles within their max_trips_day (less `frozen`
+    replan trips), then fill each (lane class, dest, day)'s lines first-fit into those
+    vehicles' kg. Returns (lines, n)."""
+    used: dict = dict(frozen or {})
+    bins: dict = {}  # (lane class, dest, day) -> [[vehicle_id, room_kg]]
+    nv: dict = {}
+    for (c, d, day), k in sorted(n.items()):
+        k = int(round(k or 0))
+        for vid, mx in zip(vmem[c].vehicle_id, vmem[c].max_trips_day, strict=True):
+            t = min(k, int(mx) - used.get((vid, day), 0))
+            if t > 0:
+                used[(vid, day)] = used.get((vid, day), 0) + t
+                nv[(vid, d, day)] = t
+                bins.setdefault((fleet.lane_class[c], d, day), []).append(
+                    [vid, t * float(fleet.capacity_kg[c])])
+                k -= t
+    out = []
+    for key, g in lines.groupby(["vehicle_id", "dest_id", "dispatch_day"], sort=True):
+        bs = bins.get(key, [])
+        for r in g.to_dict("records"):
+            left = r["kg"]
+            for j, b in enumerate(bs):  # ponytail: FLOAT_TOL residue rides the last bin
+                q = left if j == len(bs) - 1 else min(left, b[1])
+                if q > FLOAT_TOL:
+                    out.append({**r, "vehicle_id": b[0], "kg": q})
+                    b[1] -= q
+                    left -= q
+    return pd.DataFrame(out, columns=lines.columns), nv
 
 
 def _plan_aggregated(sc: Scenario, ctx: dict, policy: str) -> Plan:
@@ -297,16 +363,24 @@ def _plan_aggregated(sc: Scenario, ctx: dict, policy: str) -> Plan:
     from validator.validate import validate  # independent re-check (D-04); validator never
     # imports this module, so the dependency stays one-way.
 
-    agg, members = _aggregate(sc)
+    agg, members, fleet, vmem = _aggregate(sc)
     arcs, batches, unship = _model_data(agg)
     ov, slack = ctx.get("demand_cap_override"), ctx.get("overship_slack", OVERSHIP_SLACK)
     used = ctx.get("residual_use")
+    frozen = (used or {}).get("trips", {})  # replan: concrete (v, day) trips -> class keys
+    cls_of = {vid: c for c, g in vmem.items() for vid in g.vehicle_id}
+    tc: dict = {}
+    for (vid, day), k in sorted(frozen.items()):
+        if vid in cls_of:
+            tc[(cls_of[vid], day)] = tc.get((cls_of[vid], day), 0) + k
+    used_c = {**used, "trips": tc} if used else None
     sol, info = _solve(agg, arcs, batches, unship, ctx.get("time_limit_s", MILP_TIME_LIMIT_S),
-                       ctx.get("gap", MIP_REL_GAP), override=ov, overship=slack, used=used)
+                       ctx.get("gap", MIP_REL_GAP), override=ov, overship=slack,
+                       used=used_c, fleet=fleet)
     info["fallback_used"] = sol is None
     if sol is None:
         info.update(slack_usage={}, mip_gap=None)
-    x, n = _greedy(agg, arcs, batches, ov, slack, used) if sol is None else sol
+    x, n = _greedy(agg, arcs, batches, ov, slack, used_c, fleet) if sol is None else sol
     keys = ["batch_id", "dest_id", "vehicle_id", "dispatch_day"]
     lines = []
     for a, kg in zip(arcs[keys].itertuples(index=False), x, strict=True):
@@ -315,19 +389,23 @@ def _plan_aggregated(sc: Scenario, ctx: dict, policy: str) -> Plan:
             lines += [(bid, a.dest_id, a.vehicle_id, a.dispatch_day, kg * q / g.qty_kg.sum())
                       for bid, q in zip(g.batch_id, g.qty_kg, strict=True)]
     lines = pd.DataFrame(lines, columns=[*keys, "kg"])
-    # Batch-level feasibility re-check, only for the batches, dests and vehicles in use.
-    t = sc.tables
+    # Batch-level feasibility re-check, only for the batches and dests in use; members of a
+    # lane class share every arc attribute, so the lane-class row stands in for them.
+    t, va = sc.tables, agg.tables["vehicles"]
     sub = replace(sc, tables={
         **t, "batches": t["batches"][t["batches"].batch_id.isin(lines.batch_id)],
         "destinations": t["destinations"][t["destinations"].dest_id.isin(lines.dest_id)],
-        "vehicles": t["vehicles"][t["vehicles"].vehicle_id.isin(lines.vehicle_id)]})
+        "vehicles": va[va.vehicle_id.isin(lines.vehicle_id)]})
     full, _, _ = _model_data(sub) if len(lines) else (arcs.iloc[:0], None, None)
     full = full.merge(lines, on=keys, how="inner")  # infeasible batch-level arcs drop out
     n_drop = len(lines) - len(full)
-    plan = _build_plan(sc, full.drop(columns="kg"), list(full.kg), n, info, policy)
+    split, n = _split_fleet(full, n, fleet, vmem, frozen)
+    plan = _build_plan(sc, split.drop(columns="kg"), list(split.kg), n, info, policy)
     viol = validate(sc, plan.plan).violation_total
     info["aggregation"] = {"batches": len(t["batches"]), "groups": len(members),
-                           "agg_arcs": len(arcs), "dropped_lines": n_drop,
+                           "vehicle_classes": len(fleet), "agg_arcs": len(arcs),
+                           "dropped_lines": n_drop,
+                           "unassigned_kg": float(full.kg.sum() - split.kg.sum()),
                            "validator_violations": viol}
     if viol:  # AGENTS.md rule 6: never ship a violating plan
         arcs, batches, _ = _model_data(sc)
