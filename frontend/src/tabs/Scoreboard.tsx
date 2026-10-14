@@ -1,5 +1,6 @@
 // Scoreboard tab (ARCHITECTURE §16; port of C-12). Shows stored KPIs; deltas via lib/delta.ts only.
 import { KpiTile, toneOf } from '../components/KpiTile'
+import { LadderCharts } from '../components/Ladder'
 import { ValidatorPanel } from '../components/ValidatorPanel'
 import { delta, fmt, fmtSigned } from '../lib/delta'
 import type { Kpis, RunDetail } from '../types'
@@ -32,7 +33,7 @@ export function Scoreboard({ run }: { run: RunDetail }) {
         <KpiTile label="Min destination fill" value={`${fmt(k.min_dest_fill_pct, 1)}%`}
           {...tile('min_dest_fill_pct', 1, ' pp')} />
       </div>
-      {/* ponytail: waterfall + attribution ladder land with U-08 (recharts, GET /api/ladder) */}
+      <LadderCharts scenario={run.scenario} seed={run.seed} />
       <ValidatorPanel validation={run.validation} />
     </>
   )
