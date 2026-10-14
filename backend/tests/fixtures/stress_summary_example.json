@@ -1,0 +1,10 @@
+{"_note": "Format example per DATABASE.md 5.12; numbers are made up, not a measured stress run.",
+ "n": 200, "base_seed": 42, "plan": "milp_markdown", "baseline": "fefo",
+ "bands": {
+  "net_inr": {"plan": {"p10": 1480000.0, "p50": 1650000.0, "p90": 1790000.0},
+              "baseline": {"p10": 1290000.0, "p50": 1410000.0, "p90": 1530000.0}},
+  "spoilage_kg": {"plan": {"p10": 310.0, "p50": 420.0, "p90": 560.0},
+                  "baseline": {"p10": 330.0, "p50": 450.0, "p90": 600.0}},
+  "demand_fulfillment_pct": {"plan": {"p10": 84.0, "p50": 89.0, "p90": 93.0},
+                             "baseline": {"p10": 78.0, "p50": 83.0, "p90": 88.0}}},
+ "share_plan_beats_baseline": {"net_inr": 0.97, "spoilage_kg": 0.62}}
