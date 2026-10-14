@@ -17,7 +17,7 @@ One URL: `make serve`. Backup: `outputs/demo_backup/` + video. Wi-Fi off.
 
 Rules: never "a year" (source gives no year), never attach ₹5,921 cr to the
 3.25 % slice alone (it is the all-stage figure), 3.25 % is share of output, not
-of loss. [docs/TODO.md §10, PRE-03]
+of loss. [PRE-03]
 
 ## 0:20–0:35 User and moment
 

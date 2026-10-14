@@ -2,9 +2,9 @@
 
 **FreshRoute — data model.** Every table, column, key, unit, rule, and output file the system reads or writes.
 
-> Companion to `ARCHITECTURE.md` (behaviour), `TODO.md` (schedule), `CONTRIBUTING.md` (workflow).
-> **Rule #1: if the organizers publish a cost model or dataset format, theirs overrides this schema.** Fill in §8 (mapping template) at H0 and adapt `adapters/organizer.py`; this schema exists so every policy and baseline is scored identically and so we can practise before the real data arrives.
-> **Changing any column, file name, or JSON field in this document is a contract change** — see `CONTRIBUTING.md` §7.
+> Companion to `ARCHITECTURE.md` (behaviour), `DECISIONS.md` (decisions), `AGENTS.md` (workflow).
+> **Rule #1: if the organizers publish a cost model or dataset format, theirs overrides this schema.** Fill in §8 (mapping template) if organizer data is provided and adapt `adapters/organizer.py`; this schema exists so every policy and baseline is scored identically and so we can practise before the real data arrives.
+> **Changing any column, file name, or JSON field in this document is a contract change** — see `AGENTS.md` Workflow section.
 
 ---
 
@@ -488,7 +488,10 @@ Canned events for the dropdown (one per type; adjust ids to the scenario): NH-48
 
 ---
 
-## 8. Organizer mapping template (fill at H0 — `TODO.md` S-02)
+## 8. Organizer mapping template
+
+> **Note (D-25):** The organizers confirmed all datasets may be synthetically generated. This template
+> remains as a reference in case organizer materials arrive, but is not blocking.
 
 Copy this table into the README and complete it. "Status": `OK` mapped · `XFORM` needs a transform · `MISSING` no equivalent (decide + log an assumption) · `N/A`.
 
@@ -525,10 +528,8 @@ Copy this table into the README and complete it. "Status": `OK` mapped · `XFORM
 - **Source:** "Variety-wise Daily Market Prices Data of Commodity" on data.gov.in (Agmarknet via the OGD platform). Fields: state, district, market, commodity, variety, grade, min/max/modal price (₹ per quintal).
 - **Snapshot file:** `data/agmarknet/agmarknet_snapshot.csv` with columns `state, district, market, commodity, variety, arrival_date, min_price, max_price, modal_price` (₹/quintal as published).
 - **Access requires a registered API key.** Resource ids: `35985678-0d79-46b4-9ed6-6f13308a1d24` (current, filters are PascalCase: `filters[Arrival_Date]`, `filters[State]`) and `9ef84268-d588-465a-a308-a864a43d0070` (original, lowercase filters: `filters[arrival_date]`, `filters[state]`). The widely circulated sample key returns `{"error": "Key not authorised"}` — **do not ship one in git.** Put the key in `.env` as `DATAGOV_API_KEY` (git-ignored) and page with `limit=500&offset=…`.
-- **Status 2026-10-14 (PRE-02, re-grounded S-01c):** no snapshot. No key is available to the team, so PRE-02 was closed on its own fallback: the generator's static price table (`scenario.json → price_source = static_table_generator_v2` since S-01c; v1 was `static_table_generator_v1`). V2 keeps the static-table form but re-bases modal levels on published Agmarknet aggregates (Farmer.in ticker, CEDA series — keyless, not a snapshot) and adds per-day volatility and per-destination spreads, with wider bands for onion. A-20 therefore does not apply to our practice data.
-- **The transform below is specified but not implemented:** `scripts/build_prices.py` does not exist yet (`scripts/` is empty). Whoever obtains a key writes it, then re-opens A-20.
-- **Transform** (`scripts/build_prices.py`): `price_inr_kg = modal_price / 100`, `price_min = min_price / 100`, `price_max = max_price / 100`; map markets to `dest_id` by hand; map commodity names by hand (check spelling in the snapshot); replay the most recent `horizon_days` days as day `0…H−1`.
-- Context only: post-harvest-loss statistics (NABCONS/PIB) are used to sanity-check the synthetic baseline (A-21), never as model inputs presented as real batch data.
+- **Status (S-01c, generator v2):** Rather than relying on an external live snapshot, generator v2 (`scenario.json → price_source = static_table_generator_v2`) re-bases modal price levels on published Agmarknet aggregates with per-day volatility and per-destination spreads. A separate `build_prices.py` script was therefore not needed.
+- Context only: post-harvest-loss statistics (NABCONS/PIB) are used to sanity-check the synthetic baseline (A-21, A-47), never as model inputs presented as real batch data.
 
 ---
 

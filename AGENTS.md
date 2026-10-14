@@ -1,9 +1,9 @@
 # AGENTS.md
 
-Instructions for AI coding assistants working on FreshRoute. Humans: see `docs/CONTRIBUTING.md`.
+Instructions for AI coding assistants working on FreshRoute.
 
 ## Read first
-`docs/ARCHITECTURE.md` (behaviour) → `docs/DATABASE.md` (contracts) → `docs/TODO.md` (task IDs, gates) → `DECISIONS.md`.
+`docs/ARCHITECTURE.md` (behaviour) → `docs/DATABASE.md` (contracts) → `DECISIONS.md`.
 Reference tasks by ID (e.g. `C-01`) in commits and PRs.
 
 ## Non-negotiables
