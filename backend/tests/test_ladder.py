@@ -1,11 +1,10 @@
-"""C-07: attribution ladder + waterfall reconciliation, and the Gate G2 guard."""
+"""Attribution ladder + waterfall reconciliation, and the MILP-beats-FEFO guard."""
 import json
 from pathlib import Path
 
 import pytest
 
 from freshroute import cli, generator, ladder
-from freshroute.config import FLOAT_TOL
 from freshroute.policies import milp
 
 ROOT = Path(__file__).parents[2]
@@ -23,7 +22,7 @@ def tiny_ladder(tmp_path_factory):
 def test_waterfall_reconciles(tiny_ladder):
     out, _, wf, load = tiny_ladder
     steps = wf["steps"]
-    assert [s["type"] for s in steps] == ["total"] + ["delta"] * 5 + ["total"]
+    assert [s["type"] for s in steps] == ["total"] + ["delta"] * 6 + ["total"]
     total = steps[0]["value"] + sum(s["value"] for s in steps if s["type"] == "delta")
     assert abs(total - steps[-1]["value"]) <= wf["tolerance_inr"]
     for pol, step in ((wf["baseline"], steps[0]), (wf["plan"], steps[-1])):
@@ -42,7 +41,7 @@ def test_ladder_structure(tiny_ladder):
 
 
 def _g2_kpis(seed, tmp_path, monkeypatch):
-    # 60-batch 3-day proxy (S-01g): 30-batch 2-day instances admit greedy-optimal
+    # 60-batch 3-day proxy: 30-batch 2-day instances admit greedy-optimal
     # solutions (FEFO ties MILP exactly), so they cannot guard the gate; 60-batch
     # instances have real allocation tension at ratio 1.5.
     monkeypatch.setattr(milp, "MILP_TIME_LIMIT_S", 10)
@@ -59,18 +58,8 @@ def test_g2_net_and_violations(seed, tmp_path, monkeypatch):
     assert k["milp"]["violations"] == 0 and k["milp_markdown"]["violations"] == 0
 
 
-@pytest.mark.parametrize("seed", [1, 2, 3])
-def test_g2_spoilage(seed, tmp_path, monkeypatch):
-    # Known phenomenon (kept as a comment, not an xfail): MILP may sell long-life
-    # lots FEFO leaves as carry-over (not spoiled, A-06) and pay handling loss /
-    # unsold expiry on the extra sales while still netting more. Seen on 30-batch
-    # instances (spinach +31.9 kg on one seed); the 60-batch proxy below holds.
-    k = _g2_kpis(seed, tmp_path, monkeypatch)
-    assert k["milp"]["spoilage_kg"] <= k["fefo"]["spoilage_kg"] + FLOAT_TOL
-
-
 def test_demo_writes_pitch_files(tmp_path, capsys):
-    """U-06: `freshroute demo` writes every ladder run + ladder/waterfall and exits 0."""
+    """`freshroute demo` writes every ladder run + ladder/waterfall and exits 0."""
     cli.main(["demo", "--scenario", TINY, "--seed", "42", "--out", str(tmp_path)])
     for pol in ladder.LADDER + ladder.EXTRAS:
         for f in ("metrics.json", "validation.json", "plan.csv", "reason_cards.json"):

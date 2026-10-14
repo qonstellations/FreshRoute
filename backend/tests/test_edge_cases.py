@@ -1,4 +1,4 @@
-"""U-05 edge cases (AGENTS.md rule 6): each mutates a copy of tiny_3batch; every policy must
+"""edge cases (AGENTS.md rule 6): each mutates a copy of tiny_3batch; every policy must
 run end to end and produce a plan the validator accepts (violations == 0). fifo and
 last_day_50 are naive by design (A-31: they ignore shelf life and windows, so they already
 score 2 SHELF_LIFE violations on tiny_3batch itself); for them only those codes may appear."""

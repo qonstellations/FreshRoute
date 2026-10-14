@@ -87,7 +87,8 @@ class FifoPolicy(Policy):
                         "arrival_day": int(a.arrival_day), "kg": kg,
                         "usable_life_at_arrival_h": life, "slack_h": a.slack_h,
                         "margin_inr_kg": a.margin_inr_kg,
-                        "priority_score": kg * p / life if life > 0 else float("inf")})
+                        # life <= 1 h (naive FIFO ships expired stock) scores as 1 h: finite JSON
+                        "priority_score": kg * p / max(life, 1.0)})
 
         lines.sort(key=lambda r: (r["dispatch_h"], r["batch_id"], r["dest_id"], r["trip_id"]))
         for i, r in enumerate(lines, 1):

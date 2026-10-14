@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from freshroute import costmodel as cm
 from freshroute.config import DISCOUNT_TIME_TRIGGER_H, FLOAT_TOL, LAST_DAY_DISCOUNT_PCT
 from freshroute.discount import COLUMNS, _lots
 from freshroute.io import Scenario
@@ -32,7 +33,7 @@ def last_day_discounts(scenario: Scenario, plan: pd.DataFrame) -> pd.DataFrame:
                 continue
             p = float(price.get((lot.dest_id, lot.commodity, k), 0.0))
             cap, capped_by = 100 * c["max_discount_frac"], "max_discount"
-            salvage_cap = 100 * (1 - c["salvage_value_inr_kg"] / p) if p > 0 else 0.0
+            salvage_cap = 100 * cm.salvage_cap_frac(p, c["salvage_value_inr_kg"])
             if salvage_cap < cap - FLOAT_TOL:
                 cap, capped_by = max(0.0, salvage_cap), "salvage_floor"
             if LAST_DAY_DISCOUNT_PCT <= cap + FLOAT_TOL:

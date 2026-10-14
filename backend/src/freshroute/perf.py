@@ -1,10 +1,10 @@
-"""C-09 perf harness (ARCHITECTURE.md section 22): generate a scale x practice-sized
+"""perf harness (ARCHITECTURE.md section 22): generate a scale x practice-sized
 SYNTHETIC scenario and time `build_arcs` and `MilpPolicy().plan`. Numbers printed and
 written to perf.json are measurements on this machine, not claims.
 
     python -m freshroute.perf [--scale 10] [--fleet-scale N] [--seed 42] [--out outputs/perf]
 
---fleet-scale defaults to --scale (C-09); U-02 measures batches-only 10x with --fleet-scale 1.
+--fleet-scale defaults to --scale; --fleet-scale 1 measures batches-only scaling.
 """
 from __future__ import annotations
 

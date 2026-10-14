@@ -1,4 +1,4 @@
-"""Solver smoke test, D-02 (S-04): PuLP->HiGHS vs scipy milp; limits bite (ARCH section 9)."""
+"""Solver smoke test, D-02: PuLP->HiGHS vs scipy milp; limits bite (ARCH section 9)."""
 import time
 
 import numpy as np

@@ -1,4 +1,4 @@
-"""FIFO baseline + run pipeline (F-07)."""
+"""FIFO baseline + run pipeline."""
 import json
 from pathlib import Path
 

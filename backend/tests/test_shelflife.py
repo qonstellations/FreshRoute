@@ -1,4 +1,4 @@
-"""ARCHITECTURE.md section 7.1 worked example plus decay properties (F-01)."""
+"""ARCHITECTURE.md section 7.1 worked example plus decay properties."""
 import pytest
 
 from freshroute.config import FLOAT_TOL, Q10_DEFAULT

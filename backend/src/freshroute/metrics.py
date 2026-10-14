@@ -62,7 +62,10 @@ def compute(scenario, plan: pd.DataFrame, discounts: pd.DataFrame, sim: dict) ->
         sp_com, com.loc[sp_com.index, "unit_cost_inr_kg"],
         com.loc[sp_com.index, "disposal_cost_inr_kg"],
         com.loc[sp_com.index, "salvage_value_inr_kg"]).sum())
-    net = float(cm.net(rev, transport, handling, sp_cost))
+    sold_by_com = led.groupby("commodity").sold_kg.sum()
+    cogs = float(cm.cost_of_goods_sold(
+        sold_by_com, com.loc[sold_by_com.index, "unit_cost_inr_kg"]).sum())
+    net = float(cm.net(rev, cogs, transport, handling, sp_cost))
 
     # --- volumes ---
     hl = float(led.handling_loss_kg.sum())
@@ -78,7 +81,6 @@ def compute(scenario, plan: pd.DataFrame, discounts: pd.DataFrame, sim: dict) ->
     fill = (g.met_kg.sum() / g.base_demand_kg.sum().where(lambda s: s > 0)).fillna(1.0) * 100.0
 
     supply_com = batches.groupby("commodity").qty_kg.sum()
-    sold_com = led.groupby("commodity").sold_kg.sum()
     return {
         "schema_version": SCHEMA_VERSION,
         "run_id": sim.get("run_id", ""),
@@ -96,7 +98,8 @@ def compute(scenario, plan: pd.DataFrame, discounts: pd.DataFrame, sim: dict) ->
             "handling_loss": hl, "delivered_unsold_expired": due, "origin_expired": oe},
         "economics_inr": {
             "gross_revenue_at_list": gross, "discount_cost": disc, "revenue": rev,
-            "transport": transport, "handling": handling, "spoilage_cost": sp_cost, "net": net},
+            "cost_of_goods_sold": cogs, "transport": transport, "handling": handling,
+            "spoilage_cost": sp_cost, "net": net},
         "volumes_kg": {
             "total_supply": supply, "shipped": shipped, "unshipped": supply - shipped,
             "sold": sold,
@@ -110,6 +113,6 @@ def compute(scenario, plan: pd.DataFrame, discounts: pd.DataFrame, sim: dict) ->
         "per_commodity": [
             {"commodity": c, "spoilage_kg": float(k),
              "spoilage_pct": _pct(k, float(supply_com.get(c, 0.0))),
-             "sold_kg": float(sold_com.get(c, 0.0))}
+             "sold_kg": float(sold_by_com.get(c, 0.0))}
             for c, k in sp_com.sort_index().items()],
     }

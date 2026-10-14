@@ -1,4 +1,4 @@
-"""Placeholder: the tiny_3batch fixture loads and *_pct converts to fractions (S-03)."""
+"""Placeholder: the tiny_3batch fixture loads and *_pct converts to fractions."""
 import json
 from pathlib import Path
 
@@ -20,4 +20,4 @@ def test_fixture_loads():
 
 def test_run_stub_writes_metrics(tmp_path):
     out = cli.run(str(FIX), "milp", 42, str(tmp_path))
-    assert json.loads((out / "metrics.json").read_text())["schema_version"] == 1
+    assert json.loads((out / "metrics.json").read_text())["schema_version"] == 2

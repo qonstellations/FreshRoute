@@ -7,11 +7,11 @@ import math
 
 import pandas as pd
 
-from freshroute.config import FLOAT_TOL
+from freshroute import costmodel as cm
+from freshroute.config import FLOAT_TOL, HOURS_PER_DAY
 from freshroute.io import Scenario
 from freshroute.shelflife import usable_life_at_arrival
 
-HOURS_PER_DAY = 24
 REASONS = ("NO_LANE", "NOT_AVAILABLE", "RAIL_SLOT", "WINDOW", "SHELF_LIFE", "BEYOND_HORIZON")
 COLUMNS = (
     "batch_id", "dest_id", "vehicle_id", "mode", "dispatch_day", "dispatch_h", "arrival_h",
@@ -21,7 +21,7 @@ COLUMNS = (
 _NAN = float("nan")
 
 
-def _next_slot(t_h: float, slots: list[int]) -> float:
+def _next_slot(t_h: float, slots: list[float]) -> float:
     """Earliest slot-hour-of-day departure at or after absolute hour t_h."""
     day = math.floor(t_h / HOURS_PER_DAY + FLOAT_TOL)
     for d in (day, day + 1):
@@ -77,7 +77,8 @@ def build_arcs(scenario: Scenario, realization: dict | None = None) -> pd.DataFr
                     ln = lanes.loc[key]
                     dispatch_h = max(day * HOURS_PER_DAY + disp_hour, ready)
                     if v.mode == "rail":
-                        slots = sorted(int(s) for s in str(ln.departure_slots).split("|"))
+                        # pandas reads a lone slot as float ("6.0")
+                        slots = sorted(float(s) for s in str(ln.departure_slots).split("|"))
                         dispatch_h = _next_slot(dispatch_h, slots)
                         if dispatch_h >= day_end - FLOAT_TOL:
                             reason = "RAIL_SLOT"
@@ -93,8 +94,9 @@ def build_arcs(scenario: Scenario, realization: dict | None = None) -> pd.DataFr
                     row.update(
                         dispatch_h=dispatch_h, arrival_h=arrival_h, arrival_day=arrival_day,
                         usable_life_at_arrival_h=usable, slack_h=slack, price_inr_kg=price,
-                        margin_inr_kg=price * (1 - c.handling_loss_frac)
-                        - ln.cost_var_inr_kg - d.handling_cost_inr_kg)
+                        margin_inr_kg=cm.shipped_margin(
+                            price, c.handling_loss_frac, c.unit_cost_inr_kg,
+                            ln.cost_var_inr_kg, d.handling_cost_inr_kg))
                     if reason is None and not (
                             d.window_open_h - FLOAT_TOL <= clock <= d.window_close_h + FLOAT_TOL):
                         reason = "WINDOW"

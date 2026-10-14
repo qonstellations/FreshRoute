@@ -12,6 +12,7 @@ from freshroute import cli
 from freshroute.config import API_VERSION, JOB_WORKERS
 
 _executor = ThreadPoolExecutor(max_workers=JOB_WORKERS)
+_live: set[str] = set()  # job ids queued or running in this process
 
 
 def _now() -> str:
@@ -25,6 +26,13 @@ def job_path(outputs: Path, run_id: str) -> Path:
 def read_job(outputs: Path, run_id: str) -> dict | None:
     p = job_path(outputs, run_id)
     return json.loads(p.read_text(encoding="utf-8")) if p.is_file() else None
+
+
+def live_job(outputs: Path, run_id: str) -> dict | None:
+    """The job record if it is running in this process; a "running" file left by a previous
+    server process is stale and returns None, so the caller resubmits."""
+    job = read_job(outputs, run_id)
+    return job if job and job["state"] == "running" and run_id in _live else None
 
 
 def _write(outputs: Path, job: dict) -> None:
@@ -44,6 +52,7 @@ def _work(outputs: Path, job: dict, fn, done_file: Path) -> None:
         job.update(state="error", error=str(e) or type(e).__name__)
     job["finished_utc"] = _now()
     _write(outputs, job)
+    _live.discard(job["run_id"])
 
 
 def submit_call(outputs: Path, job_id: str, fn, done_file: Path, **meta) -> dict:
@@ -51,6 +60,7 @@ def submit_call(outputs: Path, job_id: str, fn, done_file: Path, **meta) -> dict
     job = {"api_version": API_VERSION, "run_id": job_id, "state": "running", **meta,
            "started_utc": _now(), "finished_utc": None, "error": None}
     _write(outputs, job)
+    _live.add(job_id)
     _executor.submit(_work, outputs, dict(job), fn, done_file)
     return job
 

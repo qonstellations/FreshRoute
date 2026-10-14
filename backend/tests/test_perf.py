@@ -1,4 +1,4 @@
-"""C-09 smoke: perf harness runs at scale 1 on a tiny generated base scenario."""
+"""smoke: perf harness runs at scale 1 on a tiny generated base scenario."""
 import json
 
 from freshroute import perf

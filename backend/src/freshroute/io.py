@@ -105,7 +105,14 @@ def load_scenario(path: str | Path) -> Scenario:
         f = path / f"{name}.csv"
         if not f.exists():
             raise ScenarioError(f"missing table file {f}")
-        tables[name] = pd.read_csv(f)
+        df = pd.read_csv(f)
+        for c in S.OPTIONAL_COLUMNS.get(name, ()):  # optional columns may be absent entirely
+            if c not in df.columns:
+                df[c] = float("nan")
+        tables[name] = df
+    h = meta.get("horizon_days")
+    if not isinstance(h, int) or isinstance(h, bool) or h < 1:
+        raise ScenarioError(f"scenario.json horizon_days must be an integer >= 1, got {h!r}")
     if (path / "geo.csv").exists():
         tables["geo"] = pd.read_csv(path / "geo.csv")
     warns = _checks(meta, tables)

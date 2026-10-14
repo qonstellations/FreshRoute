@@ -1,4 +1,4 @@
-"""Event schema and application (AD-01; DATABASE.md section 6)."""
+"""Event schema and application (DATABASE.md section 6)."""
 import json
 from pathlib import Path
 

@@ -1,4 +1,4 @@
-"""AD-03: Monte Carlo stress test (ARCHITECTURE.md 14.1, DATABASE.md 5.12) on tiny_3batch."""
+"""Monte Carlo stress test (ARCHITECTURE.md 14.1, DATABASE.md 5.12) on tiny_3batch."""
 import json
 from pathlib import Path
 

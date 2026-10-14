@@ -1,4 +1,4 @@
-"""Event-driven replan (AD-02; ARCHITECTURE.md 14.2, DATABASE.md 5.13) on tiny_3batch."""
+"""Event-driven replan (ARCHITECTURE.md 14.2, DATABASE.md 5.13) on tiny_3batch."""
 import json
 from pathlib import Path
 
@@ -99,8 +99,8 @@ def test_event_before_first_dispatch(base, tmp_path):
     assert _read(out, "validation.json")["violation_total"] == 0
     # a no-op event re-solves from the old plan; within the 1 % MIP gap the plan may still
     # change (measured -285 INR on tiny), so only the old side is pinned
-    assert d["kpis_old_plan_under_event"] == {
-        k: _read(base, "metrics.json")["kpis"][k] for k in d["kpis_old_plan_under_event"]}
+    assert d["kpis_old_plan_under_event"] == pytest.approx({
+        k: _read(base, "metrics.json")["kpis"][k] for k in d["kpis_old_plan_under_event"]})
 
 
 def test_event_after_everything_dispatched(base, tmp_path):

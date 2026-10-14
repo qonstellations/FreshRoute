@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "tiny_3batch",
   "source": "synthetic",
   "seed": 42,

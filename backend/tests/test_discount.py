@@ -1,4 +1,4 @@
-"""F-09: tiered markdown rule (ARCHITECTURE.md section 10, A-22)."""
+"""tiered markdown rule (ARCHITECTURE.md section 10, A-22)."""
 from pathlib import Path
 
 import pandas as pd

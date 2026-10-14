@@ -1,4 +1,4 @@
-"""Simulator on tiny_3batch with a hand-built plan (F-06). Arithmetic in comments."""
+"""Simulator on tiny_3batch with a hand-built plan. Arithmetic in comments."""
 from pathlib import Path
 
 import pandas as pd
@@ -54,9 +54,11 @@ def test_hand_checked():
     # discount = 1320 + 1395 = 2715 ; revenue 38172
     # transport = (2000+1100*2.0) + (2500+400*2.5) = 4200+3500 = 7700
     # handling = 1100*1.0 + 400*1.5 = 1700 ; spoilage = 27.5*14 + 4*9 = 421
-    # net = 38172 - 7700 - 1700 - 421 = 28351
+    # cogs = (400+440+232.5)*15 + 396*12 = 16087.5 + 4752 = 20839.5
+    # net = 38172 - 20839.5 - 7700 - 1700 - 421 = 7511.5
     for key, val in dict(gross_revenue_at_list=40887, discount_cost=2715, revenue=38172,
-                         transport=7700, handling=1700, spoilage_cost=421, net=28351).items():
+                         cost_of_goods_sold=20839.5, transport=7700, handling=1700,
+                         spoilage_cost=421, net=7511.5).items():
         near(e[key], val)
     near(m["kpis"]["spoilage_kg"], 31.5)
     near(m["kpis"]["demand_fulfillment_pct"], 1428.5 / 3900 * 100)

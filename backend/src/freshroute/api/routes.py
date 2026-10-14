@@ -152,14 +152,15 @@ def start_run(req: RunRequest) -> dict:
     nv = bool(req.flags.get("newsvendor"))
     if nv and req.policy not in cli.NEWSVENDOR_POLICIES:
         raise HTTPException(400, f"--newsvendor needs a MILP policy, not {req.policy!r}")
+    scen = _scenario_path(req.scenario)
     try:
-        name = load_scenario(req.scenario).name
+        name = load_scenario(scen).name
     except (OSError, ValueError, KeyError) as e:
         raise HTTPException(400, f"scenario {req.scenario!r} failed to load: {e}") from e
     run_id = f"{name}__{req.policy}__s{req.seed}{'__nv' if nv else ''}"  # id cli.run computes
-    job = jobs.read_job(da.OUTPUTS, run_id)
-    if not (job and job["state"] == "running"):
-        job = jobs.submit(da.OUTPUTS, run_id, req.scenario, req.policy, req.seed, nv)
+    job = jobs.live_job(da.OUTPUTS, run_id)
+    if job is None:
+        job = jobs.submit(da.OUTPUTS, run_id, scen, req.policy, req.seed, nv)
     return {"run_id": run_id, "status": job["state"]}
 
 
@@ -170,13 +171,19 @@ def status(run_id: str) -> dict:
         if not (da.OUTPUTS / run_id / "metrics.json").is_file():
             raise HTTPException(404, f"no job or run {run_id!r}")
         job = {"state": "done", "started_utc": None, "finished_utc": None, "error": None}
+    elif job["state"] == "running" and jobs.live_job(da.OUTPUTS, run_id) is None:
+        job = {**job, "state": "error", "error": "stale job: the server restarted; submit again"}
     return {k: job.get(k) for k in ("state", "started_utc", "finished_utc", "error")}
 
 
 def _scenario_path(scenario: str) -> str:
-    """A bare scenario name (as served in metrics.json) resolves under data/scenarios/."""
+    """A bare scenario name (as served in metrics.json) resolves under data/scenarios/; a
+    relative path resolves against the repo root, never the server's working directory."""
     bare = not any(c in scenario for c in ("/", chr(92), ":"))
-    return str(SCENARIOS / scenario) if bare and (SCENARIOS / scenario).is_dir() else scenario
+    if bare and (SCENARIOS / scenario).is_dir():
+        return str(SCENARIOS / scenario)
+    p = Path(scenario)
+    return str(p if p.is_absolute() else da.ROOT / p)
 
 
 def _out_dir(scenario: str, kind: str, seed: int) -> Path:
@@ -195,15 +202,15 @@ def stress_summary(scenario: str, seed: int) -> dict:
 
 @router.post("/stress", status_code=202)
 def start_stress(req: StressRequest) -> dict:
-    if req.policy not in cli.POLICIES or req.policy in cli.BLOCKED_POLICIES:
+    if req.policy not in cli.POLICIES:
         raise HTTPException(400, f"policy {req.policy!r} cannot be stressed")
     try:
         name = load_scenario(_scenario_path(req.scenario)).name
     except (OSError, ValueError, KeyError) as e:
         raise HTTPException(400, f"scenario {req.scenario!r} failed to load: {e}") from e
     job_id = f"{name}__stress__s{req.seed}"
-    job = jobs.read_job(da.OUTPUTS, job_id)
-    if not (job and job["state"] == "running"):
+    job = jobs.live_job(da.OUTPUTS, job_id)
+    if job is None:
         d = da.OUTPUTS / job_id
         job = jobs.submit_call(da.OUTPUTS, job_id, lambda: stress.run_stress(
             _scenario_path(req.scenario), req.policy, req.n, req.seed, str(d)),
@@ -227,8 +234,8 @@ def start_replan(req: ReplanRequest) -> dict:
     except (ValidationError, TypeError) as e:
         raise HTTPException(400, f"invalid event: {e}") from e
     job_id = f"{req.run_id}__replan__{_segment(ev.event_id)}"
-    job = jobs.read_job(da.OUTPUTS, job_id)
-    if not (job and job["state"] == "running"):
+    job = jobs.live_job(da.OUTPUTS, job_id)
+    if job is None:
         job = jobs.submit_call(da.OUTPUTS, job_id, lambda: replan.replan_run(run_dir, ev),
                                run_dir / "replan" / ev.event_id / "diff.json",
                                event_id=ev.event_id)

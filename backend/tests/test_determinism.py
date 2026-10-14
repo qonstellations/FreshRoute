@@ -1,4 +1,4 @@
-"""C-08: same scenario + policy + seed => identical outputs (ARCHITECTURE.md section 18,
+"""same scenario + policy + seed => identical outputs (ARCHITECTURE.md section 18,
 DATABASE.md section 5.1: only `timestamp_utc` and `solver.solve_seconds` may differ)."""
 import json
 from pathlib import Path

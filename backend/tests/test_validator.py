@@ -1,4 +1,4 @@
-"""F-04: validator accepts the hand-built plan, flags each injected violation, stays independent
+"""validator accepts the hand-built plan, flags each injected violation, stays independent
 (ARCHITECTURE.md section 11)."""
 import ast
 import copy
@@ -51,7 +51,8 @@ def test_expected_trips_and_metrics_consistent():
     assert got == trips.set_index("trip_id")["kg_total"].to_dict()
     m = json.loads((EXP / "metrics.json").read_text())
     e, v = m["economics_inr"], m["volumes_kg"]
-    assert e["net"] == e["revenue"] - e["transport"] - e["handling"] - e["spoilage_cost"]
+    assert e["net"] == (e["revenue"] - e["cost_of_goods_sold"] - e["transport"] - e["handling"]
+                         - e["spoilage_cost"])
     assert v["total_supply"] == v["sold"] + m["kpis"]["spoilage_kg"] + v["carryover"]["total"]
     assert m["kpis"]["spoilage_kg"] == sum(m["spoilage_breakdown_kg"].values())
 
@@ -60,7 +61,7 @@ def test_validation_json_written(tmp_path):
     sc, plan, disc = base()
     validate(sc, plan, disc).write(tmp_path / "validation.json")
     d = json.loads((tmp_path / "validation.json").read_text())
-    assert d == {"schema_version": 1, "violation_total": 0, "counts": {}, "violations": [],
+    assert d == {"schema_version": 2, "violation_total": 0, "counts": {}, "violations": [],
                  "warnings": []}
 
 

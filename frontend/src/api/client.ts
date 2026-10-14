@@ -41,7 +41,7 @@ export const api = {
     req<Ladder>(`/ladder?scenario=${e(scenario)}&seed=${seed}`),
   postRun: (body: PostRunRequest) => req<PostRunResponse>('/runs', post(body)),
   status: (id: string) => req<StatusResponse>(`/runs/${e(id)}/status`),
-  // AD-05 / AD-06: a 404 with a specific detail = not on disk yet (the UI shows the CLI hint)
+  // a 404 with a specific detail = not on disk yet (the UI shows the CLI hint)
   stress: (scenario: string, seed: number) =>
     req<StressResponse>(`/stress?scenario=${e(scenario)}&seed=${seed}`),
   postStress: (body: PostStressRequest) => req<PostRunResponse>('/stress', post(body)),

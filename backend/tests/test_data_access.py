@@ -16,7 +16,8 @@ def test_fixture_invariants(tmp_path):
     m, _ = data_access.load_metrics(outputs=tmp_path)
     e, v, b = m["economics_inr"], m["volumes_kg"], m["spoilage_breakdown_kg"]
     assert e["revenue"] == e["gross_revenue_at_list"] - e["discount_cost"]
-    assert e["net"] == e["revenue"] - e["transport"] - e["handling"] - e["spoilage_cost"]
+    assert e["net"] == (e["revenue"] - e["cost_of_goods_sold"] - e["transport"] - e["handling"]
+                        - e["spoilage_cost"])
     assert e["net"] == m["kpis"]["net_inr"]
     assert sum(b.values()) == m["kpis"]["spoilage_kg"]
     assert v["total_supply"] == v["sold"] + m["kpis"]["spoilage_kg"] + v["carryover"]["total"]

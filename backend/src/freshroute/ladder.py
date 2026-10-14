@@ -10,7 +10,7 @@ from freshroute.io import load_scenario
 
 LADDER = ("fifo", "fefo", "milp", "milp_markdown")
 EXTRAS = ("last_day_50",)
-# ponytail: fefo stands in for organizer_baseline until C-06 (organizer doc) lands.
+# ponytail: fefo stands in for organizer_baseline until the organizers publish their baseline.
 BASELINE, PLAN = "fefo", "milp_markdown"
 TOLERANCE_INR = 0.01
 ABLATION_DELTAS = ("net_inr", "spoilage_kg", "spoilage_pct", "demand_fulfillment_pct")
@@ -24,6 +24,8 @@ def waterfall(base: dict, plan: dict) -> list[dict]:
         {"label": "Baseline net", "value": base["net"], "type": "total"},
         {"label": "Spoilage cost avoided", "value": 0.0 - d("spoilage_cost"), "type": "delta"},
         {"label": "Extra sales (list price)", "value": d("gross_revenue_at_list"), "type": "delta"},
+        {"label": "Cost of extra goods sold", "value": 0.0 - d("cost_of_goods_sold"),
+         "type": "delta"},
         {"label": "Extra transport", "value": 0.0 - d("transport"), "type": "delta"},
         {"label": "Extra handling", "value": 0.0 - d("handling"), "type": "delta"},
         {"label": "Discounts given", "value": 0.0 - d("discount_cost"), "type": "delta"},
@@ -46,7 +48,7 @@ def run_ladder(scenario: str, seed: int, out: str | None = None,
     out_dir.mkdir(parents=True, exist_ok=True)
     ladder = {
         "scenario": name, "seed": seed, "realization": "base",
-        "official_baseline": None,  # C-06 blocked: no organizer baseline doc yet
+        "official_baseline": None,  # no organizer baseline procedure published yet
         "ladder": [{"policy": p, "kpis": metrics[p]["kpis"]} for p in LADDER],
         "extras": [{"policy": p, "kpis": metrics[p]["kpis"]} for p in EXTRAS],
     }

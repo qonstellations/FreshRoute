@@ -1,4 +1,4 @@
-"""One test per reject reason, both window modes, determinism (F-02)."""
+"""One test per reject reason, both window modes, determinism."""
 from pathlib import Path
 
 import pandas as pd
@@ -31,7 +31,7 @@ def test_baseline_feasible_and_worked_numbers():
     assert a.usable_life_at_arrival_h == pytest.approx(100 - 5 - 6 - 2, abs=FLOAT_TOL)
     assert a.slack_h == pytest.approx(87 - 24, abs=FLOAT_TOL)
     assert a.arrival_h == pytest.approx(17)
-    assert a.margin_inr_kg == pytest.approx(30 * (1 - 0.025) - 2.0 - 1.0)
+    assert a.margin_inr_kg == pytest.approx((30 - 15) * (1 - 0.025) - 2.0 - 1.0)
 
 
 def test_no_lane():

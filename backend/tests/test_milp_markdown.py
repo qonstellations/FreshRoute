@@ -1,4 +1,4 @@
-"""C-11: milp_markdown pipeline (plan -> discount.py -> discounts.csv -> simulator)."""
+"""milp_markdown pipeline (plan -> discount.py -> discounts.csv -> simulator)."""
 import json
 from pathlib import Path
 

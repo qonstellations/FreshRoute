@@ -19,7 +19,8 @@ def near(a, b):
 def check_invariants(m):
     e, v, k, sb = m["economics_inr"], m["volumes_kg"], m["kpis"], m["spoilage_breakdown_kg"]
     near(e["revenue"], e["gross_revenue_at_list"] - e["discount_cost"])
-    near(e["net"], e["revenue"] - e["transport"] - e["handling"] - e["spoilage_cost"])
+    near(e["net"], e["revenue"] - e["cost_of_goods_sold"] - e["transport"] - e["handling"]
+         - e["spoilage_cost"])
     near(k["net_inr"], e["net"])
     near(k["spoilage_kg"], sum(sb.values()))
     near(v["total_supply"], v["sold"] + k["spoilage_kg"] + v["carryover"]["total"])
@@ -57,7 +58,8 @@ def test_hand_built():
     m = compute(_scenario(), plan, pd.DataFrame(), {"ledger": ledger, "origin": origin})
     check_invariants(m)
     want = dict(gross_revenue_at_list=30000, discount_cost=3000, revenue=27000,
-                transport=2900, handling=1600, spoilage_cost=1520, net=20980)
+                cost_of_goods_sold=6000, transport=2900, handling=1600, spoilage_cost=1520,
+                net=14980)
     for key, val in want.items():
         near(m["economics_inr"][key], val)
     near(m["kpis"]["spoilage_kg"], 190)

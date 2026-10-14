@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from freshroute.feasibility import HOURS_PER_DAY
+from freshroute.config import HOURS_PER_DAY
 from freshroute.io import Scenario
 
 COLUMNS = (

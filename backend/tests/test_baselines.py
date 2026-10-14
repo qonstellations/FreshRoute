@@ -1,4 +1,4 @@
-"""FEFO-greedy and last_day_50 baselines (C-05, ARCHITECTURE.md section 12)."""
+"""FEFO-greedy and last_day_50 baselines (ARCHITECTURE.md section 12)."""
 import json
 from pathlib import Path
 
@@ -16,12 +16,12 @@ SCENARIOS = [ROOT / "backend" / "tests" / "fixtures" / "tiny_3batch",
 
 
 def test_organizer_baseline_policy_names_its_blocker():
-    """C-06: asking for the official baseline must say *why* it is absent, not just "unknown"."""
+    """Asking for the official baseline must say *why* it is absent, not just "unknown"."""
     assert "organizer_baseline" in cli.POLICY_CHOICES  # parser accepts it...
     with pytest.raises(SystemExit) as e:  # ...so _policy explains the block
         cli._policy("organizer_baseline")
     msg = str(e.value)
-    assert "C-06" in msg and "S-01" in msg
+    assert "organizers" in msg and "baseline procedure" in msg
     assert "fifo" in msg and "milp_markdown" in msg  # still lists what does work
 
 
@@ -29,6 +29,8 @@ def test_unknown_policy_lists_available():
     with pytest.raises(SystemExit) as e:
         cli._policy("nope")
     assert "unknown policy" in str(e.value)
+
+
 DISC_CODES = {"DISCOUNT_CAP", "DISCOUNT_BELOW_SALVAGE", "DISCOUNT_NOT_MONOTONE"}
 
 

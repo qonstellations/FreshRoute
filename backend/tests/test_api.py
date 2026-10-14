@@ -34,7 +34,7 @@ def ran(run_outputs, monkeypatch):
 
 
 def test_health(client):
-    assert client.get("/api/health").json() == {"status": "ok", "schema_version": 1,
+    assert client.get("/api/health").json() == {"status": "ok", "schema_version": 2,
                                                 "api_version": 1}
 
 
@@ -87,7 +87,7 @@ def test_tables_json_and_csv(ran, run_outputs):
 def test_dispatch_sheet_and_reason_cards(ran):
     sheet = ran.get(f"/api/runs/{RUN}/dispatch-sheet").json()
     assert isinstance(sheet["csv"], list) and isinstance(sheet["text"], str)
-    r = ran.get(f"/api/runs/{RUN}/reason-cards")  # cli.run writes them since U-01
+    r = ran.get(f"/api/runs/{RUN}/reason-cards")  # cli.run writes them
     on_disk = json.loads((data_access.OUTPUTS / RUN / "reason_cards.json").read_text("utf-8"))
     assert r.status_code == 200 and r.json() == on_disk
 

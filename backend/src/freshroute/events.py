@@ -2,7 +2,7 @@
 
 `Event` validates syntax (type, target shape, magnitude range); `check_targets` validates the
 ids against a scenario; `apply_event` returns a changed copy of the scenario. Nothing here
-plans or scores; the LLM parser (AD-09), if any, may only produce an `Event`.
+plans or scores; an LLM parser, if one is ever added, may only produce an `Event`.
 """
 from __future__ import annotations
 
@@ -15,11 +15,10 @@ from typing import Literal
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from freshroute.config import HOURS_PER_DAY
 from freshroute.io import Scenario
 
-HOURS_PER_DAY = 24
 EventType = Literal["route_delay", "capacity_drop", "demand_spike", "new_order", "price_shock"]
-_DEST_COM = ("demand_spike", "new_order", "price_shock")
 _WILD_COM = ("demand_spike", "price_shock")  # `*` allowed for the commodity
 
 

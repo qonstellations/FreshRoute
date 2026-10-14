@@ -1,4 +1,4 @@
-"""C-04 (ARCHITECTURE.md section 9.2): with overship 0, markdown off and the base realization,
+"""(ARCHITECTURE.md section 9.2): with overship 0, markdown off and the base realization,
 the simulator's net_inr of the MILP plan equals the MILP objective without tie-break/slack."""
 from pathlib import Path
 

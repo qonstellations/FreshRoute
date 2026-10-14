@@ -45,8 +45,9 @@ def demand_target(sc: Scenario, on: bool = True) -> pd.DataFrame:
             rows.append((r.dest_id, r.commodity, r.day, float(r.demand_kg_p50), 0.5,
                          float("nan"), float("nan")))
             continue
-        c_u = (p * (1 - c.handling_loss_frac) - float(ln.cost_var_inr_kg.min())
-               - dest.handling_cost_inr_kg[r.dest_id])
+        c_u = costmodel.shipped_margin(p, c.handling_loss_frac, c.unit_cost_inr_kg,
+                                       float(ln.cost_var_inr_kg.min()),
+                                       dest.handling_cost_inr_kg[r.dest_id])
         c_o = (costmodel.spoilage_unit_cost(c.unit_cost_inr_kg, c.disposal_cost_inr_kg,
                                             c.salvage_value_inr_kg)
                + p * NEWSVENDOR_MARKDOWN_REF)

@@ -8,12 +8,14 @@ values live in config.py. Rows at the base value reuse the base run.
 from __future__ import annotations
 
 import copy
+import math
 from pathlib import Path
 
 import pandas as pd
 
 from freshroute import metrics as M
 from freshroute.config import (
+    FLOAT_TOL,
     OVERSHIP_SLACK,
     SENS_DEMAND_MULT,
     SENS_ELASTICITY_MULT,
@@ -58,7 +60,7 @@ def run_sensitivity(scenario: str, seed: int, out: str | None = None) -> Path:
                "overship_slack": OVERSHIP_SLACK}
     rows = []
     for param, value, s, c in cases:
-        k = base if is_base.get(param) == value else _kpis(s, c)
+        k = base if abs(is_base.get(param, math.nan) - value) <= FLOAT_TOL else _kpis(s, c)
         rows.append({"parameter": param, "value": value, "policy": POLICY,
                      **{col: k[col] for col in COLUMNS[3:]}})
     out_dir = Path(out) if out else Path("outputs") / f"{sc.name}__sensitivity__s{seed}"

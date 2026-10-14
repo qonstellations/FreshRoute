@@ -1,11 +1,12 @@
 """Reason-card text templates (ARCHITECTURE.md section 15; card fields in DATABASE.md 5.9).
 
 `build_cards` assembles one card per plan shipment from the plan, the feasibility arcs and
-discounts.csv (U-01); `render_text` only renders numbers already on a card. Read-only: nothing
+discounts.csv; `render_text` only renders numbers already on a card. Read-only: nothing
 here changes a plan or a KPI.
 """
 from __future__ import annotations
 
+import math
 from dataclasses import replace
 
 import pandas as pd
@@ -55,12 +56,12 @@ def render_text(card: dict) -> str:
 
 
 def _f(x) -> float | None:
-    """JSON-safe float (NaN -> null)."""
-    return None if x is None or pd.isna(x) else float(x)
+    """JSON-safe float (NaN / +-inf -> null)."""
+    return None if x is None or pd.isna(x) or not math.isfinite(x) else float(x)
 
 
 def _scoped_arcs(scenario: Scenario, plan: pd.DataFrame) -> pd.DataFrame:
-    """Arcs for reason cards on a scoped sub-scenario (U-02 full-run fix).
+    """Arcs for reason cards on a scoped sub-scenario.
 
     Only batches in ``plan`` are looked up (``by_batch.get(batch)`` below), and
     vehicles sharing ``(origin, mode, available_from_h)`` have identical arcs

@@ -4,7 +4,7 @@ Responses are files served verbatim, so they have no models here.
 """
 from __future__ import annotations
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from freshroute.config import DEFAULT_SEED, MC_N
 
@@ -20,7 +20,7 @@ class StressRequest(BaseModel):
     scenario: str
     policy: str = "milp_markdown"
     seed: int = DEFAULT_SEED
-    n: int = MC_N
+    n: int = Field(MC_N, ge=1, le=2000)
 
 
 class ReplanRequest(BaseModel):

@@ -1,4 +1,4 @@
-"""Template narration (AD-07): the ARCHITECTURE 14.4 guard as a test."""
+"""Template narration: the ARCHITECTURE 14.4 guard as a test."""
 import json
 import re
 from pathlib import Path

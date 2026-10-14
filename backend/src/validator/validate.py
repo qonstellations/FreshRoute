@@ -13,7 +13,7 @@ import pandas as pd
 from freshroute.io import Scenario
 from validator.rules import demand_warnings, discount_rules, shipment_rules
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 @dataclass

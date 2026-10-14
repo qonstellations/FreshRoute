@@ -25,6 +25,7 @@ export interface Metrics { // §5.7
   spoilage_breakdown_kg: { handling_loss: number; delivered_unsold_expired: number; origin_expired: number }
   economics_inr: {
     gross_revenue_at_list: number; discount_cost: number; revenue: number
+    cost_of_goods_sold: number
     transport: number; handling: number; spoilage_cost: number; net: number
   }
   volumes_kg: {
@@ -119,7 +120,7 @@ export interface StatusResponse {
   started_utc: string | null; finished_utc: string | null; error: string | null
 }
 
-// ---- AD-05 / AD-06 (DATABASE §5.12, §5.13, §6; endpoints per §11.2 "added later") ----
+// ---- Robustness and Replan (DATABASE §5.12, §5.13, §6; endpoints per §11.2 "added later") ----
 /** Client-only marker set by the format-example stub in api/client.ts; never sent by the API. */
 export type Example = { example?: true }
 

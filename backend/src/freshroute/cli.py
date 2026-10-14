@@ -32,14 +32,14 @@ from freshroute.simulator import simulate
 from validator.validate import validate
 
 POLICIES = ("fifo", "fefo", "last_day_50", "milp", "milp_markdown")
-# Recognised names that cannot run yet (C-06). Listed in --policy choices so the parser accepts
-# them and _policy() can explain the block, instead of argparse saying "invalid choice".
 NEWSVENDOR_POLICIES = ("milp", "milp_markdown")
+# Recognised names that cannot run yet. Listed in --policy choices so the parser accepts them
+# and _policy() can explain the block, instead of argparse saying "invalid choice".
 BLOCKED_POLICIES = ("organizer_baseline",)
 POLICY_CHOICES = POLICIES + BLOCKED_POLICIES
 ORGANIZER_BASELINE_BLOCKED = (  # also the API's 400 detail (DATABASE.md section 11.2)
-    "policy 'organizer_baseline' is not implemented: C-06 is blocked until the organizers "
-    "publish their baseline procedure and submission format (docs/TODO.md S-01, C-06). "
+    "policy 'organizer_baseline' is not implemented: it waits for the organizers' published "
+    "baseline procedure and submission format (README, organizer mapping). "
     f"Available policies: {', '.join(POLICIES)}"
 )
 
@@ -61,8 +61,8 @@ def _policy(name: str):
         from freshroute.policies.milp import MilpMarkdownPolicy
         return MilpMarkdownPolicy()
     if name == "organizer_baseline":
-        # C-06: implement this only from the organizers' published procedure. Inventing one and
-        # calling it official is the failure rule #1 exists to prevent (DECISIONS.md).
+        # Implement this only from the organizers' published procedure. Inventing one and
+        # calling it official is the failure AGENTS.md rule 1 exists to prevent.
         raise SystemExit(ORGANIZER_BASELINE_BLOCKED)
     raise SystemExit(f"unknown policy {name!r}; available: {', '.join(POLICIES)}")
 
@@ -160,7 +160,7 @@ def demo(scenario: str, seed: int, out: str | None = None, with_sensitivity: boo
     lad_dir = run_ladder(scenario, seed, out)
     print(format_ladder(lad_dir))
     lad = json.loads((lad_dir / "ladder.json").read_text(encoding="utf-8"))
-    if with_sensitivity:  # ponytail: off by default, ~275 s on practice (U-04)
+    if with_sensitivity:  # ponytail: off by default, slow (minutes on practice)
         from freshroute.sensitivity import run_sensitivity
         sen = run_sensitivity(scenario, seed,
                               str(lad_dir.parent / f"{lad['scenario']}__sensitivity__s{seed}"))
@@ -198,6 +198,9 @@ def main(argv: list[str] | None = None) -> None:
     st.add_argument("--named", action="store_true",
                     help="last-resort fallback: 3 named scenarios (optimistic/base/stress)")
     st.add_argument("--out")
+    gn = sub.add_parser("generate", help="regenerate the committed synthetic scenarios")
+    gn.add_argument("names", nargs="*", help="scenario names (default: all)")
+    gn.add_argument("--out", default="data/scenarios")
     dm = sub.add_parser("demo", help="ladder + waterfall on the demo scenario; the pitch numbers")
     dm.add_argument("--scenario", default=DEMO_SCENARIO)
     dm.add_argument("--seed", type=int, default=DEMO_SEED)
@@ -230,6 +233,11 @@ def main(argv: list[str] | None = None) -> None:
         print(f"wrote {out}  ({time.perf_counter() - t0:.2f} s wall)")
         if v["violation_total"]:
             sys.exit(1)
+        return
+    if a.cmd == "generate":
+        from freshroute.generator import COMMITTED, generate_committed
+        for n in a.names or COMMITTED:
+            print(f"wrote {generate_committed(n, a.out)}")
         return
     if a.cmd == "demo":
         if demo(a.scenario, a.seed, a.out, a.with_sensitivity):

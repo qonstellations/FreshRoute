@@ -1,4 +1,4 @@
-"""U-04: sensitivity.csv (DATABASE.md section 5.12) on tiny_3batch."""
+"""sensitivity.csv (DATABASE.md section 5.12) on tiny_3batch."""
 import json
 from pathlib import Path
 

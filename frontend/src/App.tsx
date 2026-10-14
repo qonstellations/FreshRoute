@@ -34,7 +34,7 @@ const POLICIES = [
   { value: 'milp_markdown', label: 'Smart plan (recommended)' },
   { value: 'milp', label: 'Smart plan, no discounts' },
   { value: 'fefo', label: 'Use oldest first (simple rule)' },
-  { value: 'fifo', label: 'Use newest first (simple rule)' },
+  { value: 'fifo', label: 'Use oldest first (simple rule)' },
   { value: 'last_day_50', label: 'Simple rule + big last-day sale' },
 ]
 const NAV = [

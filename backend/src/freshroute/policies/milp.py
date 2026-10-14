@@ -22,6 +22,7 @@ from freshroute.config import (
     AGG_RSL_BUCKET_H,
     EPS_FEFO,
     FLOAT_TOL,
+    HOURS_PER_DAY,
     LAMBDA_SPOIL,
     MILP_TIME_LIMIT_S,
     MIP_REL_GAP,
@@ -29,7 +30,7 @@ from freshroute.config import (
     PENALTY_MULT,
     PHI_BALANCE,
 )
-from freshroute.feasibility import HOURS_PER_DAY, build_arcs
+from freshroute.feasibility import build_arcs
 from freshroute.io import Scenario
 from freshroute.policies.base import PLAN_COLUMNS, TRIP_COLUMNS, Plan, Policy
 from freshroute.shelflife import decay
@@ -103,7 +104,7 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None
              - pulp.lpSum(fixed[k] * n[k] for k in nk)
              - pulp.lpSum(LAMBDA_SPOIL * unship[b] * u[b] for b in u))
     by_b = arcs.groupby("batch_id").groups
-    for bid in batches.index:  # C1 stock balance; arc-less batches too, so u = qty (C-04)
+    for bid in batches.index:  # C1 stock balance; arc-less batches too, so u = qty
         prob += pulp.lpSum(x[i] for i in by_b.get(bid, [])) + u[bid] == float(batches.qty_kg[bid])
     for (v, d, day), idx in arcs.groupby(["vehicle_id", "dest_id", "dispatch_day"]).groups.items():
         prob += pulp.lpSum(x[i] for i in idx) <= pulp.lpSum(  # C2
@@ -149,7 +150,7 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None
             var.setInitialValue(max(0.0, PHI_BALANCE * g_avg - gxd[d] / tot[d]))
         return warm is None or prob.valid(FLOAT_TOL)  # plain runs never pay for the check
 
-    # Warm start from the FEFO-greedy plan (C-04/G2): the incumbent is never worse than FEFO
+    # Warm start from the FEFO-greedy plan: the incumbent is never worse than FEFO
     # under the MILP objective, even when the time limit stops the search early. A replan
     # (section 14.2) starts from the old plan's undispatched rows instead while they still
     # satisfy every constraint: fewest moves, and the old plan was itself optimized.
@@ -171,7 +172,7 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None
         nv = {k: v.value() for k, v in n.items()}
         info["slack_usage"] = {d: float(v.value()) for d, v in slack.items()
                                if (v.value() or 0.0) > FLOAT_TOL}
-        # C-04: plain-INR objective (lambda = 1, no FEFO tie-break, no C6 slack penalty)
+        # plain-INR objective (lambda = 1, no FEFO tie-break, no C6 slack penalty)
         econ = arcs.margin_inr_kg - arcs.spoil_inr_kg
         info["objective_inr"] = float(
             sum(float(c) * xi for c, xi in zip(econ, xv, strict=True))
@@ -359,7 +360,7 @@ def _split_fleet(lines: pd.DataFrame, n: dict, fleet: pd.DataFrame, vmem: dict,
 def _plan_aggregated(sc: Scenario, ctx: dict, policy: str) -> Plan:
     """Aggregate -> solve -> split each pseudo-batch arc pro rata to qty_kg -> keep only lines
     whose batch-level arc is feasible -> independent validator; any violation left -> FEFO-greedy
-    on the full scenario (section 9.5, U-02)."""
+    on the full scenario (section 9.5)."""
     from validator.validate import validate  # independent re-check (D-04); validator never
     # imports this module, so the dependency stays one-way.
 
@@ -431,8 +432,8 @@ class MilpPolicy(Policy):
             return _plan_aggregated(scenario, ctx, self.name)
         arcs, batches, unship = _model_data(scenario)
         ov = ctx.get("demand_cap_override")
-        slack = ctx.get("overship_slack", OVERSHIP_SLACK)  # sensitivity (U-04)
-        used = ctx.get("residual_use")  # replan (AD-02): frozen trips and arrivals
+        slack = ctx.get("overship_slack", OVERSHIP_SLACK)  # sensitivity
+        used = ctx.get("residual_use")  # replan: frozen trips and arrivals
         sol, info = _solve(scenario, arcs, batches, unship,
                            ctx.get("time_limit_s", MILP_TIME_LIMIT_S), ctx.get("gap", MIP_REL_GAP),
                            override=ov, overship=slack, used=used,
@@ -446,7 +447,7 @@ class MilpPolicy(Policy):
 
 
 class MilpMarkdownPolicy(MilpPolicy):
-    """milp_markdown (ARCHITECTURE.md sections 10, 12): MILP plan + tiered markdown (C-11)."""
+    """milp_markdown (ARCHITECTURE.md sections 10, 12): MILP plan + tiered markdown."""
 
     name = "milp_markdown"
 

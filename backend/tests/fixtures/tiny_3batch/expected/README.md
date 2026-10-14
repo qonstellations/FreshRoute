@@ -1,9 +1,9 @@
-# tiny_3batch: hand-computed expected outputs (F-04)
+# tiny_3batch: hand-computed expected outputs
 
 Rules used: ARCHITECTURE section 7 (cost model, usable life), section 13 (simulator), DECISIONS "Default rule"
 (absolute windows, dispatch_h 5, carry-over valued 0, origin handling 0, no markdown => empty `discounts.csv`).
 Files here: `plan.csv`, `trips.csv`, `discounts.csv` (header only), `metrics.json` (machine-readable numbers).
-Tomato spoilage cost per kg = 15 + 2 - 3 = 14. Onion = 12 + 1 - 4 = 9.
+Tomato spoilage cost per kg = 15 + 2 - 3 = 14. Onion = 12 + 1 - 4 = 9. Sold kg also carry unit cost (COGS).
 
 ## 1. Feasibility (usable life = RSL - wait*decay(20C) - travel*decay(10C) - handling)
 decay(20C) = 1 (ref 20C); decay(10C) = 2^((10-20)/10) = 0.5; wait = 5 - 0 = 5 h; handling = 2 h; min sell window 24 h.
@@ -42,7 +42,8 @@ spoilage_pct = 174.25 / 2300 x 100 = 7.5760869...
 - Transport = fixed 2000 + 2500 = 4500; variable 700 x 2.0 + 600 x 2.5 = 1400 + 1500 = 2900; total **7400**.
 - Handling = 700 x 1.0 + 600 x 1.5 = 700 + 900 = **1600** (on delivered kg, loss included).
 - Spoilage cost: tomato kg 10 + 8.75 + 150 = 168.75 x 14 = 2362.5; onion 3 + 2.5 = 5.5 x 9 = 49.5; total **2412**.
-- Net = 34005 - 7400 - 1600 - 2412 = **22593**.
+- Cost of goods sold = sold kg x unit cost: tomato 731.25 x 15 = 10968.75; onion 544.5 x 12 = 6534; total **17502.75** (A-48).
+- Net = 34005 - 17502.75 - 7400 - 1600 - 2412 = **5090.25**.
 
 ## 5. Service metrics
 Base demand over 3 days: D1 tomato 1200, D1 onion 900, D2 tomato 1050, D2 onion 750 = 3900.

@@ -34,7 +34,7 @@ function Body({ open }: { open: DrawerOpen }) {
     <Stack align="center" gap="xs" py="xl" c="dimmed">
       {open.from === 'row' && rankBadge(open.layoutId.replace('rank-', ''))}
       <IconFileUnknown size={40} stroke={1.4} />
-      <Text c="dimmed">No reason card for this shipment (run written before U-01?).</Text>
+      <Text c="dimmed">No reason card for this shipment (run written before reason cards existed?).</Text>
     </Stack>
   )
   return (

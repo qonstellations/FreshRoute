@@ -1,4 +1,4 @@
-"""Reason-card text and dispatch-sheet skeleton (C-13)."""
+"""Reason-card text and dispatch-sheet skeleton."""
 import re
 from pathlib import Path
 

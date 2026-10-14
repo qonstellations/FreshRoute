@@ -1,4 +1,4 @@
-"""AD-04: newsvendor demand target (ARCHITECTURE.md section 14.3), --newsvendor, ablation row."""
+"""newsvendor demand target (ARCHITECTURE.md section 14.3), --newsvendor, ablation row."""
 import json
 from pathlib import Path
 

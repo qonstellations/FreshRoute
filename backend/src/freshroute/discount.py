@@ -9,12 +9,12 @@ from typing import NamedTuple
 
 import pandas as pd
 
+from freshroute import costmodel as cm
 from freshroute.config import (
     DISCOUNT_RISK_BREAKS,
     DISCOUNT_TIERS_PCT,
     DISCOUNT_TIME_TRIGGER_H,
     FLOAT_TOL,
-    MAX_UPLIFT,
 )
 
 COLUMNS = (
@@ -51,7 +51,7 @@ def delta_revenue(
 ) -> float:
     """Worth-it test value (ARCH section 10 step 5)."""
     base = min(stock_kg, demand_kg)
-    extra = min(stock_kg, demand_kg * (1 + min(eps * frac, MAX_UPLIFT))) - base
+    extra = min(stock_kg, demand_kg * cm.demand_uplift(eps, frac)) - base
     return extra * price * (1 - frac) - base * price * frac
 
 
@@ -66,7 +66,7 @@ def discount_pct(
     j = min(i + 1, len(DISCOUNT_TIERS_PCT) - 1) if near_end else i
     trig = DISCOUNT_TIERS_PCT[j]
     cap_frac, capped_by = max_discount_frac, "max_discount"
-    salvage_cap = 1 - salvage / price if price > 0 else 0.0
+    salvage_cap = cm.salvage_cap_frac(price, salvage)
     if salvage_cap < cap_frac - FLOAT_TOL:
         cap_frac, capped_by = salvage_cap, "salvage_floor"
     cap = max(0.0, cap_frac * 100)

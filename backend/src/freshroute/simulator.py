@@ -10,7 +10,8 @@ import math
 
 import pandas as pd
 
-from freshroute.config import FLOAT_TOL, MAX_UPLIFT
+from freshroute import costmodel as cm
+from freshroute.config import FLOAT_TOL
 from freshroute.discount import _lots
 from freshroute.shelflife import decay, usable_life_at_arrival
 
@@ -100,7 +101,7 @@ def simulate(scenario, plan: pd.DataFrame, discounts: pd.DataFrame, realization=
                         and x["left"] > FLOAT_TOL]
             frac = disc.get((sellable[0]["lot_id"], k), 0.0) if sellable else 0.0
             base = float(demand.get((dest, com, k), 0.0))
-            eff = base * (1 + min(eps * frac, MAX_UPLIFT))
+            eff = base * cm.demand_uplift(eps, frac)
             rem = eff
             for x in sellable:  # FEFO
                 take = min(x["left"], rem)

@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "run_id": "EXAMPLE-SYNTHETIC",
   "scenario": "synthetic_example",
   "policy": "milp",
@@ -8,12 +8,12 @@
   "kpis": {
     "spoilage_kg": 600.0, "spoilage_pct": 6.0,
     "demand_fulfillment_pct": 87.0, "min_dest_fill_pct": 82.0,
-    "net_inr": 327000.0, "violations": 0
+    "net_inr": 227000.0, "violations": 0
   },
   "spoilage_breakdown_kg": {"handling_loss": 100.0, "delivered_unsold_expired": 300.0, "origin_expired": 200.0},
   "economics_inr": {
     "gross_revenue_at_list": 435000.0, "discount_cost": 15000.0, "revenue": 420000.0,
-    "transport": 60000.0, "handling": 9000.0, "spoilage_cost": 24000.0, "net": 327000.0
+    "cost_of_goods_sold": 100000.0, "transport": 60000.0, "handling": 9000.0, "spoilage_cost": 24000.0, "net": 227000.0
   },
   "volumes_kg": {
     "total_supply": 10000.0, "shipped": 9500.0, "unshipped": 500.0, "sold": 8700.0,
