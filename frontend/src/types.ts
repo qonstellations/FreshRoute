@@ -68,7 +68,27 @@ export interface RunDetail extends Metrics {
 export type TableName = 'plan' | 'trips' | 'discounts' | 'sim_ledger' | 'sim_lots'
 export interface Table { columns: string[]; records: Record<string, string | number | boolean | null>[] }
 
-export type ReasonCards = Record<string, unknown>[] | null // §5.9, typed when U-01 renders it
+export type ReasonCode = 'SHELF_LIFE' | 'WINDOW' | 'CAPACITY_BOUND' | 'DEMAND_CAP' | 'LOWER_MARGIN'
+export interface ReasonCard { // §5.9, one per plan.csv shipment_id
+  shipment_id: string; batch_id: string; commodity: string
+  chosen: {
+    dest_id: string; vehicle_id: string; mode: string; dispatch_h: number; arrival_h: number
+    kg: number; usable_life_at_arrival_h: number; slack_h: number; margin_inr_kg: number
+  }
+  priority: { rank: number; score: number }
+  alternatives: {
+    dest_id: string; mode: string; dispatch_day: number; feasible: boolean; reject_reason: string
+    usable_life_at_arrival_h: number; slack_h: number; margin_inr_kg: number
+    margin_delta_inr_kg: number; slack_delta_h: number; reason_code: ReasonCode
+  }[]
+  runner_up: {
+    dest_id: string; reason_code: ReasonCode
+    margin_delta_inr_kg: number; margin_delta_inr: number; slack_delta_h: number
+  } | null
+  discount: { day: number; risk: number; tier_pct: number; capped_by: 'none' | 'max_discount' | 'salvage_floor' } | null
+  text: string
+}
+export type ReasonCards = ReasonCard[] | null
 
 export interface DispatchRow { // §5.10 CSV columns, served in priority_rank order
   vehicle_id: string; trip_id: string; dispatch_h: number; depart_clock: string
