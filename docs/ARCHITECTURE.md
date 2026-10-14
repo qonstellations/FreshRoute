@@ -127,7 +127,7 @@ freshroute/
 │   ├── src/validator/          # second top-level package, INDEPENDENT of freshroute logic (D-17)
 │   │   └── validate.py  rules.py
 │   └── tests/                  # fixtures/tiny_3batch/  fixtures/metrics_example.json  test_*.py
-├── frontend/                   # React SPA: Vite + TypeScript + recharts + react-leaflet (D-19) + Mantine + motion (D-24)
+├── frontend/                   # React SPA: Vite + TypeScript + recharts (D-19) + Mantine + motion (D-24)
 │   ├── package.json  package-lock.json  vite.config.ts  tsconfig.json  index.html
 │   └── src/  main.tsx  App.tsx  api/  components/  pages/  lib/  types.ts
 ├── scripts/                    # build_prices.py (Agmarknet → prices.csv)
@@ -421,7 +421,7 @@ Components are Mantine 9; motion springs animate tab switches, the reason-card d
 |---|---|
 | Sidebar | scenario picker, seed, flags (markdown on/off, newsvendor on/off), `q10` slider, ε multiplier, **Plan** button |
 | Scoreboard | 4 KPI tiles (spoilage kg and %, fulfillment %, net ₹, violations: baseline n vs ours), min fill rate, waterfall, attribution ladder, validator panel |
-| Plan | priority-ordered dispatch table, reason card drawer, discount cards, shelf-life countdown map (react-leaflet; colour table is the fallback) |
+| Plan | priority-ordered dispatch table, reason card drawer, discount cards, shelf-life countdown map (offline SVG route network over `geo.csv`, D-24; colour table is the fallback) |
 | Robustness | MC fan chart / bands, % scenarios beating baseline, sensitivity table |
 | Replan | 5 canned events dropdown (+ NL box if stretch done), apply, diff view, ΔKPIs, narration |
 | Trust | assumptions, cost-model coefficients, `run_manifest.json` (seed, git SHA, scenario hash, solver status) |

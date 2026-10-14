@@ -62,7 +62,7 @@ make demo                           # THE one command all slide numbers come fro
 
 No `make` (e.g. plain Windows)? Run the commands written in the comments at the top of the `Makefile`.
 
-Core dependencies: `pandas`, `numpy`, `scipy>=1.9`, `pulp`, `highspy`, `pydantic>=2`, `fastapi`, `uvicorn`; dev group `pytest`, `ruff`, `httpx`; frontend `react`, `recharts`, `react-leaflet`. Optional: an LLM client (only for the AD-09 stretch). `statsforecast` is **not** used in this build.
+Core dependencies: `pandas`, `numpy`, `scipy>=1.9`, `pulp`, `highspy`, `pydantic>=2`, `fastapi`, `uvicorn`; dev group `pytest`, `ruff`, `httpx`; frontend `react`, `recharts`, `@mantine/core`, `motion` (D-24). Optional: an LLM client (only for the AD-09 stretch). `statsforecast` is **not** used in this build.
 
 Environment variables (never committed): `LLM_API_KEY` (and provider name) if AD-09 is attempted. Put them in `.env`, which is git-ignored.
 
