@@ -88,7 +88,9 @@ def discount_pct(
 
 def _lots(plan: pd.DataFrame, batches: pd.DataFrame, comm: pd.DataFrame) -> pd.DataFrame:
     p = plan.merge(batches[["batch_id", "commodity"]], on="batch_id")
-    p["lot_id"] = p["batch_id"] + "@" + p["dest_id"] + "@" + p["arrival_day"].astype(str)
+    # arrival_day arrives as float when the arcs table had NaN rows; lot_id uses the int day
+    p["lot_id"] = (p["batch_id"] + "@" + p["dest_id"] + "@"
+                   + p["arrival_day"].astype(int).astype(str))
     keys = ["lot_id", "batch_id", "dest_id", "commodity", "arrival_day"]
     g = p.groupby(keys, as_index=False).agg(
         kg=("kg", "sum"), arrival_h=("arrival_h", "min"),

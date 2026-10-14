@@ -85,3 +85,6 @@ def test_build_discounts_per_lot_monotone_and_capped():
     for r in out.itertuples():
         assert r.discount_pct <= comm.loc[r.commodity, "max_discount_frac"] * 100 + FLOAT_TOL
     pd.testing.assert_frame_equal(out, build_discounts(sc, plan))  # deterministic
+    # float arrival_day (arcs with NaN rows, e.g. practice) must still give "<b>@<d>@<int day>"
+    flt = build_discounts(sc, plan.astype({"arrival_day": float}))
+    assert set(flt.lot_id) == set(out.lot_id) and not flt.lot_id.str.endswith(".0").any()
