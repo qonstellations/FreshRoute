@@ -3,15 +3,16 @@ import json
 from pathlib import Path
 
 import pytest
-from validator.validate import validate
 
 from freshroute import cli
 from freshroute.io import load_scenario
 from freshroute.policies.fefo import FefoPolicy
 from freshroute.policies.last_day_50 import LastDay50Policy
+from validator.validate import validate
 
-ROOT = Path(__file__).parents[1]
-SCENARIOS = [ROOT / "tests" / "fixtures" / "tiny_3batch", ROOT / "data" / "scenarios" / "practice"]
+ROOT = Path(__file__).parents[2]
+SCENARIOS = [ROOT / "backend" / "tests" / "fixtures" / "tiny_3batch",
+             ROOT / "data" / "scenarios" / "practice"]
 
 
 def test_organizer_baseline_policy_names_its_blocker():

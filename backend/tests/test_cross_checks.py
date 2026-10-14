@@ -5,12 +5,12 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
-from validator.rules import usable_life
 
 from freshroute.io import load_scenario
 from freshroute.metrics import compute
 from freshroute.shelflife import usable_life_at_arrival
 from freshroute.simulator import simulate
+from validator.rules import usable_life
 
 FIX = Path(__file__).parent / "fixtures" / "tiny_3batch"
 

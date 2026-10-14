@@ -18,7 +18,7 @@ run_id = st.sidebar.selectbox("Run", runs) if runs else None
 m, is_fixture = data_access.load_metrics(run_id)
 if is_fixture:
     run_id = None
-    st.info("No run under outputs/. Showing tests/fixtures/metrics_example.json (placeholder).")
+    st.info("No run under outputs/. Showing the example fixture (placeholder).")
 
 manifest = data_access.load_manifest(run_id)
 if manifest and (manifest.get("solver") or {}).get("fallback_used"):

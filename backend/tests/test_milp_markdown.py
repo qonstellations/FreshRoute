@@ -8,8 +8,9 @@ import pytest
 from freshroute import cli
 from freshroute.policies import milp
 
-ROOT = Path(__file__).parents[1]
-SCENARIOS = [ROOT / "tests" / "fixtures" / "tiny_3batch", ROOT / "data" / "scenarios" / "practice"]
+ROOT = Path(__file__).parents[2]
+SCENARIOS = [ROOT / "backend" / "tests" / "fixtures" / "tiny_3batch",
+             ROOT / "data" / "scenarios" / "practice"]
 
 
 @pytest.mark.parametrize("path", SCENARIOS, ids=lambda p: p.name)

@@ -1,12 +1,13 @@
 """C-08: same scenario + policy + seed => identical outputs (ARCHITECTURE.md section 18,
 DATABASE.md section 5.1: only `timestamp_utc` and `solver.solve_seconds` may differ)."""
 import json
+from pathlib import Path
 
 import pytest
 
 from freshroute.cli import run
 
-SCENARIO = "tests/fixtures/tiny_3batch"
+SCENARIO = str(Path(__file__).parent / "fixtures" / "tiny_3batch")
 FILES = ("metrics.json", "plan.csv", "trips.csv", "discounts.csv", "sim_ledger.csv")
 
 

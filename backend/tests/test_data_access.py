@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "app"))
 import data_access  # noqa: E402
 
 
@@ -72,7 +72,7 @@ def test_app_script_runs_without_exceptions():
     pytest.importorskip("streamlit")  # RF-01 dropped streamlit; RF-02 deletes app/
     from streamlit.testing.v1 import AppTest
 
-    at = AppTest.from_file(str(Path(__file__).resolve().parents[1] / "app" / "streamlit_app.py"))
+    at = AppTest.from_file(str(Path(__file__).resolve().parents[2] / "app" / "streamlit_app.py"))
     at.run(timeout=30)
     assert not at.exception
     assert any("SYNTHETIC DATA" in w.value for w in at.warning)

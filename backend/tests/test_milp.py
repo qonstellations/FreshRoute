@@ -72,7 +72,7 @@ def test_deterministic():
 
 def test_fefo_tiebreak_small():
     # section 9.2: eps/usable_life stays under 1 % of the smallest per-kg margin
-    for path in (FIX, Path(__file__).parents[1] / "data" / "scenarios" / "practice"):
+    for path in (FIX, Path(__file__).parents[2] / "data" / "scenarios" / "practice"):
         arcs, _, _ = milp._model_data(load_scenario(path))
         tie = (config.EPS_FEFO / arcs.usable_life_at_arrival_h).max()
         assert tie < 0.01 * arcs.margin_inr_kg.abs().min(), path

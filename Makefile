@@ -1,6 +1,5 @@
 # Commands below can be run by hand if make is missing (Windows): copy the recipe lines.
 # uv owns Python (D-15): `uv sync` installs, `uv run` executes.
-export PYTHONPATH := src
 
 setup:
 	uv sync
@@ -12,12 +11,12 @@ test:
 check:
 	uv run ruff check .
 	uv run pytest -q
-	uv run python -m freshroute.cli run --scenario tests/fixtures/tiny_3batch --policy milp --out outputs/check_milp --fail-on-violations
+	uv run freshroute run --scenario backend/tests/fixtures/tiny_3batch --policy milp --out outputs/check_milp --fail-on-violations
 
 demo:
 	@echo "demo: not implemented yet (freshroute demo lands with the spine)"
 
 run-stub:
-	uv run python -m freshroute.cli run --scenario tests/fixtures/tiny_3batch --policy milp --seed 42
+	uv run freshroute run --scenario backend/tests/fixtures/tiny_3batch --policy milp --seed 42
 
 .PHONY: setup test check demo run-stub

@@ -550,7 +550,7 @@ The dashboard's only door to the engine. The API **serves run artifacts verbatim
 | `GET /api/health` | 200 | `{"status": "ok", "schema_version": 1, "api_version": 1}` |
 | `GET /api/scenarios` | 200 | `[{"name", "source", "horizon_days", "window_mode"}]` — from `data/scenarios/*/scenario.json`, sorted by `name` |
 | `GET /api/scenarios/{name}/geo` | 200 / 404 | `geo.csv` as records (§3.9), or 404 when absent (the UI uses the colour table) |
-| `GET /api/runs` | 200 | `{"runs": [{"run_id", "scenario", "policy", "seed", "has_ladder"}], "fixture": false}` — `run_id`s from `outputs/*/metrics.json`, sorted; `fixture: true` when the list is empty and `tests/fixtures/metrics_example.json` is being served |
+| `GET /api/runs` | 200 | `{"runs": [{"run_id", "scenario", "policy", "seed", "has_ladder"}], "fixture": false}` — `run_id`s from `outputs/*/metrics.json`, sorted; `fixture: true` when the list is empty and `backend/tests/fixtures/metrics_example.json` is being served |
 | `GET /api/runs/{run_id}` | 200 / 404 | `metrics.json` verbatim, plus `baseline` (see `data_access.load_baseline` ordering: ladder `official_baseline` → ladder `fefo` → sibling `fefo` run), `validation` (`validation.json` or `null`), `manifest` (`run_manifest.json` or `null`) |
 | `GET /api/runs/{run_id}/tables/{table}` | 200 / 404 | `table ∈ {plan, trips, discounts, sim_ledger, sim_lots}` (§5.2–§5.6) as `{"columns": [...], "records": [...]}`; `?format=csv` returns the file as `text/csv` for download |
 | `GET /api/runs/{run_id}/reason-cards` | 200 | `reason_cards.json` (§5.9), or `null` when the run has none yet (nothing writes them before U-01) |

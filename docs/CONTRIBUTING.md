@@ -50,7 +50,7 @@ uv sync                             # creates .venv from uv.lock (Python 3.11, D
 npm ci --prefix frontend            # frontend deps from package-lock.json (Node 22+)
 make setup                          # both of the above, plus an editable install of the backend
 make test                           # fast unit tests (aim: well under a minute)
-make run-stub                       # freshroute run --scenario tests/fixtures/tiny_3batch --policy milp --seed 42
+make run-stub                       # freshroute run --scenario backend/tests/fixtures/tiny_3batch --policy milp --seed 42
 make api                            # FastAPI on http://127.0.0.1:8000/docs
 make web                            # Vite dev server on http://localhost:5173 (proxies /api)
 make serve                          # build the SPA and serve it from the API — the demo URL
@@ -130,7 +130,7 @@ Review checklist: does it match the contract? does a test prove it? any literal 
 **To change a contract:**
 1. Update the relevant document **in the same PR** as the code.
 2. Post `CONTRACT: <what changed, who is affected>` in the team chat before merging.
-3. Bump `schema_version` if a file/JSON format changed, `api_version` if an endpoint changed, and update `tests/fixtures/metrics_example.json` plus `frontend/src/types.ts` so the UI keeps working.
+3. Bump `schema_version` if a file/JSON format changed, `api_version` if an endpoint changed, and update `backend/tests/fixtures/metrics_example.json` plus `frontend/src/types.ts` so the UI keeps working.
 4. The affected owner approves the PR.
 
 **IDs:** `A-xx` = assumption, `D-xx` = decision, `AD-xx` = A+ add-on task, `RF-xx` = toolchain/UI refactor task; other task prefixes are in the `TODO.md` ID legend.

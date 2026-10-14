@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-from validator.validate import validate
 
 from freshroute.io import load_scenario
+from validator.validate import validate
 
 ROOT = Path(__file__).parent
 FIX = ROOT / "fixtures" / "tiny_3batch"
@@ -147,7 +147,7 @@ def test_injected_discount_not_monotone():
 
 
 def test_validator_imports_only_allowed_modules():
-    files = list((ROOT.parent / "validator").glob("*.py"))
+    files = list((ROOT.parent / "src" / "validator").glob("*.py"))
     assert files
     for f in files:
         for node in ast.walk(ast.parse(f.read_text(encoding="utf-8"))):

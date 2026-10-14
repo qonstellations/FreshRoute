@@ -205,7 +205,7 @@ Priority order (and reverse cut order): **stress test → replan → newsvendor 
 **P3**
 - [ ] **AD-05** · 1.0 h — Fan chart + sensitivity table (Robustness tab, recharts) and `q10`/ε sliders.
 - [ ] **AD-06** · 1.25 h — Replan tab: dropdown of 5 canned events, **Apply**, diff view, ΔKPIs.
-- [x] **AD-07** · 0.5 h — **Template narration** (`narrator.template_narration`) over `diff.json`/`metrics.json` — works with no LLM. *Verified on the format-example fixture `tests/fixtures/diff_example.json`; real `diff.json` pending AD-01/AD-02.*
+- [x] **AD-07** · 0.5 h — **Template narration** (`narrator.template_narration`) over `diff.json`/`metrics.json` — works with no LLM. *Verified on the format-example fixture `backend/tests/fixtures/diff_example.json`; real `diff.json` pending AD-01/AD-02.*
 - [ ] **AD-08** · 0.25 h — Deck skeleton (6–7 slides, §10 below).
 
 **Stretch (only if G4 conditions are all green)**

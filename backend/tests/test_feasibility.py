@@ -10,7 +10,7 @@ from freshroute.io import load_scenario
 
 ROOT = Path(__file__).parent
 FIX = ROOT / "fixtures" / "tiny_3batch"
-PRACTICE = ROOT.parent / "data" / "scenarios" / "practice"
+PRACTICE = ROOT.parents[1] / "data" / "scenarios" / "practice"
 
 
 def sc():

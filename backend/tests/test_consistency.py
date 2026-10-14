@@ -11,10 +11,10 @@ from freshroute.io import load_scenario
 from freshroute.policies import milp
 from freshroute.simulator import simulate
 
-ROOT = Path(__file__).parents[1]
+ROOT = Path(__file__).parents[2]
 
 
-@pytest.mark.parametrize("path", [ROOT / "tests" / "fixtures" / "tiny_3batch",
+@pytest.mark.parametrize("path", [ROOT / "backend" / "tests" / "fixtures" / "tiny_3batch",
                                   ROOT / "data" / "scenarios" / "small"])
 def test_milp_objective_equals_sim_net(path, monkeypatch):
     monkeypatch.setattr(milp, "OVERSHIP_SLACK", 0.0)

@@ -13,7 +13,6 @@ from importlib import metadata
 from pathlib import Path
 
 import pandas as pd
-from validator.validate import validate
 
 from freshroute import dispatch_sheet
 from freshroute import metrics as M
@@ -21,6 +20,7 @@ from freshroute.config import DEFAULT_SEED, OVERSHIP_SLACK, SCHEMA_VERSION
 from freshroute.discount import COLUMNS as DISCOUNT_COLUMNS
 from freshroute.io import load_scenario
 from freshroute.simulator import simulate
+from validator.validate import validate
 
 POLICIES = ("fifo", "fefo", "last_day_50", "milp", "milp_markdown")
 # Recognised names that cannot run yet (C-06). Listed in --policy choices so the parser accepts

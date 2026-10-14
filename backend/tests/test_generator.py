@@ -42,7 +42,7 @@ def test_deterministic(tmp_path):
 
 def test_practice_fifo_calibrated(tmp_path):
     """C-10 / A-21: committed practice = generator output; naive FIFO near NABCONS spoilage."""
-    practice = Path(__file__).parents[1] / "data" / "scenarios" / "practice"
+    practice = Path(__file__).parents[2] / "data" / "scenarios" / "practice"
     fresh = generate("practice", 42, 200, 8, 3, 3, tmp_path / "p")
     for f in sorted(practice.glob("*.csv")):
         pd.testing.assert_frame_equal(pd.read_csv(f), pd.read_csv(fresh / f.name))

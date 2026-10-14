@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 OUTPUTS = ROOT / "outputs"
-FIXTURE = ROOT / "tests" / "fixtures" / "metrics_example.json"
+FIXTURE = ROOT / "backend" / "tests" / "fixtures" / "metrics_example.json"
 
 
 def list_runs(outputs: Path = OUTPUTS) -> list[str]:

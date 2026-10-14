@@ -8,8 +8,8 @@ from freshroute import cli, generator, ladder
 from freshroute.config import FLOAT_TOL
 from freshroute.policies import milp
 
-ROOT = Path(__file__).parents[1]
-TINY = str(ROOT / "tests" / "fixtures" / "tiny_3batch")
+ROOT = Path(__file__).parents[2]
+TINY = str(ROOT / "backend" / "tests" / "fixtures" / "tiny_3batch")
 
 
 @pytest.fixture(scope="module")

@@ -38,7 +38,7 @@ npm ci --prefix frontend
 Commands (see `docs/CONTRIBUTING.md` §4):
 
 ```bash
-make run-stub    # freshroute run on tests/fixtures/tiny_3batch (full pipeline, prints the 4 KPIs)
+make run-stub    # freshroute run on backend/tests/fixtures/tiny_3batch (full pipeline, prints the 4 KPIs)
 make demo        # (V-04, not built yet) the one command every reported number comes from (seed 42)
 make api         # FastAPI on http://127.0.0.1:8000 (docs at /docs)
 make web         # Vite dev server on http://localhost:5173, proxying /api

@@ -468,7 +468,7 @@ Toolchain (D-15): uv owns Python. `uv sync` installs the project plus the dev gr
 | `make api` | `uv run uvicorn freshroute.api.app:app --reload` on `127.0.0.1:8000` |
 | `make web` | Vite dev server on `5173`, proxying `/api` |
 | `make serve` | build `frontend/dist`, then run the API serving it — **the demo URL is one command** |
-| `make run-stub` | `freshroute run --scenario tests/fixtures/tiny_3batch --policy milp --seed 42` |
+| `make run-stub` | `freshroute run --scenario backend/tests/fixtures/tiny_3batch --policy milp --seed 42` |
 
 ---
 
