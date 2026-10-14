@@ -13,6 +13,7 @@ EXTRAS = ("last_day_50",)
 # ponytail: fefo stands in for organizer_baseline until C-06 (organizer doc) lands.
 BASELINE, PLAN = "fefo", "milp_markdown"
 TOLERANCE_INR = 0.01
+ABLATION_DELTAS = ("net_inr", "spoilage_kg", "spoilage_pct", "demand_fulfillment_pct")
 
 
 def waterfall(base: dict, plan: dict) -> list[dict]:
@@ -30,8 +31,10 @@ def waterfall(base: dict, plan: dict) -> list[dict]:
     ]
 
 
-def run_ladder(scenario: str, seed: int, out: str | None = None) -> Path:
-    """Run ladder + extras policies; write <out or outputs>/<name>__ladder__s<seed>/; return it."""
+def run_ladder(scenario: str, seed: int, out: str | None = None,
+               newsvendor: bool = False) -> Path:
+    """Run ladder + extras policies; write <out or outputs>/<name>__ladder__s<seed>/; return it.
+    `newsvendor` adds an `ablation` entry: PLAN re-run with --newsvendor (section 14.3)."""
     root = Path(out) if out else Path("outputs")
     name = load_scenario(scenario).name
     metrics = {}
@@ -47,6 +50,14 @@ def run_ladder(scenario: str, seed: int, out: str | None = None) -> Path:
         "ladder": [{"policy": p, "kpis": metrics[p]["kpis"]} for p in LADDER],
         "extras": [{"policy": p, "kpis": metrics[p]["kpis"]} for p in EXTRAS],
     }
+    if newsvendor:  # flag off: ladder.json unchanged (AGENTS.md rule 9)
+        nv_id = f"{name}__{PLAN}__s{seed}__nv"
+        k = json.loads((cli.run(scenario, PLAN, seed, str(root / nv_id), newsvendor=True)
+                        / "metrics.json").read_text(encoding="utf-8"))["kpis"]
+        ref = metrics[PLAN]["kpis"]
+        ladder["ablation"] = [{
+            "policy": PLAN, "flags": {"newsvendor": True}, "run_id": nv_id, "vs": PLAN,
+            "kpis": k, "delta": {key: k[key] - ref[key] for key in ABLATION_DELTAS}}]
     wf = {"baseline": BASELINE, "plan": PLAN, "tolerance_inr": TOLERANCE_INR,
           "steps": waterfall(metrics[BASELINE]["economics_inr"], metrics[PLAN]["economics_inr"])}
     (out_dir / "ladder.json").write_text(json.dumps(ladder, indent=2) + "\n", encoding="utf-8")
@@ -58,9 +69,10 @@ def format_ladder(out_dir: Path) -> str:
     lad = json.loads((out_dir / "ladder.json").read_text(encoding="utf-8"))
     wf = json.loads((out_dir / "waterfall.json").read_text(encoding="utf-8"))
     lines = [f"{'policy':<14}{'spoil kg':>11}{'spoil %':>9}{'fill %':>9}{'net INR':>16}{'viol':>6}"]
-    for e in lad["ladder"] + lad["extras"]:
+    for e in lad["ladder"] + lad["extras"] + lad.get("ablation", []):
         k = e["kpis"]
-        lines.append(f"{e['policy']:<14}{k['spoilage_kg']:>11.2f}{k['spoilage_pct']:>9.2f}"
+        label = e["policy"] + ("+nv" if e.get("flags", {}).get("newsvendor") else "")
+        lines.append(f"{label:<14}{k['spoilage_kg']:>11.2f}{k['spoilage_pct']:>9.2f}"
                      f"{k['demand_fulfillment_pct']:>9.2f}{k['net_inr']:>16,.2f}{k['violations']:>6}")
     lines.append(f"\nwaterfall ({wf['baseline']} -> {wf['plan']})")
     for s in wf["steps"]:
