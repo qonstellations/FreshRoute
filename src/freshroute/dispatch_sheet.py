@@ -1,5 +1,5 @@
 """Dispatch sheet: priority-ordered CSV and WhatsApp-style text (ARCHITECTURE.md section 15;
-format in DATABASE.md 5.10). Skeleton: not wired into the CLI yet.
+format in DATABASE.md 5.10). Written by `cli.run` for every run.
 """
 from __future__ import annotations
 
