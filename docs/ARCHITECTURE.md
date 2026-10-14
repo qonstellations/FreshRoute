@@ -418,16 +418,13 @@ Reason codes for the runner-up: `SHELF_LIFE`, `WINDOW`, `CAPACITY_BOUND`, `DEMAN
 
 ## 16. Dashboard (`frontend/`, React SPA over `backend/src/freshroute/api/`)
 
-Components are Mantine 9; motion springs animate tab switches, the reason-card drawer, KPI count-ups, table rows and the Replan diff (D-24). Every animation respects `prefers-reduced-motion`.
+Components are Mantine 9; motion springs animate step changes, cards, the reason-card drawer, KPI count-ups, table rows and the Replan diff (D-24). Every animation respects `prefers-reduced-motion`. The page is a 3-step flow in plain words — no sidebar, no jargon controls on screen (method/seed/flags live under "Advanced settings").
 
-| Area | Contents |
+| Step | Contents |
 |---|---|
-| Sidebar | scenario picker, seed, flags (markdown on/off, newsvendor on/off), `q10` slider, ε multiplier, **Plan** button |
-| Scoreboard | 4 KPI tiles (spoilage kg and %, fulfillment %, net ₹, violations: baseline n vs ours), min fill rate, waterfall, attribution ladder, validator panel |
-| Plan | priority-ordered dispatch table, reason card drawer, discount cards, shelf-life countdown map (offline SVG route network over `geo.csv`, D-24; colour table is the fallback) |
-| Robustness | MC fan chart / bands, % scenarios beating baseline, sensitivity table |
-| Replan | 5 canned events dropdown (+ NL box if stretch done), apply, diff view, ΔKPIs, narration |
-| Trust | assumptions, cost-model coefficients, `run_manifest.json` (seed, git SHA, scenario hash, solver status) |
+| 1 · Make a plan | place cards, one big **Plan** button (auto-jumps to results when done), older plans under an accordion |
+| 2 · See results | scoreboard (spoilage kg and %, fulfillment %, net ₹, violations: baseline n vs ours; min fill rate, waterfall, attribution ladder, validator panel) + dispatch table, reason card drawer, discount cards, shelf-life map (offline SVG route network over `geo.csv`, D-24; colour table is the fallback) |
+| 3 · What if? | 5 canned events (+ NL box if stretch done), apply, diff view, ΔKPIs, narration + MC fan chart / bands, % scenarios beating baseline, sensitivity table + trust accordion (assumptions, cost-model coefficients, `run_manifest.json`) |
 
 ### 16.1 Layers and the rules between them
 

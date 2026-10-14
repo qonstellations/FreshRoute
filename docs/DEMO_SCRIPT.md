@@ -28,8 +28,9 @@ before saying them.
 
 ## 0:35–1:30 Live demo, golden path
 
-1. Load scenario → press **Plan** (practice MILP hits the 30 s time limit;
-   say the measured seconds on the day, A-40).
+1. Pick the place card → press the **big Plan button** (practice MILP hits the
+   30 s time limit; say the measured seconds on the day, A-40; the results open
+   by themselves).
 2. Scoreboard [`practice__ladder__s42/ladder.json`, measured 2026-10-14]:
    fifo 945.52 kg / 59.59 % / ₹1,271,668 / 37 violations ·
    fefo 928.33 / 54.02 / ₹1,263,250 / 0 ·

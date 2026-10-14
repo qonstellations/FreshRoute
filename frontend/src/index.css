@@ -47,6 +47,11 @@ th, td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; f
   animation: sweep 1.4s linear infinite; }
 @keyframes sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
 .burst-dot { position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; margin: -4.5px; border-radius: 50%; }
+/* Friendly stepper flow (App.tsx): selectable place cards */
+.pick-card { transition: box-shadow .2s, border-color .2s; }
+.pick-card:hover { box-shadow: 0 10px 24px rgb(16 24 40 / .10); }
+.pick-card[data-on=true] { border-color: var(--mantine-color-green-5);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--mantine-color-green-5) 35%, transparent); }
 @media (prefers-reduced-motion: reduce) { .shell-header::before, .plan-btn-sweep { animation: none; } }
 /* Scoreboard story */
 .melt { margin-top: var(--mantine-spacing-lg); }
