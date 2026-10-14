@@ -112,3 +112,10 @@ def test_post_run_202_then_done(client, tmp_path):
     assert s["state"] == "done", s
     assert (tmp_path / RUN / "metrics.json").is_file()
     assert json.loads((tmp_path / ".api" / "jobs" / f"{RUN}.json").read_text())["state"] == "done"
+
+
+def test_run_listed_by_directory_name(client, tmp_path):
+    cli.run(TINY, "fifo", 42, str(tmp_path / "check_fifo"))  # --out dir != metrics.run_id
+    ids = [r["run_id"] for r in client.get("/api/runs").json()["runs"]]
+    assert ids == ["check_fifo"]
+    assert client.get("/api/runs/check_fifo").status_code == 200

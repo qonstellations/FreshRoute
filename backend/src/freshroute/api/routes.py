@@ -68,11 +68,13 @@ def geo(name: str) -> list[dict]:
 @router.get("/runs")
 def runs() -> dict:
     ids = da.list_runs(da.OUTPUTS)
-    ms = [da.load_metrics(r, da.OUTPUTS)[0] for r in ids]
-    return {"runs": [{"run_id": m.get("run_id"), "scenario": m.get("scenario"),
+    ms = [(r, da.load_metrics(r, da.OUTPUTS)[0]) for r in ids]
+    # run_id = directory name: the key every /runs/{run_id} endpoint resolves (a CLI --out
+    # directory may differ from metrics.run_id)
+    return {"runs": [{"run_id": r, "scenario": m.get("scenario"),
                       "policy": m.get("policy"), "seed": m.get("seed"),
                       "has_ladder": da.load_ladder(m.get("scenario"), m.get("seed"),
-                                                   da.OUTPUTS) is not None} for m in ms],
+                                                   da.OUTPUTS) is not None} for r, m in ms],
             "fixture": not ids}
 
 
