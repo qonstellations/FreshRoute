@@ -74,9 +74,14 @@ def _lookups(sc: Scenario, override: dict | None = None):
 
 
 def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None,
-           overship=OVERSHIP_SLACK):
-    """Returns ((x, n) | None, info); None when there is no usable incumbent."""
+           overship=OVERSHIP_SLACK, used=None, warm=None):
+    """Returns ((x, n) | None, info); None when there is no usable incumbent. `used` (replan,
+    section 14.2): {"trips": {(v, day): n}, "recv": {(d, day): kg}} already taken by frozen
+    shipments, subtracted from C3 and C4, plus "fill": {d: kg} counted in C6; `warm`: old plan
+    rows offered as the warm start."""
     veh, lanes, dest, target = _lookups(sc, override)
+    trips_used, recv_used = (used or {}).get("trips", {}), (used or {}).get("recv", {})
+    fill_used = (used or {}).get("fill", {})  # frozen kg per dest, counted in C6 fill
     prob = pulp.LpProblem("freshroute_alloc", pulp.LpMaximize)
     x = [prob.add_variable(f"x{i}", 0, None, cat="Continuous") for i in range(len(arcs))]
     vdt = sorted({(a.vehicle_id, a.dest_id, a.dispatch_day) for a in arcs.itertuples()})
@@ -94,17 +99,21 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None
         prob += pulp.lpSum(x[i] for i in idx) <= float(veh.capacity_kg[v]) * n[(v, d, day)]  # C2
     for v, day in sorted({(k[0], k[2]) for k in vdt}):  # C3 trips per day
         prob += (pulp.lpSum(n[k] for k in vdt if k[0] == v and k[2] == day)
-                 <= int(veh.max_trips_day[v]))
+                 <= max(0, int(veh.max_trips_day[v]) - trips_used.get((v, day), 0)))
     for (d, _a), idx in arcs.groupby(["dest_id", "arrival_day"]).groups.items():  # C4 (D-05)
-        prob += pulp.lpSum(x[i] for i in idx) <= float(dest.receive_cap_kg_day[d])
+        prob += (pulp.lpSum(x[i] for i in idx)
+                 <= max(0.0, float(dest.receive_cap_kg_day[d]) - recv_used.get((d, _a), 0.0)))
     tot: dict = {}  # T_d over reachable (d, c, a) keys
     for (d, c, a), idx in arcs.groupby(["dest_id", "commodity", "arrival_day"]).groups.items():
         tgt = float(target.get((d, c, a), 0.0))
         tot[d] = tot.get(d, 0.0) + tgt
         prob += pulp.lpSum(x[i] for i in idx) <= tgt * (1 + overship)  # C5 (D-05)
-    tot = {d: v for d, v in sorted(tot.items()) if v > FLOAT_TOL}
+    tot = {d: v + fill_used.get(d, 0.0) for d, v in sorted(tot.items())}
+    tot = {d: v for d, v in tot.items() if v > FLOAT_TOL}
     by_d = arcs.groupby("dest_id").groups
     xd = {d: pulp.lpSum(x[i] for i in by_d[d]) for d in tot}
+    for d in sorted(set(fill_used) & set(xd)):
+        xd[d] += fill_used[d]
     avg = prob.add_variable("avg_fill", 0, None, cat="Continuous")  # one row, keeps C6 sparse
     prob += avg == pulp.lpSum((1 / (len(tot) * tot[d])) * xd[d] for d in tot)
     slack = {d: prob.add_variable(f"s_{d}", 0, None, cat="Continuous") for d in tot}
@@ -112,21 +121,29 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None
         prob += xd[d] + tot[d] * slack[d] >= PHI_BALANCE * tot[d] * avg
     penalty = PENALTY_MULT * float(sc.tables["prices"].price_inr_kg.max())
     prob.setObjective(prob.objective - pulp.lpSum(penalty * tot[d] * slack[d] for d in tot))
+
+    def start(gx, gn) -> bool:
+        """Set the warm start; False if it breaks a constraint."""
+        for var, val in zip(x, gx, strict=True):
+            var.setInitialValue(val)
+        for k, var in n.items():
+            var.setInitialValue(gn.get(k, 0))
+        for bid, var in u.items():
+            var.setInitialValue(max(0.0, float(batches.qty_kg[bid])
+                                    - sum(gx[i] for i in by_b.get(bid, []))))
+        gxd = {d: sum(gx[i] for i in by_d[d]) + fill_used.get(d, 0.0) for d in tot}
+        g_avg = sum(gxd[d] / (len(tot) * tot[d]) for d in tot)
+        avg.setInitialValue(g_avg)
+        for d, var in slack.items():
+            var.setInitialValue(max(0.0, PHI_BALANCE * g_avg - gxd[d] / tot[d]))
+        return warm is None or prob.valid(FLOAT_TOL)  # plain runs never pay for the check
+
     # Warm start from the FEFO-greedy plan (C-04/G2): the incumbent is never worse than FEFO
-    # under the MILP objective, even when the time limit stops the search early.
-    gx, gn = _greedy(sc, arcs, batches, override, overship)
-    for var, val in zip(x, gx, strict=True):
-        var.setInitialValue(val)
-    for k, var in n.items():
-        var.setInitialValue(gn.get(k, 0))
-    for bid, var in u.items():
-        var.setInitialValue(max(0.0, float(batches.qty_kg[bid])
-                                - sum(gx[i] for i in by_b.get(bid, []))))
-    gxd = {d: sum(gx[i] for i in by_d[d]) for d in tot}
-    g_avg = sum(gxd[d] / (len(tot) * tot[d]) for d in tot)
-    avg.setInitialValue(g_avg)
-    for d, var in slack.items():
-        var.setInitialValue(max(0.0, PHI_BALANCE * g_avg - gxd[d] / tot[d]))
+    # under the MILP objective, even when the time limit stops the search early. A replan
+    # (section 14.2) starts from the old plan's undispatched rows instead while they still
+    # satisfy every constraint: fewest moves, and the old plan was itself optimized.
+    if warm is None or not start(*_warm(arcs, warm, veh)):
+        start(*_greedy(sc, arcs, batches, override, overship, used))
     t0 = time.perf_counter()
     stats = prob.solve(pulp.HiGHS(msg=False, timeLimit=time_limit_s, gapRel=gap, warmStart=True))
     info = {"status": str(stats.status), "solve_seconds": time.perf_counter() - t0,
@@ -158,13 +175,13 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None
 
 
 def _greedy(sc: Scenario, arcs, batches, override: dict | None = None,
-            overship: float = OVERSHIP_SLACK):
+            overship: float = OVERSHIP_SLACK, used: dict | None = None):
     """FEFO-greedy over feasible arcs honouring C2-C5 (earliest-expiry batch first)."""
     veh, _, dest, target = _lookups(sc, override)
     tgt = {k: v * (1 + overship) for k, v in target.items()}
-    recv: dict = {}
+    recv: dict = dict((used or {}).get("recv", {}))  # (d, day) keys only; frozen arrivals
     load: dict = {}  # (v,d,day) -> kg left on already-opened trips
-    trips_day: dict = {}
+    trips_day: dict = dict((used or {}).get("trips", {}))
     n: dict = {}
     x = [0.0] * len(arcs)
     expiry = batches.available_from_h + batches.remaining_shelf_life_h
@@ -192,6 +209,21 @@ def _greedy(sc: Scenario, arcs, batches, override: dict | None = None,
                 recv[ka] = recv.get(ka, 0.0) + q
                 load[k] -= q
                 left -= q
+    return x, n
+
+
+def _warm(arcs, warm: pd.DataFrame, veh):
+    """Plan rows (batch, dest, vehicle, dispatch_day, kg) as (x, n); rows whose arc is no
+    longer feasible are dropped (their kg goes back to u)."""
+    keys = ["batch_id", "dest_id", "vehicle_id", "dispatch_day"]
+    kg = warm.groupby(keys).kg.sum()
+    x = [float(kg.get(k, 0.0)) for k in arcs[keys].itertuples(index=False, name=None)]
+    load: dict = {}
+    for k, q in zip(arcs[keys[1:]].itertuples(index=False, name=None), x, strict=True):
+        load[k] = load.get(k, 0.0) + q
+    cap = veh.capacity_kg.astype(float)  # a 0-capacity vehicle leaves n = 0: C2 fails, invalid
+    n = {(v, d, day): math.ceil(q / cap[v] - FLOAT_TOL) if cap[v] > 0 else 0
+         for (d, v, day), q in load.items() if q > FLOAT_TOL}
     return x, n
 
 
@@ -268,12 +300,13 @@ def _plan_aggregated(sc: Scenario, ctx: dict, policy: str) -> Plan:
     agg, members = _aggregate(sc)
     arcs, batches, unship = _model_data(agg)
     ov, slack = ctx.get("demand_cap_override"), ctx.get("overship_slack", OVERSHIP_SLACK)
+    used = ctx.get("residual_use")
     sol, info = _solve(agg, arcs, batches, unship, ctx.get("time_limit_s", MILP_TIME_LIMIT_S),
-                       ctx.get("gap", MIP_REL_GAP), override=ov, overship=slack)
+                       ctx.get("gap", MIP_REL_GAP), override=ov, overship=slack, used=used)
     info["fallback_used"] = sol is None
     if sol is None:
         info.update(slack_usage={}, mip_gap=None)
-    x, n = _greedy(agg, arcs, batches, ov, slack) if sol is None else sol
+    x, n = _greedy(agg, arcs, batches, ov, slack, used) if sol is None else sol
     keys = ["batch_id", "dest_id", "vehicle_id", "dispatch_day"]
     lines = []
     for a, kg in zip(arcs[keys].itertuples(index=False), x, strict=True):
@@ -299,7 +332,7 @@ def _plan_aggregated(sc: Scenario, ctx: dict, policy: str) -> Plan:
     if viol:  # AGENTS.md rule 6: never ship a violating plan
         arcs, batches, _ = _model_data(sc)
         info.update(fallback_used=True, slack_usage={}, mip_gap=None)
-        x, n = _greedy(sc, arcs, batches, ov, slack)
+        x, n = _greedy(sc, arcs, batches, ov, slack, used)
         plan = _build_plan(sc, arcs, x, n, info, policy)
     return plan
 
@@ -321,14 +354,16 @@ class MilpPolicy(Policy):
         arcs, batches, unship = _model_data(scenario)
         ov = ctx.get("demand_cap_override")
         slack = ctx.get("overship_slack", OVERSHIP_SLACK)  # sensitivity (U-04)
+        used = ctx.get("residual_use")  # replan (AD-02): frozen trips and arrivals
         sol, info = _solve(scenario, arcs, batches, unship,
                            ctx.get("time_limit_s", MILP_TIME_LIMIT_S), ctx.get("gap", MIP_REL_GAP),
-                           override=ov, overship=slack)
+                           override=ov, overship=slack, used=used,
+                           warm=ctx.get("warm_start"))
         info["fallback_used"] = sol is None
         if sol is None:
             info.update(slack_usage={}, mip_gap=None)
         # AGENTS.md rule 6: never crash. ponytail: greedy ignores C6 and replan residuals.
-        x, n = _greedy(scenario, arcs, batches, ov, slack) if sol is None else sol
+        x, n = _greedy(scenario, arcs, batches, ov, slack, used) if sol is None else sol
         return _build_plan(scenario, arcs, x, n, info, self.name)
 
 

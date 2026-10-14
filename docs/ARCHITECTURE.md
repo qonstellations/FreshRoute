@@ -172,7 +172,8 @@ simulator.simulate(scenario, plan, discounts, realization) -> SimResult    # sim
 metrics.compute(scenario, plan, discounts, sim) -> dict                    # metrics.json
 validator.validate.validate(scenario, plan, discounts) -> ValidationReport # validation.json
 stress.run(scenario, plan, discounts, n, seed) -> StressResult
-replan.replan(scenario, plan, discounts, event) -> ReplanResult
+replan.replan(scenario, plan, trips, discounts, event, *, markdown, run_id, seed) -> dict
+replan.replan_run(run_dir, event, out=None) -> Path                        # replan/<event_id>/
 ```
 
 ---
@@ -388,6 +389,7 @@ The simulator executes the plan; it does **not** enforce windows/capacities (tha
 - The event still affects frozen shipments in transit (e.g. a delay moves their arrival and may break shelf life) — the simulator shows that; they simply cannot be reassigned.
 - Diff (`diff.json`): moved batches (batch → old dest/day → new dest/day), changed discounts, ΔKPIs. **ΔKPIs compare "old plan executed in the changed world" vs "replanned"** — the honest do-nothing comparison.
 - Invariants (tests): frozen shipments appear unchanged in the new plan; validator reports 0 hard violations; replan ≤ 5 s on the demo scenario (gate G4). Demo narration may only claim the measured time.
+- As built (AD-02): the residual model is the §9 MILP with frozen use passed in through `ctx["residual_use"]` — trips per `(vehicle, day)` off C3, kg per `(dest, arrival_day)` off C4, frozen kg per destination counted in the C6 fill — and C5 via `demand_cap_override = p50 − frozen / (1 + overship_slack)`, so frozen + new never exceeds the original cap. Dispatch `≥ at_h` = vehicles' `available_from_h` raised to `at_h` (a new trip may leave at `at_h` itself). The solve is capped at `REPLAN_TIME_LIMIT_S` and warm-started from the old plan's undispatched rows (infeasible arcs dropped) while that start satisfies every constraint, else from the FEFO-greedy. Markdown is rebuilt over the whole plan when the run had it. Both sides of the ΔKPIs go through `simulate` + `metrics.compute`; the old side keeps the old `discounts.csv`. Details and limits: A-43.
 - No round-trip or return-time modeling: vehicles are limited only by `max_trips_day` (A-08).
 
 ### 14.3 Newsvendor demand target (`newsvendor.py`)
@@ -453,7 +455,8 @@ freshroute validate  --scenario … --plan outputs/<run_id>/plan.csv            
 freshroute ladder    --scenario … --seed 42 [--newsvendor]                                → ladder.json (+ ablation row), waterfall.json
 freshroute sensitivity --scenario … --seed 42                                             → sensitivity.csv
 freshroute stress    --scenario … --policy milp_markdown --n 200 --seed 42 [--named]      → stress_summary.json, stress.csv
-freshroute replan    --scenario … --run outputs/<run_id> --event event.json               → replan/<event_id>/
+freshroute replan    --run outputs/<run_id> --event event.json [--out …]                   → replan/<event_id>/ (exit 1 on violations)
+                     [--scenario … --policy … --seed 42]  creates --run first when it has no plan.csv
 freshroute demo      [--scenario <demo>] [--seed 42] [--with-sensitivity] [--out outputs]  → ladder + waterfall (+ sensitivity.csv); exit 1 if the milp_markdown plan has violations
 ```
 
@@ -499,6 +502,7 @@ Toolchain (D-15): uv owns Python. `uv sync` installs the project plus the dev gr
 | `PHI_BALANCE` (φ) | 0.5 | team assumption |
 | `MAX_UPLIFT` | 0.5 | team assumption (A-11) |
 | `MILP_TIME_LIMIT_S` | 30 | research doc |
+| `REPLAN_TIME_LIMIT_S` | 2 | team assumption (AD-02, A-43) — residual re-solve cap that keeps replan under the 5 s gate |
 | `MIP_REL_GAP` | 0.01 | team assumption |
 | `AGG_RSL_BUCKET_H` | 6 | team assumption |
 | `AGG_ARC_THRESHOLD` | 100,000 candidate arcs (batches × dests × vehicles × days) | team assumption (U-02) — above it the MILP uses the §9.5 aggregation fallback; practice is 14,400, batches-only 10× is 144,000 |
@@ -568,6 +572,7 @@ Anything marked **confirm** must be checked against the organizers' documents at
 | A-41 | Aggregation key adds `available_from_h` to the documented `(commodity, origin, RSL bucket)` and the pseudo-batch takes min RSL / max storage temperature, so its feasible arcs are feasible for every member (wait ≥ 0, same dispatch hour) and the batch-level re-check drops nothing in practice; the cost is that members lose arcs only their own (longer) RSL would allow, and the solver's `objective_inr` is the representative's, not the simulator's net ₹ (U-02) | team |
 | A-42 | Stress (AD-03) confirms A-28's keys and extends `simulate`'s realization with `travel_h` {(origin, dest, mode): h} and `rsl_h` {batch_id: h} (replacing A-25 under stress): each plan line keeps its `dispatch_h`, gets `arrival_h = dispatch_h + sampled travel` and §7 usable life from the sampled RSL; origin expiry uses the sampled RSL; a lot whose arrival day moves keeps its discount rows (renamed to the new `lot_id`). Draws are independent per demand row (sorted dest, commodity, day), lane (sorted origin, dest, mode) and batch (sorted id), drawn in that order from `default_rng(base_seed + i)`; no correlation across rows. Plans are not re-optimised. `fefo` is the baseline until C-06. "Beats" is strict beyond `FLOAT_TOL` (higher net ₹, lower spoilage kg). Named fallback quantiles (`MC_NAMED`) are a team choice: "stress" = low demand, late trucks, short life | team |
 | A-45 | Newsvendor details beyond §14.3 (AD-04): `c_var` = cheapest lane into the destination from any origin holding the commodity (mode/vehicle not checked); unreachable or unpriced keys keep the p50 cap; `--newsvendor` only for MILP policies. Scored on the base (p50) realization only, the target cannot pay off there: measured SYNTHETIC seed 42 `milp_markdown` net ₹44,430.75 → ₹42,184.29 (tiny_3batch) and ₹1,655,293.29 → ₹1,577,091.11 (practice, TimeLimit at ~1.2 % gap, load-dependent); spoilage 45.50 → 45.50 kg and 1,244.27 → 1,224.52 kg; 0 violations. Its case rests on the stress test (AD-03), not on these rows | team |
+| A-43 | Replan (AD-02). Measured 2026-10-14 on this laptop, SYNTHETIC `practice` seed 42, `milp_markdown` base, one event per type at `at_h = 8` (105 of 313 shipments frozen): `replan_run` wall 3.1–3.4 s (2 runs × 5 events), of which the HiGHS residual solve is the 2 s cap (`REPLAN_TIME_LIMIT_S`; every practice replan stops at TimeLimit, `solver.status` "-4"), `build_arcs` ≈ 0.9 s, four validator passes + two simulations ≈ 0.45 s; `freshroute replan` CLI 4.2 s including interpreter start-up. `tiny_3batch`: 0.13–0.16 s, solved to the 1 % gap. **Quality cost of the cap:** on practice the 2 s solve never improves on its warm start, so the replan is a repair (drop now-infeasible lines, re-split over-capacity trips). For `route_delay` +6 h on all lanes into D3 the replan has 0 violations vs the old plan's 11 but nets ₹75,939 less, because the simulator still sells the old plan's shelf-life-violating lots; with a 30 s cap the same replan solves to 1 % in ≈ 16 s and nets +₹250 vs the old plan. Tried: greedy warm start (−₹80k at 3 s), old-plan warm start (−₹76k at 2–3 s), 30 s (+₹250, 17 s — fails G4). Other semantics: capacity / receiving effects apply from `at_h` by table (no time dimension), so violations caused by frozen rows alone are reported as `FROZEN_<code>` warnings, not counted (DATABASE.md 5.13); `route_delay` re-times only rows still travelling at `at_h` in the simulator, but the validator re-times every row on the lane (an already-arrived frozen row may show a `FROZEN_` warning); the do-nothing side keeps the old `discounts.csv` (a re-timed lot that changes `arrival_day` loses its markdown); a no-op event can still move the plan within the 1 % MIP gap (−₹285 on tiny for `price_shock` ×1.0) because the MILP objective is not the simulator's net ₹. Time-limited replans are load-dependent like A-40; determinism is tested on tiny (solved to the gap) | team |
 
 ---
 
@@ -595,7 +600,7 @@ Anything marked **confirm** must be checked against the organizers' documents at
 | Item | Target | Measured at |
 |---|---|---|
 | `milp_markdown` plan on the demo scenario | ~3 s (hard cap 30 s, incumbent returned) | C-09, U-02 |
-| Replan | < 5 s (gate G4); say only the measured time in the pitch | AD-02 |
+| Replan | < 5 s (gate G4); say only the measured time in the pitch | AD-02: 3.1–3.4 s in-process, 4.2 s CLI incl. start-up on `practice` (A-43) |
 | MC 200 scenarios (evaluate only) | measure; if too slow, drop to 50 | AD-03 |
 | `make demo` end-to-end | team target ~5 min; measure | U-06 |
 | `make serve` to first paint | not a budget item; dev-only numbers, never quoted in the pitch | RF-07 |

@@ -425,6 +425,19 @@ Step formulas: `ARCHITECTURE.md` §12. Signs: cost steps are negative when the p
 ```
 `kpis_old_plan_under_event` = the old plan executed in the changed world (the honest do-nothing comparison).
 
+Written by `freshroute replan` (`replan.py`, AD-02). Field rules:
+- `kpis_old_plan_under_event`, `kpis_replanned`: the six `metrics.json` `kpis` (`spoilage_kg`, `spoilage_pct`, `demand_fulfillment_pct`, `min_dest_fill_pct`, `net_inr`, `violations`), both from the one simulator on the changed world; `delta_kpis` = replanned − old, per key. `violations` counts as in `validation.json` below.
+- `moved_batches`: per batch, the `(dest_id, dispatch_day)` carrying most of its **undispatched** kg in the old plan vs the replan, listed only when they differ; `kg` = kg on the new main line (on the old one if the batch is now unshipped). `dest_id`/`dispatch_day` are `null` on the side where the batch is unshipped.
+- `discount_changes`: every `(lot_id, day)` whose `discount_pct` differs (a missing row counts as 0); `from_pct`/`to_pct` are floats.
+- `solver`: `{"status", "mip_gap", "fallback_used"}` of the residual MILP (as in `run_manifest.json`), `null` when nothing was left to plan.
+- `solve_seconds`: wall time from applying the event to the finished plan and discounts. It is the only field allowed to differ between identical replans.
+
+`plan.csv`: frozen rows first (`is_frozen = true`, every decision column — ids, `trip_id`, `mode`, dispatch, `kg`, `margin_inr_kg`, priority — copied from the old plan; a `route_delay` re-times `arrival_h`, `arrival_day`, `usable_life_at_arrival_h`, `slack_h` of rows still travelling at `at_h`), then the replanned rows: `shipment_id` continues after the old plan's highest id, `priority_rank` after the frozen ones, and a trip id that would collide with a frozen trip on the same vehicle/destination/day takes the next free number. A shipment already marked `is_frozen` stays frozen in a later replan. `trips.csv`: frozen trips (kg re-summed if a trip was only partly frozen) plus the new ones.
+
+`validation.json`: the independent validator on the whole plan in the changed world. A violation the frozen rows already cause on their own (an in-transit delay breaking shelf life, a trip that left before a `capacity_drop` loaded above the new capacity) cannot be replanned away: it is moved to `warnings` with code `FROZEN_<code>` (same fields as a violation) and is not counted in `violation_total` (A-43). The same rule applies to the old plan's `violations` in the diff.
+
+Chaining: `--run` may be a replan directory; its world is its parent run's scenario with each `event.json` on the path applied in order, so the second replan lands in `<run>/replan/<e1>/replan/<e2>/` (chaining needs this default layout).
+
 ### 5.14 Directory layouts
 
 ```
@@ -449,7 +462,7 @@ Run-directory contents are unchanged by the API refactor, so `schema_version` st
 ```json
 {"event_id": "E-001", "type": "route_delay", "target": "NASHIK|PUNE|*", "magnitude": 6, "at_h": 8, "note": "NH-48 jam"}
 ```
-Validated with pydantic (`events.py`). `note` is optional and never used by the solver. **Semantics are our interpretation (A-14) — confirm against the organizers' event definitions.**
+Validated with pydantic (`events.py`: `Event`, `load_event`, `apply_event`). `note` is optional and never used by the solver. Unknown fields, an unknown `type`, a malformed `target` or a `magnitude` out of range are rejected at parse time; a `target` naming a lane, vehicle, destination or commodity the scenario does not have raises `EventError` when the event is applied. `day(at_h) = ⌊at_h / 24⌋`. A `new_order` for a `(dest, commodity, day)` with no demand row creates one (p10 = p50 = p90 = `magnitude`, `event_flag` = `event_id`). **Semantics are our interpretation (A-14) — confirm against the organizers' event definitions.**
 
 | `type` | `target` syntax | `magnitude` | Effect |
 |---|---|---|---|

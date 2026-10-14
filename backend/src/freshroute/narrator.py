@@ -7,10 +7,12 @@ from __future__ import annotations
 _SHOW_MOVES = 3
 
 
+def _where(x: dict) -> str:
+    return "unshipped" if x["dest_id"] is None else f"{x['dest_id']} day {x['dispatch_day']}"
+
+
 def _moved(m: dict) -> str:
-    f, t = m["from"], m["to"]
-    return (f"{m['batch_id']} moved {f['dest_id']} day {f['dispatch_day']} -> "
-            f"{t['dest_id']} day {t['dispatch_day']} ({m['kg']:,.0f} kg)")
+    return f"{m['batch_id']} moved {_where(m['from'])} -> {_where(m['to'])} ({m['kg']:,.0f} kg)"
 
 
 def template_narration(diff: dict, metrics: dict) -> str:
