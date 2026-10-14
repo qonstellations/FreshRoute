@@ -27,6 +27,11 @@ POLICIES = ("fifo", "fefo", "last_day_50", "milp", "milp_markdown")
 # them and _policy() can explain the block, instead of argparse saying "invalid choice".
 BLOCKED_POLICIES = ("organizer_baseline",)
 POLICY_CHOICES = POLICIES + BLOCKED_POLICIES
+ORGANIZER_BASELINE_BLOCKED = (  # also the API's 400 detail (DATABASE.md section 11.2)
+    "policy 'organizer_baseline' is not implemented: C-06 is blocked until the organizers "
+    "publish their baseline procedure and submission format (docs/TODO.md S-01, C-06). "
+    f"Available policies: {', '.join(POLICIES)}"
+)
 
 
 def _policy(name: str):
@@ -48,11 +53,7 @@ def _policy(name: str):
     if name == "organizer_baseline":
         # C-06: implement this only from the organizers' published procedure. Inventing one and
         # calling it official is the failure rule #1 exists to prevent (DECISIONS.md).
-        raise SystemExit(
-            "policy 'organizer_baseline' is not implemented: C-06 is blocked until the organizers "
-            "publish their baseline procedure and submission format (docs/TODO.md S-01, C-06). "
-            f"Available policies: {', '.join(POLICIES)}"
-        )
+        raise SystemExit(ORGANIZER_BASELINE_BLOCKED)
     raise SystemExit(f"unknown policy {name!r}; available: {', '.join(POLICIES)}")
 
 
