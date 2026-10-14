@@ -14,19 +14,19 @@ FreshRoute is a hub-level decision tool for perishable produce. Given batches wi
 
 | Doc | Purpose |
 |---|---|
-| [`Docs/ARCHITECTURE.md`](Docs/ARCHITECTURE.md) | How the system works: cost model, MILP, markdown, simulator, add-ons, assumption log |
-| [`Docs/DATABASE.md`](Docs/DATABASE.md) | Data contracts: input tables, output files, event schema, organizer mapping |
-| [`Docs/TODO.md`](Docs/TODO.md) | Schedule, tasks, gates, cut list, pitch and Q&A prep |
-| [`Docs/CONTRIBUTING.md`](Docs/CONTRIBUTING.md) | Team workflow, git rules, code standards, testing |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | How the system works: cost model, MILP, markdown, simulator, add-ons, assumption log |
+| [`docs/DATABASE.md`](docs/DATABASE.md) | Data contracts: input tables, output files, event schema, organizer mapping |
+| [`docs/TODO.md`](docs/TODO.md) | Schedule, tasks, gates, cut list, pitch and Q&A prep |
+| [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) | Team workflow, git rules, code standards, testing |
 | [`DECISIONS.md`](DECISIONS.md) | Decision log (`D-xx`) |
 | [`AGENTS.md`](AGENTS.md) | Instructions for AI coding assistants working in this repo |
-| [`Docs/RESEARCH-v1.md`](Docs/RESEARCH-v1.md) | Background research and variant comparison (some figures secondhand; see its §H) |
+| [`docs/RESEARCH-v1.md`](docs/RESEARCH-v1.md) | Background research and variant comparison (some figures secondhand; see its §H) |
 
 **Rule #1:** if the organizers publish a cost model or dataset format, theirs overrides everything in these docs.
 
 ## Quickstart *(TBD — V-04)*
 
-Commands (see `Docs/CONTRIBUTING.md` §4):
+Commands (see `docs/CONTRIBUTING.md` §4):
 
 ```bash
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
@@ -39,7 +39,7 @@ make app         # Streamlit dashboard (shows tests/fixtures/metrics_example.jso
 
 ## Assumptions and cost-model mapping *(S-02 written on defaults; finalized at V-03)*
 
-The assumption log lives in `Docs/ARCHITECTURE.md` §20 and the organizer column mapping template in `Docs/DATABASE.md` §8. Both are copied in the sections below (S-02) and finalized at V-03, with each *confirm* item marked resolved or open. The copy below stops at A-22; later assumptions (A-23 onward) live in `ARCHITECTURE.md` §20 only until V-03.
+The assumption log lives in `docs/ARCHITECTURE.md` §20 and the organizer column mapping template in `docs/DATABASE.md` §8. Both are copied in the sections below (S-02) and finalized at V-03, with each *confirm* item marked resolved or open. The copy below stops at A-22; later assumptions (A-23 onward) live in `ARCHITECTURE.md` §20 only until V-03.
 
 ## Results *(TBD — V-04)*
 
@@ -47,11 +47,11 @@ To be copied from `make demo` output only. No projected numbers appear here.
 
 ## Sources
 
-Verified, secondhand and vendor-reported claims are labelled in `Docs/TODO.md` §10 and `Docs/RESEARCH-v1.md` §H.
+Verified, secondhand and vendor-reported claims are labelled in `docs/TODO.md` §10 and `docs/RESEARCH-v1.md` §H.
 
 ## Organizer mapping
 
-Template from `Docs/DATABASE.md` §8. No organizer material has been read yet, so every row is on the `DECISIONS.md` default rule: our own field is used and the row is marked `default applied (no organizer data yet)`. Organizer file/column and transform stay empty until S-01 is done with real material; rule #1 applies the moment it is known.
+Template from `docs/DATABASE.md` §8. No organizer material has been read yet, so every row is on the `DECISIONS.md` default rule: our own field is used and the row is marked `default applied (no organizer data yet)`. Organizer file/column and transform stay empty until S-01 is done with real material; rule #1 applies the moment it is known.
 
 | Our table.column | Organizer file.column | Transform | Status |
 |---|---|---|---|
@@ -71,24 +71,24 @@ Template from `Docs/DATABASE.md` §8. No organizer material has been read yet, s
 | `lanes.transit_temp_c` | our own field | none | default applied (no organizer data yet) |
 | `lanes.departure_slots` (rail) | our own field | none | default applied (no organizer data yet) |
 | `vehicles.*` (capacity, trips/day, availability) | our own field | none | default applied (no organizer data yet) |
-| `events.*` | our own field (`Docs/DATABASE.md` §6, A-14) | none | default applied (no organizer data yet) |
+| `events.*` | our own field (`docs/DATABASE.md` §6, A-14) | none | default applied (no organizer data yet) |
 | Origin handling cost | our own field: 0 (A-07) | none | default applied (no organizer data yet) |
-| Discount / markdown rules (tiers, caps, elasticity) | our own rule (`Docs/ARCHITECTURE.md` §10) | none | default applied (no organizer data yet) |
-| Spoilage definition and cost | our own definition (`Docs/ARCHITECTURE.md` §7) | none | default applied (no organizer data yet) |
-| Fulfillment definition | our own definition (`Docs/ARCHITECTURE.md` §7) | none | default applied (no organizer data yet) |
+| Discount / markdown rules (tiers, caps, elasticity) | our own rule (`docs/ARCHITECTURE.md` §10) | none | default applied (no organizer data yet) |
+| Spoilage definition and cost | our own definition (`docs/ARCHITECTURE.md` §7) | none | default applied (no organizer data yet) |
+| Fulfillment definition | our own definition (`docs/ARCHITECTURE.md` §7) | none | default applied (no organizer data yet) |
 | Hard-constraint list (what counts as a violation) | codes in `validator/` as built in F-04 | none | default applied (no organizer data yet) |
-| Submission/plan output format (for `organizer_baseline` export) | our own `plan.csv` (`Docs/DATABASE.md` §5.2) | none | default applied (no organizer data yet) |
+| Submission/plan output format (for `organizer_baseline` export) | our own `plan.csv` (`docs/DATABASE.md` §5.2) | none | default applied (no organizer data yet) |
 
 ## Open questions (S-01)
 
-From `Docs/TODO.md` §3. "Default" answers come from the default rule in `DECISIONS.md`; everything else is OPEN until the organizers' material is read.
+From `docs/TODO.md` §3. "Default" answers come from the default rule in `DECISIONS.md`; everything else is OPEN until the organizers' material is read.
 
 | # | Question | Answer | Assumption |
 |---|---|---|---|
-| 1 | Exact cost model (revenue, transport, handling incl. origin, spoilage/disposal, discount accounting) | Default: our `Docs/ARCHITECTURE.md` §7; origin handling cost 0. Organizer model overrides when known. | A-07, A-19 |
+| 1 | Exact cost model (revenue, transport, handling incl. origin, spoilage/disposal, discount accounting) | Default: our `docs/ARCHITECTURE.md` §7; origin handling cost 0. Organizer model overrides when known. | A-07, A-19 |
 | 2 | Organizers' baseline: documented procedure and how it is scored | OPEN | none |
 | 3 | Submission format for plans; is a scoring/checker script provided | OPEN | none |
-| 4 | Hidden scenarios: same file format as the dataset, size, events, horizon | OPEN (event semantics default: `Docs/DATABASE.md` §6) | A-14 |
+| 4 | Hidden scenarios: same file format as the dataset, size, events, horizon | OPEN (event semantics default: `docs/DATABASE.md` §6) | A-14 |
 | 5 | Time conventions: epoch, absolute vs daily-repeating windows | Default: absolute hours from day 0 at 00:00 | A-01 |
 | 6 | What counts as a hard-constraint violation | Default: the codes in `validator/` as built in F-04 | none |
 | 7 | Rules: AI assistants, external data, open-source libraries; pitch length (assumed 3:00), live demo vs video, venue network and hardware | Default for AI assistants / external data: allowed, human owner reviews every merge; if the rules forbid it, stop and flag at the next gate. Libraries, pitch format, venue: OPEN | none |
@@ -98,7 +98,7 @@ Also open in `DECISIONS.md`: horizon end (default: carry-over valued 0, A-06) an
 
 ## Cost-model comparison (S-02)
 
-Every coefficient or formula in `Docs/ARCHITECTURE.md` §7 that must change if the organizers' model differs. Parameter values live in `config.py` (`Docs/ARCHITECTURE.md` §19); formulas live in `costmodel.py`. No organizer cost model has been read.
+Every coefficient or formula in `docs/ARCHITECTURE.md` §7 that must change if the organizers' model differs. Parameter values live in `config.py` (`docs/ARCHITECTURE.md` §19); formulas live in `costmodel.py`. No organizer cost model has been read.
 
 | Item (ARCHITECTURE §7) | Where | Status |
 |---|---|---|
@@ -124,7 +124,7 @@ Every coefficient or formula in `Docs/ARCHITECTURE.md` §7 that must change if t
 
 ## Assumption log
 
-Copy of `Docs/ARCHITECTURE.md` §20. Every **confirm** item is still open: no organizer material has been read yet.
+Copy of `docs/ARCHITECTURE.md` §20. Every **confirm** item is still open: no organizer material has been read yet.
 
 | ID | Assumption | Status |
 |---|---|---|
@@ -140,11 +140,11 @@ Copy of `Docs/ARCHITECTURE.md` §20. Every **confirm** item is still open: no or
 | A-10 | `q10 = 2` default, not verified per commodity | team |
 | A-11 | Elasticity uplift is linear in discount, capped at `MAX_UPLIFT` | team |
 | A-12 | Shelf price = discount of FEFO-head lot at start of day | team |
-| A-13 | Stress sampling distributions as in `Docs/ARCHITECTURE.md` §14.1 | team |
-| A-14 | Event semantics as in `Docs/DATABASE.md` §6 | confirm - still open (default in `DECISIONS.md`) |
+| A-13 | Stress sampling distributions as in `docs/ARCHITECTURE.md` §14.1 | team |
+| A-14 | Event semantics as in `docs/DATABASE.md` §6 | confirm - still open (default in `DECISIONS.md`) |
 | A-15 | Base shelf lives are de-rated team assumptions (FAO/UMaine values are temperate cold-storage references) | team |
-| A-16 | `overship_slack`, phi, lambda, `EPS_FEFO` defaults as in `Docs/ARCHITECTURE.md` §19 | team |
-| A-17 | Newsvendor `c_u`, `c_o`, markdown reference and clamp as in `Docs/ARCHITECTURE.md` §14.3 | team |
+| A-16 | `overship_slack`, phi, lambda, `EPS_FEFO` defaults as in `docs/ARCHITECTURE.md` §19 | team |
+| A-17 | Newsvendor `c_u`, `c_o`, markdown reference and clamp as in `docs/ARCHITECTURE.md` §14.3 | team |
 | A-18 | `last_day_50` = FIFO-nearest + `min(50 %, max_discount_pct)` markdown, salvage floor respected | team |
 | A-19 | Unshipped stock is penalized as spoilage only if it would expire at origin within the horizon | team |
 | A-20 | Practice prices calibrated from Agmarknet modal Rs/quintal / 100; Agmarknet and post-harvest-loss figures are context, never model inputs claimed as "real" batch data | team |
@@ -157,4 +157,4 @@ Copy of `Docs/ARCHITECTURE.md` §20. Every **confirm** item is still open: no or
 - [ ] Omcar
 - [ ] Pratham
 
-Not signed off. The commit `docs: sign off cost model and contracts` is made by the team once the organizer material has been read and all three agree (`Docs/TODO.md` S-02).
+Not signed off. The commit `docs: sign off cost model and contracts` is made by the team once the organizer material has been read and all three agree (`docs/TODO.md` S-02).

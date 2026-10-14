@@ -103,7 +103,7 @@ The UI is a **viewer**: it shows what the engine wrote to `outputs/<run_id>/` an
 ```
 freshroute/
 ├── README.md  AGENTS.md  DECISIONS.md
-├── Docs/                       # ARCHITECTURE.md  DATABASE.md  TODO.md  CONTRIBUTING.md  RESEARCH-v1.md
+├── docs/                       # ARCHITECTURE.md  DATABASE.md  TODO.md  CONTRIBUTING.md  RESEARCH-v1.md
 ├── Makefile  pyproject.toml  requirements.txt  .python-version  .gitignore
 ├── data/
 │   ├── organizer/              # raw organizer files (gitignored unless rules allow committing)

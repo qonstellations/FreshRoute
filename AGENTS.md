@@ -1,9 +1,9 @@
 # AGENTS.md
 
-Instructions for AI coding assistants working on FreshRoute. Humans: see `Docs/CONTRIBUTING.md`.
+Instructions for AI coding assistants working on FreshRoute. Humans: see `docs/CONTRIBUTING.md`.
 
 ## Read first
-`Docs/ARCHITECTURE.md` (behaviour) → `Docs/DATABASE.md` (contracts) → `Docs/TODO.md` (task IDs, gates) → `DECISIONS.md`.
+`docs/ARCHITECTURE.md` (behaviour) → `docs/DATABASE.md` (contracts) → `docs/TODO.md` (task IDs, gates) → `DECISIONS.md`.
 Reference tasks by ID (e.g. `C-01`) in commits and PRs.
 
 ## Non-negotiables
@@ -27,7 +27,7 @@ Reference tasks by ID (e.g. `C-01`) in commits and PRs.
 ## Workflow
 - Run `make check` (ruff + pytest + validate demo plan) before proposing a commit.
 - Changing a contract (tables, JSON, CLI, function signatures) means updating the doc in the same change and bumping `schema_version` if a format changed.
-- New assumption → next free `A-xx` in `Docs/ARCHITECTURE.md` §20. New decision → next free `D-xx` in `DECISIONS.md`.
+- New assumption → next free `A-xx` in `docs/ARCHITECTURE.md` §20. New decision → next free `D-xx` in `DECISIONS.md`.
 - Commits: `type(scope): summary (TASK-ID)`. Keep changes small, one task per change.
 - Never commit `.env`, keys, `.venv`, `outputs/` (except `outputs/demo_backup/` at freeze) or restricted organizer data.
 - After feature freeze (H17): bug fixes only.

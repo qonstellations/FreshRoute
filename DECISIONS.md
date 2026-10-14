@@ -1,6 +1,6 @@
 # DECISIONS.md
 
-Decision log for FreshRoute. `D-xx` = decision (this file); `A-xx` = assumption (`Docs/ARCHITECTURE.md` §20). Add the next free `D-xx` at the bottom; never renumber. If a decision is reversed, mark it **Superseded by D-yy** rather than deleting it.
+Decision log for FreshRoute. `D-xx` = decision (this file); `A-xx` = assumption (`docs/ARCHITECTURE.md` §20). Add the next free `D-xx` at the bottom; never renumber. If a decision is reversed, mark it **Superseded by D-yy** rather than deleting it.
 
 | ID | Decision | Why | Status |
 |---|---|---|---|
@@ -19,7 +19,7 @@ Decision log for FreshRoute. `D-xx` = decision (this file); `A-xx` = assumption 
 | D-13 | 20 h timeline with feature freeze at H17 | Research doc's 24 h plan freezes 3 h before the end; same buffer here | Accepted |
 | D-14 | Confirm D-02: PuLP 4.0.0 -> HiGHS (`pulp.HiGHS(timeLimit=, gapRel=)`) is used; `scipy.optimize.milp` (`options` `time_limit`, `mip_rel_gap`) stays the fallback; time-limit and gap options verified | `tests/test_solver_smoke.py`: both APIs give equal objectives on a toy MILP; on a hard 60x5 knapsack a 0.05 s limit returns in ~0.06 s (PuLP status `TimeLimit`, scipy status 1) and a 0.5 gap solves to Optimal. D-02 unchanged. PuLP 4.0 API differs from 3.x: build variables with `prob.add_variable(name, lb, ub, cat=)` (`LpVariable(cat=)` and `LpStatus` are gone); `solve()` returns a stats object, read `.status` against `pulp.LpSolveStatus` | Accepted |
 
-## Open decisions (resolve at H0, `Docs/TODO.md` S-01/S-02)
+## Open decisions (resolve at H0, `docs/TODO.md` S-01/S-02)
 
 - Organizer cost model vs ours: which coefficients change?
 - Window mode (absolute vs daily), horizon, origin handling cost, hard-violation definition.
@@ -30,16 +30,16 @@ Decision log for FreshRoute. `D-xx` = decision (this file); `A-xx` = assumption 
 
 The open decisions above stay open until the organizers' material answers them (S-01/S-02). **Until then, and for anything the organizers do not specify, the team proceeds with these defaults** and builds so each can be changed in one place (`config.py`, `costmodel.py` or the adapter):
 
-- **Cost model:** our `Docs/ARCHITECTURE.md` §7. The organizers' model overrides it the moment it is known (non-negotiable 1 in `AGENTS.md`).
+- **Cost model:** our `docs/ARCHITECTURE.md` §7. The organizers' model overrides it the moment it is known (non-negotiable 1 in `AGENTS.md`).
 - **Window mode / epoch:** absolute hours from day 0 at 00:00 (A-01).
 - **Horizon end:** unexpired stock is carry-over, valued 0, not spoiled (A-06).
 - **Origin handling cost:** 0 (A-07).
 - **Hard violations:** the codes in `validator/` as built in F-04.
 - **Organizer data:** `data/organizer/` is git-ignored and never committed.
 - **AI assistants / external data:** use is allowed (human owner reviews every merge) until the event rules say otherwise; if they forbid it, stop and flag it at the next gate.
-- **Full question list:** the eight S-01 questions in `Docs/TODO.md` §3 (baseline, submission format, hidden scenarios, rail/P10/P90/events presence, pitch and venue rules, in addition to the four above) are open on the same terms; the README "Open questions" table tracks each one.
-- **`remaining_shelf_life_h` (A-03):** measured at `available_from_h` in reference-temperature-equivalent hours, as `Docs/ARCHITECTURE.md` §7.
-- **Event semantics (A-14):** as `Docs/DATABASE.md` §6.
+- **Full question list:** the eight S-01 questions in `docs/TODO.md` §3 (baseline, submission format, hidden scenarios, rail/P10/P90/events presence, pitch and venue rules, in addition to the four above) are open on the same terms; the README "Open questions" table tracks each one.
+- **`remaining_shelf_life_h` (A-03):** measured at `available_from_h` in reference-temperature-equivalent hours, as `docs/ARCHITECTURE.md` §7.
+- **Event semantics (A-14):** as `docs/DATABASE.md` §6.
 - **Anything else:** the module owner decides within 5 minutes, records an `A-xx` or `D-xx`, and moves on.
 
 When an open decision is resolved, add the next free `D-xx` row and update the matching `A-xx`; the default above is then superseded.
