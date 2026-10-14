@@ -39,7 +39,7 @@ export function Scoreboard({ run, step }: { run: RunDetail; step?: number }) {
     <Stack gap="lg">
       {base && dNet != null && base.policy !== run.policy && (
         <Reveal show={at(1)}><m.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={spring.soft}>
-          <Paper radius="lg" p="xl" className="hero">
+          <Paper radius="lg" p="xl" className="band">
             <Group gap="lg" wrap="nowrap">
               <ThemeIcon size={64} radius="xl" variant="white" color={dNet >= 0 ? 'green' : 'red'}>
                 {dNet >= 0 ? <IconTrendingUp size={38} /> : <IconTrendingDown size={38} />}

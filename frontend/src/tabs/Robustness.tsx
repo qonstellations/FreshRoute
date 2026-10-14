@@ -113,7 +113,7 @@ function Hero({ s }: { s: StressResponse }) {
   const won = dotsWon(share.net_inr, n)
   const reduce = useReducedMotion()
   return (
-    <Paper radius="lg" p="xl" className="hero">
+    <Paper radius="lg" p="xl" className="band">
       <Group gap="lg" wrap="nowrap" align="flex-start">
         <ThemeIcon size={64} radius="xl" variant="white" color="green"><IconShieldCheck size={38} /></ThemeIcon>
         <div>

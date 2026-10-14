@@ -55,7 +55,7 @@ th, td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; f
 .burst-dot { position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; margin: -4.5px; border-radius: 50%; }
 /* Atelier look (D-27): cream paper, ink blue, Anton display + Kode Mono micro-labels.
    GSAP drives the motion; these rules are the static styling. */
-.atelier-header { backdrop-filter: blur(12px); background: color-mix(in srgb, var(--cream) 88%, transparent);
+.atelier-header { backdrop-filter: blur(12px); background: color-mix(in srgb, var(--bg) 88%, transparent);
   border-bottom: 1px solid var(--border); }
 .wordmark-sm { font-family: Anton, sans-serif; font-weight: 400; letter-spacing: .02em; }
 .atelier-nav { border: 1px solid var(--border); background: none; padding: 8px 14px; font: inherit;
@@ -95,11 +95,11 @@ th, td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; f
 .hero-labels { display: flex; justify-content: space-between; margin-top: auto; padding-top: 32px;
   font-size: .72rem; }
 .hero-index { display: grid; grid-template-columns: repeat(2, 1fr); border: 1px solid var(--border); margin-top: 8px; }
-@media (width >= 1024px) { .hero-index { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 1024px) { .hero-index { grid-template-columns: repeat(4, 1fr); } }
 .hero-cell { background: none; border: 0; border-bottom: 1px solid var(--border); padding: 12px;
   display: flex; flex-direction: column; justify-content: space-between; gap: 20px; min-height: 96px;
   cursor: pointer; font: inherit; color: var(--text); text-align: left; position: relative; }
-@media (width >= 1024px) { .hero-cell { border-bottom: 0; } .hero-cell + .hero-cell { border-left: 1px solid var(--border); } }
+@media (min-width: 1024px) { .hero-cell { border-bottom: 0; } .hero-cell + .hero-cell { border-left: 1px solid var(--border); } }
 .hero-cell:hover { background: var(--ink); color: var(--cream); }
 .hero-cell small { font-size: .68rem; }
 .hero-cell big { font-family: Anton, sans-serif; font-size: 1rem; text-align: right; }
@@ -118,6 +118,8 @@ th, td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; f
   clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); }
 .sec-n { font-size: .75rem; font-family: "Kode Mono", monospace; letter-spacing: .14em; }
 .sec-body { margin-top: 28px; }
+/* ink band for the score/robustness heroes (white-on-cream fix): solid ink block, cream type */
+.band { background: var(--ink); color: var(--cream); }
 .plan-cta { margin-top: 20px; }
 /* RunButton restyled as blue block */
 .plan-cta .plan-btn, .plan-btn { background: var(--ink); color: var(--cream); font-family: Anton, sans-serif;
@@ -130,19 +132,25 @@ th, td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; f
 .pick-num { font-size: .72rem; color: var(--muted); }
 .pick-card[data-on=true] .pick-num { color: var(--cream); opacity: .75; }
 .dot { background: var(--ink); width: 4px; height: 4px; display: inline-block; margin-right: 8px; }
-/* dark trust section (reference members section) */
-.sec-dark { background: var(--coal); color: var(--cream); max-width: none; }
-.sec-dark .sec-tag, .sec-dark .sec-sub { color: var(--cream); opacity: .8; }
+/* dark trust section (reference members section): only the display type goes cream;
+   cards keep their scheme surfaces so tables stay readable */
+.sec-dark { background: var(--coal); max-width: none; }
+.sec-dark .sec-tag { color: var(--cream); }
+.sec-dark .solid { color: var(--cream); }
+.sec-dark .sec-sub { color: var(--cream); opacity: .8; }
 .sec-dark .ghost { -webkit-text-stroke-color: var(--cream); }
 .atelier-foot { border-top: 1px solid var(--border); margin-top: 10vh; padding: 40px clamp(16px, 4vw, 64px) 16px; }
 .foot-word { font-family: Anton, sans-serif; font-weight: 400; font-size: clamp(3rem, 10vw, 10rem); line-height: 1; }
 .foot-meta { display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px 16px; margin: 40px 0 16px; font-size: .72rem; }
-@media (width >= 1024px) { .foot-meta { grid-template-columns: repeat(12, 1fr); align-items: end; } }
+@media (min-width: 1024px) { .foot-meta { grid-template-columns: repeat(12, 1fr); align-items: end; }
+  .foot-meta > :first-child { grid-column: 1 / 5; }
+  .foot-meta > :nth-child(2) { grid-column: 6 / 9; }
+  .foot-meta > :nth-child(3) { grid-column: 9 / 11; }
+  .foot-meta > :nth-child(4) { grid-column: 11 / 13; justify-self: end; text-align: right; } }
 .foot-meta a { color: inherit; text-decoration: underline 1px; }
 .top-link { background: none; border: 0; font: inherit; font-size: .72rem; color: var(--text);
   cursor: pointer; display: inline-flex; gap: 4px; align-items: center; padding: 0; }
 @media (prefers-reduced-motion: reduce) { .atelier-cta .cta-label, .atelier-cta .cta-clone, .atelier-nav .fill { transition: none; } }
-.sec-dark { --text: var(--cream); }
 .pick-card { transition: background .2s, border-color .2s; }
 @media (prefers-reduced-motion: reduce) { .shell-header::before, .plan-btn-sweep { animation: none; } }
 /* Scoreboard story */
