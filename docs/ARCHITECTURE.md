@@ -418,13 +418,16 @@ Reason codes for the runner-up: `SHELF_LIFE`, `WINDOW`, `CAPACITY_BOUND`, `DEMAN
 
 ## 16. Dashboard (`frontend/`, React SPA over `backend/src/freshroute/api/`)
 
-Components are Mantine 9; motion springs animate step changes, cards, the reason-card drawer, KPI count-ups, table rows and the Replan diff (D-24). Every animation respects `prefers-reduced-motion`. The page is a 3-step flow in plain words — no sidebar, no jargon controls on screen (method/seed/flags live under "Advanced settings").
+Components are Mantine 9; GSAP ScrollTrigger drives scroll choreography (hero intro/parallax, section reveals, marquee, anchor nav) and motion springs animate the reason-card drawer, KPI count-ups, table rows and the Replan diff (D-24, D-27). Every animation respects `prefers-reduced-motion` (static page fallback). The page is one Atelier-style scroll: giant display hero, then numbered sections in plain words — no sidebar, no jargon controls on screen (method/seed/flags live under "Advanced settings").
 
-| Step | Contents |
+| Section | Contents |
 |---|---|
-| 1 · Make a plan | place cards, one big **Plan** button (auto-jumps to results when done), older plans under an accordion |
-| 2 · See results | scoreboard (spoilage kg and %, fulfillment %, net ₹, violations: baseline n vs ours; min fill rate, waterfall, attribution ladder, validator panel) + dispatch table, reason card drawer, discount cards, shelf-life map (offline SVG route network over `geo.csv`, D-24; colour table is the fallback) |
-| 3 · What if? | 5 canned events (+ NL box if stretch done), apply, diff view, ΔKPIs, narration + MC fan chart / bands, % scenarios beating baseline, sensitivity table + trust accordion (assumptions, cost-model coefficients, `run_manifest.json`) |
+| Hero + nav | giant FRESH/ROUTE type, vision line, anchor nav 01–05, demo-data badge, dark toggle |
+| 01 · Plan | place cards, one big **Plan** button (auto-scrolls to Score when done), older plans under an accordion |
+| 02 · Score | scoreboard (spoilage kg and %, fulfillment %, net ₹, violations: baseline n vs ours; min fill rate, waterfall, attribution ladder, validator panel) |
+| 03 · Trucks | dispatch table, reason card drawer, discount cards, shelf-life map (offline SVG route network over `geo.csv`, D-24; colour table is the fallback) |
+| 04 · What if | 5 canned events (+ NL box if stretch done), apply, diff view, ΔKPIs, narration + MC fan chart / bands, % scenarios beating baseline, sensitivity table |
+| 05 · Trust | assumptions, cost-model coefficients, `run_manifest.json` (seed, git SHA, scenario hash, solver status) |
 
 ### 16.1 Layers and the rules between them
 

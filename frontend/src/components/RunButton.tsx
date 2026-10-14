@@ -65,7 +65,7 @@ export function RunButton({ request, onDone, onError }: {
           <m.span key={state} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, position: 'relative' }}
             initial={{ opacity: 0, y: 14, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -14, scale: 0.9 }} transition={spring.snappy}>
-            {state === 'busy' && <><Loader size={16} color="white" type="dots" /> {`Running ${busy}…`}</>}
+            {state === 'busy' && <><Loader size={16} color="white" type="dots" /> Planning…</>}
             {state === 'done' && <>
               <m.span style={{ display: 'inline-flex' }} initial={{ scale: 0, rotate: -45 }}
                 animate={{ scale: 1, rotate: 0 }} transition={spring.bouncy}><IconCheck size={18} stroke={3} /></m.span>

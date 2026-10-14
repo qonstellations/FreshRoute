@@ -1,14 +1,15 @@
-// Friendly 3-step flow (ARCHITECTURE §16): 1 Make a plan → 2 See results → 3 What if?
-// Renders API JSON verbatim; the engine decides, this page only shows.
+// Atelier-style scroll experience (ARCHITECTURE §16, D-27): one page, giant type,
+// numbered sections, GSAP ScrollTrigger reveals. Renders API JSON verbatim;
+// the engine decides, this page only shows.
 import {
-  Accordion, ActionIcon, AppShell, Badge, Card, Container, Group, NumberInput, Paper, Select, SimpleGrid, Stack, Stepper,
-  Switch, Text, Title, Tooltip, useMantineColorScheme,
+  Accordion, ActionIcon, AppShell, Badge, Card, Group, NumberInput, Paper, Select, SimpleGrid, Stack, Switch, Text,
+  Title, Tooltip, useMantineColorScheme,
 } from '@mantine/core'
-import {
-  IconChartBar, IconFlask, IconLeaf, IconMoon, IconSparkles, IconSun, IconTruck,
-} from '@tabler/icons-react'
-import { AnimatePresence, m } from 'motion/react'
-import { useCallback, useEffect, useState } from 'react'
+import { IconArrowDown, IconLeaf, IconMoon, IconSun, IconTruck } from '@tabler/icons-react'
+import { gsap } from 'gsap'
+import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { api } from './api/client'
 import { StatusBanner, SyntheticBanner } from './components/Banners'
 import { RunButton } from './components/RunButton'
@@ -18,8 +19,9 @@ import { Replan } from './tabs/Replan'
 import { Robustness } from './tabs/Robustness'
 import { Scoreboard } from './tabs/Scoreboard'
 import { Trust } from './tabs/Trust'
-import { spring } from './theme'
 import type { RunDetail, RunsList, ScenarioInfo } from './types'
+
+gsap.registerPlugin(ScrollTrigger, ScrollToPlugin)
 
 // ponytail: run_id of backend/tests/fixtures/metrics_example.json, used when /api/runs is empty + fixture
 const FIXTURE_RUN_ID = 'EXAMPLE-SYNTHETIC'
@@ -30,31 +32,30 @@ const POLICIES = [
   { value: 'fifo', label: 'Use newest first (simple rule)' },
   { value: 'last_day_50', label: 'Simple rule + big last-day sale' },
 ]
-const STEPS = [
-  { label: 'Make a plan', icon: <IconSparkles size={18} /> },
-  { label: 'See results', icon: <IconChartBar size={18} /> },
-  { label: 'What if?', icon: <IconFlask size={18} /> },
+const NAV = [
+  { id: 'plan', n: '01', label: 'Plan' },
+  { id: 'score', n: '02', label: 'Score' },
+  { id: 'trucks', n: '03', label: 'Trucks' },
+  { id: 'whatif', n: '04', label: 'What if' },
+  { id: 'trust', n: '05', label: 'Trust' },
 ]
 
-function SectionTitle({ icon, title, sub }: { icon: React.ReactNode; title: string; sub: string }) {
+export const scrollTo = (id: string) => {
+  gsap.to(window, { duration: 1.1, ease: 'power3.inOut', scrollTo: { y: `#${id}`, offsetY: 70 } })
+}
+
+function SectionHead({ n, tag, title, sub }: { n: string; tag: string; title: string; sub: string }) {
   return (
-    <Group gap="sm" mt="xl" mb="xs">
-      <m.span initial={{ scale: 0, rotate: -30 }} animate={{ scale: 1, rotate: 0 }} transition={spring.bouncy}>
-        {icon}
-      </m.span>
-      <div>
-        <Title order={3}>{title}</Title>
-        <Text size="sm" c="dimmed">{sub}</Text>
-      </div>
-    </Group>
+    <div data-reveal>
+      <Text className="sec-tag">[{tag}]</Text>
+      <Title order={2} className="sec-title"><span className="sec-n">{n}</span> {title}</Title>
+      <Text c="dimmed" mt={4} maw={640}>{sub}</Text>
+    </div>
   )
 }
 
 export default function App() {
-  const [step, setStep] = useState(() => {
-    const q = Number(new URLSearchParams(location.search).get('step'))
-    return q >= 1 && q <= 3 ? q - 1 : 0
-  })
+  const root = useRef<HTMLDivElement>(null)
   const [dark, setDark] = useState(() => {
     try { return localStorage.getItem('fr-stage') === '1' } catch { return false }
   })
@@ -64,11 +65,6 @@ export default function App() {
     setColorScheme(dark ? 'dark' : 'light')
     try { localStorage.setItem('fr-stage', dark ? '1' : '0') } catch { /* private window */ }
   }, [dark, setColorScheme])
-  useEffect(() => {
-    const q = new URLSearchParams(location.search)
-    q.set('step', String(step + 1))
-    history.replaceState(null, '', `?${q}`)
-  }, [step])
 
   const [scenarios, setScenarios] = useState<ScenarioInfo[]>([])
   const [runs, setRuns] = useState<RunsList>({ runs: [], fixture: false })
@@ -85,7 +81,9 @@ export default function App() {
     try {
       const r = await api.runs()
       setRuns(r)
-      setRunId(select ?? r.runs[0]?.run_id ?? (r.fixture ? FIXTURE_RUN_ID : null))
+      // prefer the demo run (practice / milp_markdown), else the newest listing
+      const demo = r.runs.find(x => x.scenario.split('/').pop() === 'practice' && x.policy === 'milp_markdown')
+      setRunId(select ?? demo?.run_id ?? r.runs[0]?.run_id ?? (r.fixture ? FIXTURE_RUN_ID : null))
     } catch (e) { setError(`Cannot list runs: ${e instanceof Error ? e.message : e}`) }
   }, [])
 
@@ -100,174 +98,203 @@ export default function App() {
     api.run(runId).then(r => { setRun(r); setError('') })
       .catch(e => setError(`Cannot load run ${runId}: ${e.message}`))
   }, [runId])
+  useEffect(() => { ScrollTrigger.refresh() }, [runId])
+
+  // GSAP world: hero intro, parallax, reveals, marquee. Reduced motion = static page.
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+      gsap.from('.hero-line', { yPercent: 110, duration: 1.2, ease: 'power4.out', stagger: 0.12 })
+      gsap.from('.hero-fade', { opacity: 0, y: 24, duration: 1, ease: 'power3.out', stagger: 0.1, delay: 0.5 })
+      gsap.to('.hero-inner', {
+        yPercent: -12, opacity: 0.25, ease: 'none',
+        scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true },
+      })
+      gsap.utils.toArray<HTMLElement>('[data-reveal]').forEach(el => {
+        gsap.from(el, {
+          opacity: 0, y: 48, duration: 1, ease: 'power3.out',
+          scrollTrigger: { trigger: el, start: 'top 88%', once: true },
+        })
+      })
+      gsap.to('.marquee-track', { xPercent: -50, duration: 22, ease: 'none', repeat: -1 })
+    }, root)
+    return () => ctx.revert()
+  }, [])
 
   const fixture = runs.fixture || !!run?.fixture
   const info = run && scenarios.find(s => s.name === run.scenario || run.scenario.endsWith(`/${s.name}`))
   const synthetic = fixture || (!!run && (!info || info.source === 'synthetic'))
-
-  const pickRun = (id: string) => { setRunId(id); setStep(1) }
+  const ready = run && runId
 
   return (
-    <AppShell header={{ height: 64 }} padding="lg">
-      <AppShell.Header className="shell-header">
-        <m.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={spring.snappy} style={{ height: '100%' }}>
-          <Group h="100%" px="lg" justify="space-between" style={{ position: 'relative' }}>
-            <Group gap={10}>
-              <IconLeaf size={28} color="var(--mantine-color-green-7)" stroke={2.2} />
-              <Title order={2} className="wordmark">FreshRoute</Title>
-              <Text size="sm" c="dimmed" visibleFrom="sm">fresh produce, planned in one click</Text>
+    <div ref={root}>
+      <AppShell header={{ height: 60 }} padding={0}>
+        <AppShell.Header className="atelier-header">
+          <Group h="100%" px="lg" justify="space-between">
+            <Group gap={8} style={{ cursor: 'pointer' }} onClick={() => gsap.to(window, { duration: 1, scrollTo: 0 })}>
+              <IconLeaf size={22} color="var(--mantine-color-green-7)" stroke={2.2} />
+              <Text fw={800} className="wordmark-sm">FreshRoute</Text>
+            </Group>
+            <Group gap={4} visibleFrom="sm">
+              {NAV.map(n => (
+                <button key={n.id} className="atelier-nav" onClick={() => scrollTo(n.id)}>
+                  <span className="atelier-nav-n">{n.n}</span> {n.label}
+                </button>
+              ))}
             </Group>
             <Group gap="xs">
-              <AnimatePresence>
-                {synthetic && (
-                  <m.div key="syn" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }} transition={spring.bouncy}>
-                    <Badge color="yellow" variant="filled" size="lg"
-                      styles={{ root: { color: 'var(--mantine-color-dark-7)' } }}>demo data</Badge>
-                  </m.div>
-                )}
-              </AnimatePresence>
+              {synthetic && <Badge color="yellow" variant="filled" size="md"
+                styles={{ root: { color: 'var(--mantine-color-dark-7)' } }}>demo data</Badge>}
               <Tooltip label={dark ? 'Light mode' : 'Dark mode for the projector'}>
                 <ActionIcon variant="subtle" size="lg" radius="xl" aria-label="Toggle dark mode"
                   onClick={() => setDark(v => !v)}>{dark ? <IconSun size={20} /> : <IconMoon size={20} />}</ActionIcon>
               </Tooltip>
             </Group>
           </Group>
-        </m.div>
-      </AppShell.Header>
+        </AppShell.Header>
 
-      <AppShell.Main>
-        <Container size="lg">
-          <Stack gap="xs" mb="md">
-            <SyntheticBanner show={synthetic} />
-            <StatusBanner fixture={fixture} manifest={run?.manifest ?? null} error={error} />
-          </Stack>
+        <AppShell.Main>
+          {/* HERO */}
+          <section className="hero">
+            <div className="hero-inner">
+              <Text className="hero-kicker hero-fade">[ fresh produce · planned in one click ]</Text>
+              <h1 className="display" aria-label="FreshRoute">
+                <span className="hero-mask"><span className="hero-line">FRESH</span></span>
+                <span className="hero-mask"><span className="hero-line outline">ROUTE</span></span>
+              </h1>
+              <Text className="hero-sub hero-fade" maw={620}>
+                Which batch goes where, when, and at what markdown — decided by
+                an optimizer, explained in plain words, re-planned in seconds
+                when the day goes wrong.
+              </Text>
+              <Group mt="xl" className="hero-fade">
+                <button className="atelier-cta" onClick={() => scrollTo('plan')}>
+                  Make a plan <IconArrowDown size={18} />
+                </button>
+                <button className="atelier-ghost" onClick={() => scrollTo('score')}>See what it says</button>
+              </Group>
+              <Stack gap={4} mt={48} mb={16} className="hero-fade">
+                <SyntheticBanner show={synthetic} />
+                <StatusBanner fixture={fixture} manifest={run?.manifest ?? null} error={error} />
+              </Stack>
+            </div>
+          </section>
 
-          <Stepper active={step} onStepClick={setStep} mb="xl" allowNextStepsSelect={!!run}>
-            {STEPS.map((s, i) => (
-              <Stepper.Step key={s.label} label={s.label} icon={s.icon}
-                allowStepSelect={i === 0 || !!run} />
-            ))}
-          </Stepper>
-
-          <AnimatePresence mode="wait" initial={false}>
-            <m.div key={step} initial={{ opacity: 0, x: 32 }} animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -32 }} transition={spring.snappy}>
-              {step === 0 && (
-                <Stack gap="lg">
-                  <Paper radius="lg" p="xl" className="hero">
-                    <m.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={spring.soft}>
-                      <Title order={2} c="white">Where should today's fresh stock go?</Title>
-                      <Text c="white" opacity={0.9} mt={4}>
-                        Pick a place below, press the big button, and watch the plan appear.
-                      </Text>
-                    </m.div>
-                  </Paper>
-
-                  <div>
-                    <Title order={4} mb="xs">1 · Pick a place</Title>
-                    <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="sm">
-                      {scenarios.map(s => {
-                        const on = s.name === scenario
-                        return (
-                          <m.div key={s.name} whileHover={{ y: -3 }} whileTap={{ scale: 0.97 }} transition={spring.snappy}>
-                            <Card withBorder radius="lg" p="md" onClick={() => setScenario(s.name)}
-                              className="pick-card" data-on={on} style={{ cursor: 'pointer' }}>
-                              <Group gap="xs">
-                                <IconTruck size={22} color={on ? 'var(--mantine-color-green-7)' : 'var(--mantine-color-dimmed)'} />
-                                <div>
-                                  <Text fw={700}>{s.name}</Text>
-                                  <Text size="xs" c="dimmed">{s.source} · {s.horizon_days}-day plan</Text>
-                                </div>
-                              </Group>
-                            </Card>
-                          </m.div>
-                        )
-                      })}
-                    </SimpleGrid>
-                  </div>
-
-                  <div>
-                    <Title order={4} mb="xs">2 · Press the button</Title>
-                    <m.div whileTap={{ scale: 0.98 }} transition={spring.snappy} style={{ maxWidth: 420 }}>
-                      <RunButton
-                        request={{ scenario: scenario && `data/scenarios/${scenario}`, policy, seed, flags: { markdown, newsvendor } }}
-                        onDone={id => { loadRuns(id); setStep(1) }} onError={setError} />
-                    </m.div>
-                    <Text size="sm" c="dimmed" mt="xs">Takes about half a minute. We jump to the results by themselves.</Text>
-                  </div>
-
-                  <Accordion variant="separated" radius="md">
-                    <Accordion.Item value="advanced">
-                      <Accordion.Control>Advanced settings (you can ignore these)</Accordion.Control>
-                      <Accordion.Panel>
-                        <Stack gap="sm" maw={420}>
-                          <Select label="Planning method" value={policy} onChange={v => v && setPolicy(v)}
-                            allowDeselect={false} data={POLICIES} />
-                          <NumberInput label="Seed (same seed = same plan)" value={seed}
-                            onChange={v => setSeed(Number(v))} allowDecimal={false} />
-                          <Switch label="Discount items about to expire" checked={markdown}
-                            onChange={e => setMarkdown(e.currentTarget.checked)} />
-                          <Switch label="Order cautiously (newsvendor)" checked={newsvendor}
-                            onChange={e => setNewsvendor(e.currentTarget.checked)} />
-                        </Stack>
-                      </Accordion.Panel>
-                    </Accordion.Item>
-                    <Accordion.Item value="recent">
-                      <Accordion.Control>Look at an older plan</Accordion.Control>
-                      <Accordion.Panel>
-                        <RunPicker runs={runs.runs} value={runId} onChange={pickRun} />
-                      </Accordion.Panel>
-                    </Accordion.Item>
-                  </Accordion>
-                </Stack>
-              )}
-
-              {step === 1 && (run && runId ? (
-                <Stack gap="md">
-                  <SectionTitle icon={<IconChartBar size={26} color="var(--mantine-color-green-7)" />}
-                    title="Your score" sub="Profit, waste and deliveries — compared with the simple rule." />
-                  <Scoreboard run={run} />
-                  <SectionTitle icon={<IconTruck size={26} color="var(--mantine-color-green-7)" />}
-                    title="Where every truck goes" sub="Tap any row to see why it was chosen." />
-                  <Plan run={run} runId={runId} />
-                </Stack>
-              ) : (
-                <Paper withBorder radius="lg" p="xl" ta="center">
-                  <Text fw={600}>No plan yet.</Text>
-                  <Text size="sm" c="dimmed" mb="md">Go back one step and press the big button.</Text>
-                </Paper>
+          {/* MARQUEE */}
+          <div className="marquee" aria-hidden>
+            <div className="marquee-track">
+              {[0, 1].map(k => (
+                <span key={k} className="marquee-chunk">PLAN · SCORE · TRUCKS · WHAT IF · TRUST ·&nbsp;</span>
               ))}
+            </div>
+          </div>
 
-              {step === 2 && (run && runId ? (
-                <Stack gap="md">
-                  <SectionTitle icon={<IconFlask size={26} color="var(--mantine-color-green-7)" />}
-                    title="Try a problem" sub="A road closes, a truck breaks — see the new plan in seconds." />
+          {/* 01 PLAN */}
+          <section id="plan" className="atelier-sec">
+            <SectionHead n="01" tag="PLAN" title="Where should today's stock go?"
+              sub="Pick a place, press the button, and the plan appears below. About half a minute." />
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="sm" mt="lg" data-reveal>
+              {scenarios.map(s => {
+                const on = s.name === scenario
+                return (
+                  <Card key={s.name} withBorder radius="lg" p="md" onClick={() => setScenario(s.name)}
+                    className="pick-card" data-on={on} style={{ cursor: 'pointer' }}>
+                    <Group gap="xs">
+                      <IconTruck size={22} color={on ? 'var(--mantine-color-green-7)' : 'var(--mantine-color-dimmed)'} />
+                      <div>
+                        <Text fw={700}>{s.name}</Text>
+                        <Text size="xs" c="dimmed">{s.source} · {s.horizon_days}-day plan</Text>
+                      </div>
+                    </Group>
+                  </Card>
+                )
+              })}
+            </SimpleGrid>
+            <div data-reveal style={{ maxWidth: 640 }} className="plan-cta">
+              <RunButton
+                request={{ scenario: scenario && `data/scenarios/${scenario}`, policy, seed, flags: { markdown, newsvendor } }}
+                onDone={id => { loadRuns(id); setTimeout(() => scrollTo('score'), 600) }} onError={setError} />
+            </div>
+            <Accordion variant="separated" radius="md" mt="md" maw={560} data-reveal>
+              <Accordion.Item value="advanced">
+                <Accordion.Control>Advanced settings (you can ignore these)</Accordion.Control>
+                <Accordion.Panel>
+                  <Stack gap="sm">
+                    <Select label="Planning method" value={policy} onChange={v => v && setPolicy(v)}
+                      allowDeselect={false} data={POLICIES} />
+                    <NumberInput label="Seed (same seed = same plan)" value={seed}
+                      onChange={v => setSeed(Number(v))} allowDecimal={false} />
+                    <Switch label="Discount items about to expire" checked={markdown}
+                      onChange={e => setMarkdown(e.currentTarget.checked)} />
+                    <Switch label="Order cautiously (newsvendor)" checked={newsvendor}
+                      onChange={e => setNewsvendor(e.currentTarget.checked)} />
+                  </Stack>
+                </Accordion.Panel>
+              </Accordion.Item>
+              <Accordion.Item value="recent">
+                <Accordion.Control>Look at an older plan</Accordion.Control>
+                <Accordion.Panel><RunPicker runs={runs.runs} value={runId} onChange={setRunId} /></Accordion.Panel>
+              </Accordion.Item>
+            </Accordion>
+          </section>
+
+          {/* 02 SCORE */}
+          <section id="score" className="atelier-sec">
+            <SectionHead n="02" tag="SCORE" title="Your score"
+              sub="Profit, waste and deliveries — measured against the simple rule." />
+            <div data-reveal className="sec-body">
+              {ready ? <Scoreboard run={run} /> : <PlanGate onPlan={() => scrollTo('plan')} />}
+            </div>
+          </section>
+
+          {/* 03 TRUCKS */}
+          <section id="trucks" className="atelier-sec">
+            <SectionHead n="03" tag="TRUCKS" title="Where every truck goes"
+              sub="Tap any row to see why it was chosen over the alternatives." />
+            <div data-reveal className="sec-body">
+              {ready ? <Plan run={run} runId={runId} /> : <PlanGate onPlan={() => scrollTo('plan')} />}
+            </div>
+          </section>
+
+          {/* 04 WHAT IF */}
+          <section id="whatif" className="atelier-sec">
+            <SectionHead n="04" tag="WHAT IF" title="When the day goes wrong"
+              sub="A road closes, a truck breaks — a new plan in seconds, tested against 200 possible tomorrows." />
+            <div data-reveal className="sec-body">
+              {ready ? (
+                <Stack gap="xl">
                   <Replan run={run} runId={runId} />
-                  <SectionTitle icon={<IconChartBar size={26} color="var(--mantine-color-green-7)" />}
-                    title="How sturdy is it?" sub="The same plan, tested against 200 possible tomorrows." />
                   <Robustness run={run} runId={runId} />
-                  <Accordion variant="separated" radius="md">
-                    <Accordion.Item value="trust">
-                      <Accordion.Control>Can I trust this plan?</Accordion.Control>
-                      <Accordion.Panel><Trust run={run} /></Accordion.Panel>
-                    </Accordion.Item>
-                  </Accordion>
                 </Stack>
-              ) : (
-                <Paper withBorder radius="lg" p="xl" ta="center">
-                  <Text fw={600}>No plan yet.</Text>
-                  <Text size="sm" c="dimmed" mb="md">Make a plan first, then come back and break it.</Text>
-                </Paper>
-              ))}
-            </m.div>
-          </AnimatePresence>
+              ) : <PlanGate onPlan={() => scrollTo('plan')} />}
+            </div>
+          </section>
 
-          <Text size="xs" c="dimmed" ta="center" mt="xl">
-            Every number comes from the planning engine. Demo data is not real.
-          </Text>
-        </Container>
-      </AppShell.Main>
-    </AppShell>
+          {/* 05 TRUST */}
+          <section id="trust" className="atelier-sec">
+            <SectionHead n="05" tag="TRUST" title="Can you trust it?"
+              sub="An independent checker re-does the maths. Every number traces to the engine." />
+            <div data-reveal className="sec-body">
+              {ready ? <Trust run={run} /> : <PlanGate onPlan={() => scrollTo('plan')} />}
+            </div>
+          </section>
+
+          <footer className="atelier-foot">
+            <Text fw={800} className="foot-word">FRESHROUTE</Text>
+            <Text size="sm" c="dimmed">Every number comes from the planning engine. Demo data is not real.</Text>
+          </footer>
+        </AppShell.Main>
+      </AppShell>
+    </div>
+  )
+}
+
+function PlanGate({ onPlan }: { onPlan: () => void }) {
+  return (
+    <Paper withBorder radius="lg" p="xl" ta="center">
+      <Text fw={600}>No plan yet.</Text>
+      <Text size="sm" c="dimmed" mb="md">Make one first — it takes about half a minute.</Text>
+      <button className="atelier-cta" onClick={onPlan}>Make a plan</button>
+    </Paper>
   )
 }
