@@ -1,4 +1,4 @@
-// Scoreboard tab (ARCHITECTURE §16; port of Streamlit C-12). Shows stored KPIs; deltas via lib/delta.ts only.
+// Scoreboard tab (ARCHITECTURE §16; port of C-12). Shows stored KPIs; deltas via lib/delta.ts only.
 import { KpiTile, toneOf } from '../components/KpiTile'
 import { ValidatorPanel } from '../components/ValidatorPanel'
 import { delta, fmt, fmtSigned } from '../lib/delta'
