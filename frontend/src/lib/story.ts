@@ -20,7 +20,9 @@ export const BEATS: Beat[] = [
   { tab: 'Plan', step: 0, title: 'Routes draw on the map' },
   { tab: 'Plan', step: 1, title: 'Dispatch sheet' },
   { tab: 'Plan', step: 2, title: 'Why this shipment? (reason card)' },
-  // TODO: Robustness and Replan beats go here once those tabs land.
+  { tab: 'Robustness', step: 0, title: 'Plan beats baseline across sampled futures' },
+  { tab: 'Robustness', step: 1, title: 'P10–P90 bands: net, spoilage, fulfilment' },
+  { tab: 'Robustness', step: 2, title: 'Sensitivity: Q10 and ε' },
   { tab: 'Trust', step: 0, title: 'Reproducible: manifest + seed' },
 ]
 

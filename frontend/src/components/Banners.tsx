@@ -28,6 +28,20 @@ export function SyntheticBanner({ show }: { show: boolean }) {
   )
 }
 
+/** Shown whenever a tab renders the client stub's format-example fixture (api/client.ts) instead of engine output. */
+export function ExampleBanner({ show, what }: { show: boolean; what: string }) {
+  return (
+    <AnimatePresence initial={false}>
+      {show && (
+        <Banner key="example" color="yellow" icon={<IconFlask />}>
+          <strong>FORMAT EXAMPLE, NOT MEASURED:</strong> the {what} endpoint is not live yet, so this shows the
+          made-up fixture from <code>backend/tests/fixtures/</code>. No number here is a result.
+        </Banner>
+      )}
+    </AnimatePresence>
+  )
+}
+
 export function StatusBanner({ fixture, manifest, error }:
   { fixture: boolean; manifest: Manifest | null; error: string }) {
   return (

@@ -82,6 +82,12 @@ th, td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; f
 [data-mantine-color-scheme=dark] .shell-tab[data-active] { color: var(--mantine-color-green-2) !important; }
 [data-mantine-color-scheme=dark] .tab-pill-fill { background: color-mix(in srgb, var(--mantine-color-green-7) 45%, transparent);
   box-shadow: inset 0 0 0 1px var(--mantine-color-green-5); }
+/* Robustness (AD-05): futures dot matrix in the hero; sensitivity slider cards */
+.futures { display: grid; grid-template-columns: repeat(40, 1fr); gap: 5px; margin-top: var(--mantine-spacing-lg); max-width: 760px; }
+.future { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -1px;
+  background: rgb(255 255 255 / .28); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .35); }
+.future[data-won] { background: #fff; box-shadow: 0 0 6px rgb(255 255 255 / .6); }
+.sens-card { background: var(--mantine-color-default-hover); }
 /* stage: brighter accents so greens survive a washed-out projector */
 :root[data-stage] .shell-header::before { opacity: .5; }
 :root[data-stage] { --mantine-primary-color-filled: var(--mantine-color-green-6); --mantine-primary-color-light-color: var(--mantine-color-green-3); }
