@@ -577,6 +577,8 @@ Anything marked **confirm** must be checked against the organizers' documents at
 
 | A-44 | Reason cards use scoped arcs (U-02 follow-up): `build_cards` builds arcs only for batches in the plan × all destinations × one vehicle per `(origin, mode, available_from_h)` class (A-46 pooling; alternatives carry no `vehicle_id`, DATABASE.md 5.9, so the representative is invisible). Byte-identical to full arcs on tiny_3batch, practice and a 3x scaled check. Measured, SYNTHETIC seed 42, 10x batches+vehicles: scoped cards 2.3 s (was 52-54 s full), full `freshroute run` 18.1 s end to end (was ~60 s), optimal, 0 violations | team |
 
+| A-47 | Quality-dataset calibration spec (S-01 round 2, generator v2): FIFO market-stage-equivalent spoilage on `practice` seed 42 must land in band per commodity, targets = NABCONS 2022 market-stage % of production (PIB PRID 2151371, Annexure-II; context only, never model inputs). Tomato 3.25 ± 1.0 · banana 2.40 ± 0.8 · mango 2.50 ± 0.8 · potato 0.86 ± 0.5 · spinach/leafy 2.3–3.5 band (no NABCONS leafy row; nearest market-stage rows are cabbage 2.32 and guava 3.46) · onion: target 1.96 is unreachable inside a 3-day horizon (720 h shelf life never expires; only the 1 % handling loss bites), so onion-bearing scenarios assert handling-loss-only spoilage and the 1.96 target is recorded as horizon-capped, not fitted by inventing expiry. The v1 fit (tomato 3.51 hinging on one 0.5 t origin-expired batch; mango 5.40; spinach 7.83) is superseded. Bands are asserted by `test_generator_quality.py` (S-01f) | team |
+
 ---
 
 ## 21. Failure modes and fallbacks
