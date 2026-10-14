@@ -25,7 +25,7 @@ def _hashes(d: Path) -> dict:
     return {f: hashlib.sha256((d / f).read_bytes()).hexdigest() for f in FILES}
 
 
-@pytest.mark.parametrize("scenario,policy", CASES, ids=lambda x: Path(x).name if "/" in str(x) or "\\" in str(x) else x)
+@pytest.mark.parametrize("scenario,policy", CASES, ids=[f"{Path(s).name}-{p}" for s, p in CASES])
 def test_outputs_match_golden(tmp_path, scenario, policy):
     key = f"{Path(scenario).name}/{policy}"
     got = _hashes(run(scenario, policy, 42, out=str(tmp_path)))
