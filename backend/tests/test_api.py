@@ -79,8 +79,15 @@ def test_tables_json_and_csv(ran, run_outputs):
 def test_dispatch_sheet_and_reason_cards(ran):
     sheet = ran.get(f"/api/runs/{RUN}/dispatch-sheet").json()
     assert isinstance(sheet["csv"], list) and isinstance(sheet["text"], str)
-    r = ran.get(f"/api/runs/{RUN}/reason-cards")
-    assert r.status_code == 200 and r.json() is None
+    r = ran.get(f"/api/runs/{RUN}/reason-cards")  # cli.run writes them since U-01
+    on_disk = json.loads((data_access.OUTPUTS / RUN / "reason_cards.json").read_text("utf-8"))
+    assert r.status_code == 200 and r.json() == on_disk
+
+
+def test_reason_cards_null_when_absent(client, tmp_path):
+    (tmp_path / "no_cards").mkdir()
+    (tmp_path / "no_cards" / "metrics.json").write_text("{}", encoding="utf-8")
+    assert client.get("/api/runs/no_cards/reason-cards").json() is None
 
 
 def test_ladder_absent_404(ran):
