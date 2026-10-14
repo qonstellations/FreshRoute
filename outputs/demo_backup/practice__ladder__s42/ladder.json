@@ -1,0 +1,65 @@
+{
+  "scenario": "practice",
+  "seed": 42,
+  "realization": "base",
+  "official_baseline": null,
+  "ladder": [
+    {
+      "policy": "fifo",
+      "kpis": {
+        "spoilage_kg": 945.5231000000006,
+        "spoilage_pct": 1.6990941021760462,
+        "demand_fulfillment_pct": 59.59305965281196,
+        "min_dest_fill_pct": 24.528868976559288,
+        "net_inr": 1271668.4249300002,
+        "violations": 37
+      }
+    },
+    {
+      "policy": "fefo",
+      "kpis": {
+        "spoilage_kg": 928.3253400000006,
+        "spoilage_pct": 1.668189925867039,
+        "demand_fulfillment_pct": 54.02238927179263,
+        "min_dest_fill_pct": 35.34788138475756,
+        "net_inr": 1263250.2956457003,
+        "violations": 0
+      }
+    },
+    {
+      "policy": "milp",
+      "kpis": {
+        "spoilage_kg": 1012.7162800000007,
+        "spoilage_pct": 1.8198394714266266,
+        "demand_fulfillment_pct": 62.50682893942249,
+        "min_dest_fill_pct": 18.724866408819338,
+        "net_inr": 1431617.560667413,
+        "violations": 0
+      }
+    },
+    {
+      "policy": "milp_markdown",
+      "kpis": {
+        "spoilage_kg": 1012.7162800000007,
+        "spoilage_pct": 1.8198394714266266,
+        "demand_fulfillment_pct": 62.50682893942249,
+        "min_dest_fill_pct": 18.724866408819338,
+        "net_inr": 1431590.6362199232,
+        "violations": 0
+      }
+    }
+  ],
+  "extras": [
+    {
+      "policy": "last_day_50",
+      "kpis": {
+        "spoilage_kg": 945.5231000000006,
+        "spoilage_pct": 1.6990941021760462,
+        "demand_fulfillment_pct": 59.59305965281196,
+        "min_dest_fill_pct": 24.528868976559288,
+        "net_inr": 1227514.8714906,
+        "violations": 37
+      }
+    }
+  ]
+}

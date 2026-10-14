@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "run_id": "practice__milp_markdown__s42",
+  "git_sha": "e70f566be32e405938ac69f82dc22f0b5e7aec7b",
+  "scenario": "data/scenarios/practice",
+  "scenario_sha256": "fbeea2f29fb9babb3ee9c7ad15580d897c4782ad8f74142e8ea320200d94c5a0",
+  "policy": "milp_markdown",
+  "flags": {
+    "markdown": true,
+    "newsvendor": false
+  },
+  "seed": 42,
+  "realization": "base",
+  "package_versions": {
+    "python": "3.13.16",
+    "scipy": "1.18.1",
+    "pulp": "4.0.0",
+    "highspy": "1.15.1",
+    "pandas": "2.3.3"
+  },
+  "solver": {
+    "status": "1",
+    "solve_seconds": 8.248124459001701,
+    "size": {
+      "vars": 4906,
+      "constraints": 422
+    },
+    "mip_gap": 0.008154203600534584,
+    "slack_usage": {},
+    "objective_inr": 1454944.58547345,
+    "fallback_used": false
+  },
+  "timestamp_utc": "2026-10-14T13:50:33+00:00"
+}
