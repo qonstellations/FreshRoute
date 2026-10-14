@@ -22,41 +22,6 @@ button:disabled { opacity: .6; cursor: default; }
 .caption, .placeholder { color: var(--muted); font-size: .85rem; }
 table { border-collapse: collapse; margin: 8px 0; background: var(--panel); }
 th, td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; font-size: .9rem; }
-/* Plan tab */
-.section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; }
-.section-head h2, .section-head h3 { margin: 0; }
-h2 .caption { font-weight: 400; margin-left: 8px; }
-a.button { padding: 8px 12px; border: 1px solid var(--border); border-radius: 4px; background: var(--panel);
-  color: var(--text); text-decoration: none; font-size: .9rem; }
-.scroll { max-height: 420px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; margin-top: 8px; }
-.scroll table { margin: 0; width: 100%; }
-.scroll thead th { position: sticky; top: 0; background: #eef1f4; }
-td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
-pre.whatsapp { background: #e7f6e9; border: 1px solid #c3e6c8; border-radius: 6px; padding: 12px; max-height: 260px;
-  overflow: auto; white-space: pre-wrap; font-size: .85rem; }
-tr.clickable { cursor: pointer; }
-tr.clickable:hover td { background: #f0f7f3; }
-tr.infeasible td { color: var(--muted); }
-.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(520px, 100vw); overflow: auto; z-index: 1000;
-  background: var(--panel); border-left: 1px solid var(--border); box-shadow: -6px 0 24px rgb(0 0 0 / .12); padding: 16px 20px; }
-.drawer .close { position: absolute; top: 10px; right: 12px; border: 0; font-size: 1.4rem; line-height: 1; padding: 4px 8px; }
-.drawer h3 { margin: 0 32px 8px 0; }
-.drawer h4 { margin: 16px 0 6px; }
-.drawer table { width: 100%; }
-.card-text { background: var(--info-bg); padding: 10px 12px; border-radius: 4px; }
-dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; font-size: .9rem; }
-dt { color: var(--muted); }
-dd { margin: 0; }
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-top: 8px; }
-.discount-card { display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 10px 12px;
-  background: var(--warn-bg); border-color: #f0d68a; border-radius: 6px; }
-.discount-card strong { font-size: 1.1rem; }
-.map { height: 380px; margin-top: 8px; border: 1px solid var(--border); border-radius: 6px; z-index: 0;
-  background-color: #eef3f7;
-  background-image: linear-gradient(#dde5ec 1px, transparent 1px), linear-gradient(90deg, #dde5ec 1px, transparent 1px);
-  background-size: 40px 40px; }
-.legend { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin: 6px 0 0; font-size: .85rem; color: var(--muted); }
-.legend i, i.dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
 /* App shell (App.tsx, RunButton.tsx): aurora header, tab pill, Plan button sweep + burst */
 .shell-header { overflow: hidden; }
 .shell-header::before { content: ""; position: absolute; inset: -60% -10%; z-index: 0; pointer-events: none; opacity: .55;
