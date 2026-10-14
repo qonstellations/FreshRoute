@@ -1,11 +1,9 @@
 # ARCHITECTURE.md
 
-**FreshRoute — Plan A+** (ShelfSense solver spine + stress test + replan) · 20-hour build · team of 3
-
 > Single source of truth for **how the system works**.
-> Data shapes → `DATABASE.md` · Who does what and when → `TODO.md` · How we work together → `CONTRIBUTING.md`.
+> Data shapes → `DATABASE.md` · Decisions → `DECISIONS.md`.
 >
-> **Rule #1: if the organizers publish a cost model, theirs overrides everything in this file.** Every coefficient and formula below exists so that all policies and baselines are scored identically and so we can practise before the real data arrives. Map every coefficient to the organizers' columns at H0 (see `TODO.md` S-02).
+> **Rule #1: if the organizers publish a cost model, theirs overrides everything in this file.** Every coefficient and formula below exists so that all policies and baselines are scored identically and so we can practise before the real data arrives. Map every coefficient to the organizers' columns when their material is available (`DATABASE.md` §8).
 
 ---
 
@@ -15,15 +13,15 @@
 1. Synthetic/organizer data loading with integrity checks.
 2. Shared cost model + seeded simulator that scores every policy identically.
 3. Independent constraint validator.
-4. Baselines: organizers' baseline (official), FIFO-nearest, FEFO-greedy, last-day-50%-markdown.
+4. Baselines: FIFO-nearest, FEFO-greedy, last-day-50%-markdown (the organizers' baseline is planned, not built: no organizer material exists).
 5. Feasibility pre-filter (shelf-life + delivery-window) → allocation MILP on HiGHS.
 6. Disclosed tiered markdown rule.
 7. Scoreboard, attribution ladder, net-revenue waterfall, reason cards, dispatch sheet.
 
-**A+ add-ons** — each behind a flag, each independently removable. Priority order (and reverse cut order):
-1. **Monte Carlo stress test** with P10–P90 bands (~2 h).
-2. **Event-driven replan** with frozen dispatches and a diff view (~3 h).
-3. **Newsvendor quantile demand target** (~1 h).
+**A+ add-ons** — each behind a flag, each independently removable:
+1. **Monte Carlo stress test** with P10–P90 bands.
+2. **Event-driven replan** with frozen dispatches and a diff view.
+3. **Newsvendor quantile demand target**.
 4. **LLM narrator / natural-language event box** — stretch only. A template-based narration is the baseline; the LLM is optional polish.
 
 **Explicitly out of scope** (do not start): statsforecast / demand forecasting, the full agentic/Copilot stack (Variant B), DP-optimized markdown (Variant C), OR-Tools routing, live API calls during the demo, a database server, authentication.
@@ -41,8 +39,8 @@ Expected rubric result for A+ is ~82–84/100. That is a judgement-based project
 | Net economic outcome (20) | Objective is the organizers' cost terms; one cost model for all policies | `costmodel.py`, `simulator.py` |
 | Allocation feasibility (15) | Infeasible arcs have no variable; independent validator reports 0 violations | `feasibility.py`, `validator` |
 | Robustness & sensitivity (10) | MC bands, q10/ε sensitivity, replan | `stress.py`, `replan.py`, sensitivity harness |
-| Engineering & reproducibility (10) | One seeded command, tests, run manifest, fresh-clone test | `cli.py`, `tests/`, `run_manifest.json` |
-| Explainability & commercial (10) | Reason cards, dispatch sheet, positioning slide | `reasons.py`, `dispatch_sheet.py`, `frontend/` |
+| Engineering & reproducibility (10) | One seeded command, tests, run manifest, fresh-clone check | `cli.py`, `tests/`, `run_manifest.json` |
+| Explainability & commercial (10) | Reason cards, dispatch sheet, dashboard | `reasons.py`, `dispatch_sheet.py`, `frontend/` |
 
 Total = 20+15+20+15+10+10+10 = **100**. The first four rows (70 pts) are deterministic metrics against the organizers' cost model and hidden scenarios: **a correct optimizer plus an honest simulator wins those points; polish does not.**
 
@@ -56,18 +54,18 @@ Total = 20+15+20+15+10+10+10 = **100**. The first four rows (70 pts) are determi
 4. **One simulator scores everything.** FIFO, FEFO, MILP, MILP+markdown, organizer baseline all go through the same `simulator.py` and `costmodel.py`.
 5. **Deterministic.** Same scenario + same seed + same flags ⇒ byte-identical `metrics.json` (apart from the timestamp/runtime fields in `run_manifest.json`).
 6. **The LLM never decides.** It may translate a sentence into a schema-validated event and narrate metrics JSON it was given. HiGHS decides.
-7. **Add-ons are flags, not forks.** `--newsvendor`, `--no-markdown`, `stress`, `replan` can each be switched off without breaking the spine.
+7. **Add-ons are flags, not forks.** `--newsvendor`, `stress`, `replan` and the markdown stage (policy `milp` vs `milp_markdown`) can each be switched off without breaking the spine.
 8. **Never return "infeasible", never crash on a scenario.** Soft-constraint slacks, solve time limit, and a FEFO-greedy fallback plan (see §9.5).
 9. **The UI shows, the engine decides.** `freshroute.api` serves `outputs/` files verbatim and may enqueue an engine run; `frontend/` renders the JSON it is given. Neither computes a KPI (D-18).
-10. **Offline demo.** All demo data is local; no live API; backup video queued.
-11. **Measured numbers only.** Every number on a slide comes from `make demo` output with a fixed seed. Label synthetic data as synthetic.
+10. **Offline demo.** All demo data is local; no live API; `outputs/demo_backup/` and a recorded video are the fallbacks.
+11. **Measured numbers only.** Every reported number comes from `make demo` output with a fixed seed. Label synthetic data as synthetic.
 
 ---
 
 ## 4. System overview
 
 ```
- data/scenarios/<name>/*.csv + scenario.json        organizer files ─► adapters/organizer.py
+ data/scenarios/<name>/*.csv + scenario.json        organizer files ─► adapters/organizer.py (planned)
                        │                                                     │
                        └───────────────► io.load_scenario() ◄────────────────┘
                                   (units, pct→fraction, integrity checks)
@@ -77,7 +75,7 @@ Total = 20+15+20+15+10+10+10 = **100**. The first four rows (70 pts) are determi
                  ▼                            ▼                              ▼
           feasibility.py              policies/*                     newsvendor.py (A+)
           (arcs table)        fifo · fefo · last_day_50              demand targets
-                 │            organizer_baseline · milp ◄────────────────────┘
+                 │            milp                  ◄────────────────────┘
                  └──────────────────────► plan.csv + trips.csv
                                               │
                                               ▼
@@ -107,57 +105,58 @@ The UI is a **viewer**: it shows what the engine wrote to `outputs/<run_id>/` an
 ```
 freshroute/
 ├── README.md  AGENTS.md  DECISIONS.md
-├── docs/                       # ARCHITECTURE.md  DATABASE.md  TODO.md  CONTRIBUTING.md  RESEARCH-v1.md
+├── docs/                       # ARCHITECTURE.md  DATABASE.md  RESEARCH-v1.md
 ├── Makefile  pyproject.toml  uv.lock  .python-version  .gitignore      # uv only, no requirements.txt (D-15)
 ├── data/
-│   ├── organizer/              # raw organizer files (gitignored unless rules allow committing)
-│   ├── agmarknet/              # cached CSV snapshot (Agmarknet via data.gov.in)
-│   └── scenarios/<name>/       # our 8 CSV tables (+ optional geo.csv) + scenario.json
+│   ├── organizer/              # raw organizer files (gitignored; never created so far)
+│   ├── agmarknet/              # empty; planned cache for an Agmarknet snapshot (no API key available)
+│   └── scenarios/<name>/       # our 8 CSV tables (+ geo.csv) + scenario.json
 ├── backend/                    # everything server-side (D-16)
 │   ├── src/freshroute/
 │   │   ├── cli.py  config.py  schema.py  io.py  events.py
 │   │   ├── costmodel.py  shelflife.py  feasibility.py
 │   │   ├── generator.py  discount.py  simulator.py  metrics.py  ladder.py
-│   │   ├── stress.py  replan.py  newsvendor.py
+│   │   ├── stress.py  sensitivity.py  replan.py  newsvendor.py  perf.py
 │   │   ├── reasons.py  dispatch_sheet.py  narrator.py
 │   │   ├── api/                # FastAPI: serves outputs/ verbatim, may enqueue a run (§16, D-18)
 │   │   │   └── app.py  data_access.py  routes.py  schemas.py  jobs.py
-│   │   ├── adapters/organizer.py
-│   │   └── policies/  base.py  fifo.py  fefo.py  last_day_50.py  organizer_baseline.py  milp.py
+│   │   ├── adapters/           # empty package; planned: organizer.py (organizer-format adapter)
+│   │   └── policies/  base.py  fifo.py  fefo.py  last_day_50.py  milp.py
+│   │                           # planned: organizer_baseline.py
 │   ├── src/validator/          # second top-level package, INDEPENDENT of freshroute logic (D-17)
 │   │   └── validate.py  rules.py
 │   └── tests/                  # fixtures/tiny_3batch/  fixtures/metrics_example.json  test_*.py
-├── frontend/                   # React SPA: Vite + TypeScript + recharts (D-19) + Mantine + motion (D-24)
+├── frontend/                   # React SPA: Vite + TypeScript + recharts + Mantine + motion + GSAP (D-19, D-24, D-27)
 │   ├── package.json  package-lock.json  vite.config.ts  tsconfig.json  index.html
-│   └── src/  main.tsx  App.tsx  api/  components/  pages/  lib/  types.ts
-├── scripts/                    # build_prices.py (Agmarknet → prices.csv)
-└── outputs/                    # gitignored, EXCEPT outputs/demo_backup/ (committed at freeze)
+│   └── src/  main.tsx  App.tsx  api/  components/  tabs/  lib/  types.ts  theme.ts
+├── scripts/                    # empty; planned: build_prices.py (Agmarknet → prices.csv)
+└── outputs/                    # gitignored, EXCEPT outputs/demo_backup/
 ```
 
 ---
 
-## 6. Modules, owners, responsibilities
+## 6. Modules and responsibilities
 
-Owners: **P1** = Optimization lead · **P2** = Simulation, metrics & validation · **P3** = Product, UI & AI/pitch. (Role definitions in `CONTRIBUTING.md`.)
-
-| Module | Owner | Responsibility |
-|---|---|---|
-| `cli.py`, `config.py`, `schema.py`, `io.py` | P2 | CLI entry points; tunables; column-name constants; CSV loading, unit conversion (`*_pct` → fraction), integrity checks |
-| `costmodel.py` | P2 | The only place cost formulas live (see §7) |
-| `shelflife.py` | P1 | `decay(T, ref_temp_c, q10)`, `usable_life_at_arrival(...)` |
-| `feasibility.py` | P1 | Builds the `arcs` table (feasible and rejected, with reason codes) |
-| `policies/milp.py` | P1 | Allocation MILP on HiGHS (§9) |
-| `policies/fifo.py`, `fefo.py`, `last_day_50.py`, `organizer_baseline.py` | P2 | Baselines (§12) |
-| `discount.py` | P3 | Tiered markdown rule (§10), pure function + tests |
-| `simulator.py`, `metrics.py`, `ladder.py` | P2 | Execution, KPIs, attribution ladder, waterfall data |
-| `validator` (`backend/src/validator/`) | P2 | Independent constraint checker (§11) |
-| `reasons.py` | P1 (fields) / P3 (templates) | Reason-card fields and rendered text |
-| `stress.py`, `newsvendor.py` | P2 | Monte Carlo + sensitivity; quantile demand targets |
-| `events.py`, `replan.py` | P1 | Event schema (pydantic), apply, freeze, re-solve, diff |
-| `generator.py`, `adapters/organizer.py` | P3 | Practice-data generator; organizer-format adapter (P2 owns the *export* of plans in the organizer's submission format) |
-| `dispatch_sheet.py`, `narrator.py` | P3 | Dispatch sheet, narration (template first, LLM optional) |
-| `api/` (FastAPI) | P2 | HTTP surface over `outputs/` and the run queue; never a KPI (§16, D-18, D-21) |
-| `frontend/` (React) | P3 | Dashboard: scoreboard, plan, robustness, replan, trust (§16, D-19) |
+| Module | Responsibility |
+|---|---|
+| `cli.py`, `config.py`, `schema.py`, `io.py` | CLI entry points; tunables; column-name constants; CSV loading, unit conversion (`*_pct` → fraction), integrity checks |
+| `costmodel.py` | The only place cost formulas live (see §7) |
+| `shelflife.py` | `decay(T, ref_temp_c, q10)`, `usable_life_at_arrival(...)` |
+| `feasibility.py` | Builds the `arcs` table (feasible and rejected, with reason codes) |
+| `policies/milp.py` | Allocation MILP on HiGHS (§9) |
+| `policies/fifo.py`, `fefo.py`, `last_day_50.py` | Baselines (§12); `organizer_baseline.py` is planned, not built |
+| `discount.py` | Tiered markdown rule (§10), pure function |
+| `simulator.py`, `metrics.py`, `ladder.py` | Execution, KPIs, attribution ladder, waterfall data |
+| `validator` (`backend/src/validator/`) | Independent constraint checker (§11) |
+| `reasons.py` | Reason-card fields and rendered text |
+| `stress.py`, `sensitivity.py`, `newsvendor.py` | Monte Carlo and sensitivity; quantile demand targets |
+| `events.py`, `replan.py` | Event schema (pydantic), apply, freeze, re-solve, diff |
+| `generator.py` | Synthetic scenario generator (v3, A-47, A-49) |
+| `perf.py` | Scale benchmark harness (`python -m freshroute.perf`) |
+| `adapters/` | Empty package; the organizer-format adapter (`adapters/organizer.py`) is planned |
+| `dispatch_sheet.py`, `narrator.py` | Dispatch sheet, narration (template first, LLM optional) |
+| `api/` (FastAPI) | HTTP surface over `outputs/` and the run queue; never a KPI (§16, D-18, D-21) |
+| `frontend/` (React) | Dashboard: score, trucks, what-if, trust (§16, D-19, D-27) |
 
 Key function contracts (names are the contract; internals are free):
 
@@ -170,8 +169,8 @@ policies.base.Policy.plan(scenario, ctx) -> Plan                           # pla
 discount.build_discounts(scenario, plan) -> DataFrame                      # discounts.csv
 simulator.simulate(scenario, plan, discounts, realization) -> SimResult    # sim_ledger.csv
 metrics.compute(scenario, plan, discounts, sim) -> dict                    # metrics.json
-validator.validate.validate(scenario, plan, discounts) -> ValidationReport # validation.json
-stress.run(scenario, plan, discounts, n, seed) -> StressResult
+validator.validate.validate(scenario, plan, discounts, overship_slack) -> ValidationReport   # validation.json
+stress.run_stress(scenario, policy, n, seed, out, named) -> Path           # stress.csv, stress_summary.json
 replan.replan(scenario, plan, trips, discounts, event, *, markdown, run_id, seed) -> dict
 replan.replan_run(run_dir, event, out=None) -> Path                        # replan/<event_id>/
 ```
@@ -206,11 +205,12 @@ sold             = min(on_hand_sellable, effective_demand)      # FEFO within th
 **Economics.**
 ```
 Revenue        = Σ sold × price × (1 − discount)
+COGS           = Σ sold × unit_cost_inr_kg                     (costmodel.cost_of_goods_sold, A-48)
 Transport      = Σ trips × cost_fixed_inr_trip + Σ kg × cost_var_inr_kg
 Handling       = Σ kg_delivered × handling_cost_inr_kg           (destination; origin handling = 0, see A-07)
 Spoilage cost  = Σ spoiled_kg × (unit_cost + disposal_cost − salvage_value)
 Discount cost  = Σ sold × price × discount     # REPORTED separately; already netted inside Revenue — NEVER subtracted again
-Net            = Revenue − Transport − Handling − Spoilage cost
+Net            = Revenue − COGS − Transport − Handling − Spoilage cost
 ```
 
 **Demand fulfillment** = `Σ min(sold, base_demand) / Σ base_demand` over (destination, commodity, day), where `base_demand` is the undiscounted demand of the realization. This equals the research doc's `Σ min(delivered_sellable, demand) / Σ demand` with "delivered_sellable" read as "kg available to sell that day". Also report **minimum destination fill rate** (allocation balance).
@@ -219,9 +219,13 @@ Net            = Revenue − Transport − Handling − Spoilage cost
 
 **Feasibility score** = number of **hard** violations reported by `validator` (never by optimizer code).
 
+**Procurement accounting (D-28, A-48).** Stock is bought at `unit_cost_inr_kg`. Sold kg carry it as cost of goods sold; spoiled kg carry it inside the spoilage cost (`unit_cost + disposal − salvage`); stock still alive at horizon end is inventory held at cost, so it carries neither and is valued 0.
+
 **Carry-over.** Stock still unexpired at horizon end (at origin or at destinations) is neither spoiled nor valued; it is reported as `carryover_kg` so nothing is hidden (A-06).
 
-### 7.1 Worked feasibility example (unit-test this, P1 + P2)
+**Other `costmodel.py` functions.** `demand_uplift(ε, discount) = 1 + min(ε·discount, MAX_UPLIFT)`; `salvage_cap_frac(price, salvage) = 1 − salvage/price` (largest discount that keeps the shelf price at or above salvage); `shipped_margin(price, h_c, unit_cost, c_var, hc_d) = (price − unit_cost)(1 − h_c) − c_var − hc_d` (₹ per shipped kg if it all sells at list; the handling-loss kg are priced separately as spoilage). `feasibility.margin_inr_kg` is `shipped_margin`.
+
+### 7.1 Worked feasibility example (unit-tested)
 
 Commodity: `ref_temp_c = 20`, `q10 = 2`, `min_sell_window_h = 24`. Batch: `RSL = 100 h`, `available_from_h = 0`, `storage_temp_c = 20`, dispatched at `dispatch_h = 5` ⇒ `wait_h = 5`. Destination `handling_time_h = 2`.
 
@@ -232,6 +236,8 @@ Commodity: `ref_temp_c = 20`, `q10 = 2`, `min_sell_window_h = 24`. Batch: `RSL =
 | Ambient, long | 30 °C | 2 | 40 | 80 | 100 − 5 − 80 − 2 = **13** | **no** → arc removed |
 
 (Store decay: `20 °C` = `ref_temp_c` ⇒ decay 1 ⇒ wait consumes 5 h.)
+
+Margin for the reefer arc, with price ₹30/kg, `unit_cost` ₹15/kg, `handling_loss_frac` 2.5 %, `cost_var` ₹2/kg, `handling_cost` ₹1/kg: `(30 − 15)(1 − 0.025) − 2 − 1 = 11.625` ₹ per shipped kg. A full hand-computed run (net ₹5,090.25, cost of goods sold ₹17,502.75) is in `backend/tests/fixtures/tiny_3batch/expected/README.md`.
 
 ---
 
@@ -262,14 +268,14 @@ The MILP builds variables only from `feasible = true` rows. Shelf-life feasibili
 ### 9.2 Objective (maximize)
 
 ```
-Σ_A x · ( p·(1 − h_c) − c_var(lane) − hc_d − λ·h_c·s_c + ε_fefo / usable_life )
+Σ_A x · ( (p − unit_cost)·(1 − h_c) − c_var(lane) − hc_d − λ·h_c·s_c + ε_fefo / usable_life )
  − Σ n · c_fixed(lane)
  − Σ_b λ · s_c · e_b · u_b
  − PENALTY · Σ slacks
 ```
 where `h_c = handling_loss_frac`, `s_c = unit_cost + disposal_cost − salvage_value` (per-kg spoilage cost), `hc_d = handling_cost_inr_kg`, `e_b = 1` if unshipped stock of batch `b` would expire at origin within the horizon else `0`, `λ = LAMBDA_SPOIL` (default 1), `ε_fefo/usable_life` = FEFO tie-breaker (must stay small: keep it under 1 % of the smallest per-kg margin; test it).
 
-The coefficients must reproduce the simulator's accounting. **Consistency test (C-04):** with `overship_slack = 0`, markdown off, p50 realization, the simulator's `net_inr` of the MILP plan equals the MILP objective (excluding the tie-break and slack terms) within a small tolerance.
+The first term is `shipped_margin` (§7). The coefficients must reproduce the simulator's accounting, including cost of goods sold. **Consistency test:** with `overship_slack = 0`, markdown off, p50 realization, the simulator's `net_inr` of the MILP plan equals the MILP objective (excluding the tie-break and slack terms) within a small tolerance.
 
 ### 9.3 Constraints
 
@@ -288,11 +294,11 @@ Indexing note (D-05): the research doc writes the demand cap with dispatch day `
 `x = 0, u = qty` is always feasible, so only C6 (and any organizer "must-serve"/minimum-fill rule) needs slacks. Each soft constraint gets a non-negative slack with `PENALTY = 10 × max price in the scenario`. Slack usage is written to `run_manifest.json` (`slack_usage`). In replan, residual capacities that go negative after freezing are clamped to 0 and logged.
 
 ### 9.5 Solver settings and fallbacks
-- Modeling: **PuLP → HiGHS** by default (readable constraints); `scipy.optimize.milp` (HiGHS, SciPy ≥ 1.9) is the fallback if PuLP/highspy won't install. P1 verifies both at S-04 and records the decision (D-02). Verify that time-limit and gap options actually work in the smoke test; do not assume.
+- Modeling: **PuLP → HiGHS** by default (readable constraints); `scipy.optimize.milp` (HiGHS, SciPy ≥ 1.9) is the fallback if PuLP/highspy won't install. The decision is recorded in D-02/D-14; the solver smoke test verifies that time-limit and gap options actually work.
 - `MILP_TIME_LIMIT_S = 30`; return the incumbent. `MIP_REL_GAP = 0.01` (assumption).
 - **No incumbent by the limit** → return the FEFO-greedy plan, set `fallback_used = true` in the manifest, and show a banner in the UI. Never crash.
-- **Scale fallback** (hidden data much larger; U-02, `_plan_aggregated` in `policies/milp.py`): triggered when candidate arcs `batches × destinations × vehicles × days > AGG_ARC_THRESHOLD` (practice 14,400 and the fixtures stay on the batch-level path). Aggregate batches by `(commodity, origin, available_from_h, RSL bucket of AGG_RSL_BUCKET_H = 6 h)`; the pseudo-batch takes the group's total kg, **min** RSL and **max** storage temperature, so any arc feasible for it is feasible for every member (A-41). Vehicles are pooled too (A-46): one lane-class row per `(origin, mode, available_from_h)` carries the arcs, and C2/C3 count trips per capacity class inside it. Solve (same time limit; no incumbent → FEFO-greedy on the aggregate), split each arc's kg back to members pro rata to `qty_kg`, re-run the batch-level feasibility check on the used batches/dests/lane classes and drop lines whose arc is infeasible, hand each class's trips to member vehicles (each within its `max_trips_day`) and fill lines first-fit into them, then run the independent validator; any violation left → FEFO-greedy on the full scenario with `fallback_used = true`. The manifest's `solver.aggregation` block records groups, vehicle classes, aggregate arcs, dropped lines, unassigned kg and validator violations. Measured numbers: A-40.
-- Size estimate from the research (200 batches × 8 destinations × 3 days × 3 vehicles → a few thousand variables after filtering, seconds to solve) is an **engineering estimate, not a benchmark**. Confirm on day 0 and at U-02.
+- **Scale model** (`_plan_aggregated` in `policies/milp.py`): used when candidate arcs `batches × destinations × vehicles × days > AGG_ARC_THRESHOLD` (`AGG_ARC_THRESHOLD = 20,000`; the `tiny_3batch` and `small` fixtures stay on the batch-level path, `practice` and larger use the pooled model). The unpooled model finds no incumbent in 30 s on `practice` (A-50). Aggregate batches by `(commodity, origin, available_from_h, RSL bucket of AGG_RSL_BUCKET_H = 6 h)`; the pseudo-batch takes the group's total kg, **min** RSL and **max** storage temperature, so any arc feasible for it is feasible for every member (A-41). Vehicles are pooled too (A-46): one lane-class row per `(origin, mode, available_from_h)` carries the arcs, and C2/C3 count trips per capacity class inside it. Solve (same time limit; no incumbent → FEFO-greedy on the aggregate), split each arc's kg back to members pro rata to `qty_kg`, re-run the batch-level feasibility check on the used batches/dests/lane classes and drop lines whose arc is infeasible, hand each class's trips to member vehicles (each within its `max_trips_day`) and fill lines first-fit into them, then run the independent validator; any violation left → FEFO-greedy on the full scenario with `fallback_used = true`. The manifest's `solver.aggregation` block records groups, vehicle classes, aggregate arcs, dropped lines, unassigned kg and validator violations. Scale measurements: A-40.
+- The research's size estimate (200 batches × 8 destinations × 3 days × 3 vehicles → a few thousand variables after filtering, seconds to solve) was an **engineering estimate, not a benchmark**; measure with `uv run python -m freshroute.perf` (A-40).
 
 ### 9.6 Dispatch prioritization
 `priority_score = (1 / usable_life_at_arrival_h) × (kg × price)`. The plan lists shipments in descending score; every line shows `slack_h = usable_life_at_arrival_h − min_sell_window_h`.
@@ -325,7 +331,7 @@ Shelf price (D-08): the simulator uses **one shelf price per destination × comm
 
 Inputs: scenario tables, `plan.csv`, `discounts.csv`. Output: `validation.json` with `violations` (hard) and `warnings` (soft).
 
-**Hard violations** (the feasibility score counts these; confirm against the organizers' definition at H0):
+**Hard violations** (the feasibility score counts these; confirm against the organizers' definition once published):
 `UNKNOWN_ID` · `NEGATIVE_QTY` · `STOCK_OVERDRAW` (Σ shipped > qty) · `NOT_AVAILABLE` (dispatch before `available_from_h`) · `NO_LANE` · `MODE_MISMATCH` · `RAIL_SLOT` · `SHELF_LIFE` · `DELIVERY_WINDOW` · `VEHICLE_CAPACITY` · `VEHICLE_TRIPS_PER_DAY` · `VEHICLE_AVAILABILITY` · `RECEIVING_CAPACITY` · `DISCOUNT_CAP` · `DISCOUNT_BELOW_SALVAGE` · `DISCOUNT_NOT_MONOTONE`.
 
 **Warnings** (reported, not counted): `DEMAND_CAP_EXCEEDED` (over `target·(1+overship_slack)`), `SLACK_USED`, `FALLBACK_PLAN_USED`.
@@ -338,7 +344,7 @@ Independence rules: re-implement `decay`/usable-life from §7 (do not import `sh
 
 | Policy (`--policy`) | Definition |
 |---|---|
-| `organizer_baseline` | The organizers' documented baseline — **the official comparison**. Implement exactly from their doc. |
+| `organizer_baseline` | **Planned, not built.** The organizers' documented baseline would be the official comparison and must be implemented exactly from their doc; no organizer material exists, so the name is recognised by the CLI/API but refuses to run. |
 | `fifo` | FIFO-nearest: dispatch in arrival order to the closest destination with remaining demand. Respects physical limits (vehicle capacity, trips/day, receiving capacity, demand cap) but does **not** check shelf-life/window feasibility — that is what a naive dispatcher does. Violations it incurs are reported honestly. |
 | `fefo` | FEFO-greedy: earliest-expiry batch first, to the highest-margin **feasible** arc (uses `feasibility.py`) that still has capacity, same demand caps as the MILP. This is a strong baseline: the research cites a simulation where FEFO cut expired product by 50 % vs FIFO (secondhand), so beating only FIFO would look like a strawman. |
 | `last_day_50` | FIFO-nearest allocation + 50 % markdown when remaining life ≤ 24 h, capped at `min(50 %, max_discount_pct)` and the salvage floor (kept fair on purpose — "is your baseline fair?" is a likely judge question). |
@@ -347,10 +353,10 @@ Independence rules: re-implement `decay`/usable-life from §7 (do not import `sh
 
 **Attribution ladder:** `fifo → fefo → milp → milp_markdown`, all on the same scenario/seed/simulator, headline evaluated on the deterministic **base realization** (p50 demand, p50 travel, p50 RSL). It shows where each rupee of improvement comes from.
 
-**Waterfall** (must reconcile exactly): `baseline net → + spoilage cost avoided → + extra sales (at list price) → − extra transport → − extra handling → − discounts given → = FreshRoute net`. Until C-06 lands (organizer doc), the waterfall baseline is `fefo` and `ladder.json.official_baseline` is `null` (`freshroute ladder --scenario X --seed N`, `ladder.py`).
+**Waterfall** (must reconcile exactly): `baseline net → + spoilage cost avoided → + extra sales (at list price) → − cost of extra goods sold → − extra transport → − extra handling → − discounts given → = FreshRoute net` (6 delta steps). Without an organizer baseline, the waterfall baseline is `fefo` and `ladder.json.official_baseline` is `null` (`freshroute ladder --scenario X --seed N`, `ladder.py`).
 Invariant (unit-tested, tolerance ₹0.01): `baseline_net + Σ deltas = plan_net`. (The research doc's waterfall omitted the handling step; without it the bars would not sum.)
 
-Step definitions (plan P vs baseline B, read from `economics_inr`): spoilage cost avoided = `spoilage_cost_B − spoilage_cost_P`; extra sales (list) = `gross_P − gross_B`; extra transport = `−(transport_P − transport_B)`; extra handling = `−(handling_P − handling_B)`; discounts given = `−(discount_cost_P − discount_cost_B)`. They sum to `net_P − net_B` exactly because `net = gross − discount_cost − transport − handling − spoilage_cost`.
+Step definitions (plan P vs baseline B, read from `economics_inr`): spoilage cost avoided = `spoilage_cost_B − spoilage_cost_P`; extra sales (list) = `gross_P − gross_B`; cost of extra goods sold = `−(cogs_P − cogs_B)`; extra transport = `−(transport_P − transport_B)`; extra handling = `−(handling_P − handling_B)`; discounts given = `−(discount_cost_P − discount_cost_B)`. They sum to `net_P − net_B` exactly because `net = gross − discount_cost − cost_of_goods_sold − transport − handling − spoilage_cost`.
 
 ---
 
@@ -380,7 +386,7 @@ The simulator executes the plan; it does **not** enforce windows/capacities (tha
 - **Paired comparison:** plan and baseline are executed on the *same* sampled realizations (common random numbers).
 - Sampling (A-13): demand and RSL via a piecewise-linear inverse CDF through (0.1, p10), (0.5, p50), (0.9, p90), extrapolated at the tails with the end-segment slope and clipped at 0. Travel time: `u ≤ 0.5 → p50`; `0.5 < u ≤ 0.9 → linear p50→p90`; `u > 0.9 →` extrapolated but capped at `1.5 × p90` (delays only; no early arrivals).
 - Output: P10/P50/P90 for each KPI for plan and baseline, plus **share of scenarios where the plan beats the baseline** on net ₹ and on spoilage (`stress_summary.json`, `stress.csv`). Realized shortfalls appear as spoilage, not as validator violations (the validator checks the plan against the data it was given).
-- Implementation (AD-03, A-42): `freshroute stress` solves the plan and the baseline (`ladder.BASELINE`, `fefo` until C-06) **once** on the base scenario, then re-simulates both under each realization. `--n 50` is the first fallback, `--named` the last (3 fixed quantile sets, `MC_NAMED`). **Measured** (2026-10-14, this laptop, SYNTHETIC `practice`, seed 42, n = 200): **54–56 s wall** end to end, of which ~30 s is the one time-limited MILP solve; each simulate + metrics call is ~0.05 s. Two runs gave byte-identical `stress.csv` and `stress_summary.json` (the MILP solve itself is time-limited, so A-40's load caveat applies to the plan being stressed).
+- Implementation (A-42): `freshroute stress` solves the plan and the baseline (`ladder.BASELINE`, `fefo` while there is no organizer baseline) **once** on the base scenario, then re-simulates both under each realization. `--n 50` is the first fallback, `--named` the last (3 fixed quantile sets, `MC_NAMED`). Wall time is dominated by the one time-limited MILP solve; the per-realization simulate + metrics calls are cheap. Reproduce with: `uv run freshroute stress --scenario data/scenarios/practice --seed 42` (A-40's load caveat applies to the plan being stressed).
 - **Sensitivity harness:** `q10` (slider), `ε` vs `ε/2`, `overship_slack`, demand ±20 % → `sensitivity.csv`. Required to answer "why trust your elasticity?".
 
 ### 14.2 Event-driven replan (`events.py`, `replan.py`)
@@ -388,8 +394,8 @@ The simulator executes the plan; it does **not** enforce windows/capacities (tha
 - Steps: apply event to a copy of the scenario → **freeze** shipments with `dispatch_h ≤ at_h` → build the residual scenario (reduce `qty_b`, `max_trips_day`, receiving capacity and demand caps by frozen consumption; restrict dispatch to `≥ at_h`) → re-solve → write `replan/<event_id>/`.
 - The event still affects frozen shipments in transit (e.g. a delay moves their arrival and may break shelf life) — the simulator shows that; they simply cannot be reassigned.
 - Diff (`diff.json`): moved batches (batch → old dest/day → new dest/day), changed discounts, ΔKPIs. **ΔKPIs compare "old plan executed in the changed world" vs "replanned"** — the honest do-nothing comparison.
-- Invariants (tests): frozen shipments appear unchanged in the new plan; validator reports 0 hard violations; replan ≤ 5 s on the demo scenario (gate G4). Demo narration may only claim the measured time.
-- As built (AD-02): the residual model is the §9 MILP with frozen use passed in through `ctx["residual_use"]` — trips per `(vehicle, day)` off C3, kg per `(dest, arrival_day)` off C4, frozen kg per destination counted in the C6 fill — and C5 via `demand_cap_override = p50 − frozen / (1 + overship_slack)`, so frozen + new never exceeds the original cap. Dispatch `≥ at_h` = vehicles' `available_from_h` raised to `at_h` (a new trip may leave at `at_h` itself). The solve is capped at `REPLAN_TIME_LIMIT_S` and warm-started from the old plan's undispatched rows (infeasible arcs dropped) while that start satisfies every constraint, else from the FEFO-greedy. Markdown is rebuilt over the whole plan when the run had it. Both sides of the ΔKPIs go through `simulate` + `metrics.compute`; the old side keeps the old `discounts.csv`. Details and limits: A-43.
+- Invariants (tests): frozen shipments appear unchanged in the new plan; validator reports 0 hard violations; replan wall time is bounded by `REPLAN_TIME_LIMIT_S` plus setup (A-43). Demo narration may only claim a time measured on the day.
+- As built: the residual model is the §9 MILP with frozen use passed in through `ctx["residual_use"]` — trips per `(vehicle, day)` off C3, kg per `(dest, arrival_day)` off C4, frozen kg per destination counted in the C6 fill — and C5 via `demand_cap_override = p50 − frozen / (1 + overship_slack)`, so frozen + new never exceeds the original cap. Dispatch `≥ at_h` = vehicles' `available_from_h` raised to `at_h` (a new trip may leave at `at_h` itself). The solve is capped at `REPLAN_TIME_LIMIT_S` and warm-started from the old plan's undispatched rows (infeasible arcs dropped) while that start satisfies every constraint, else from the FEFO-greedy. Markdown is rebuilt over the whole plan when the run had it. Both sides of the ΔKPIs go through `simulate` + `metrics.compute`; the old side keeps the old `discounts.csv`. Details and limits: A-43.
 - No round-trip or return-time modeling: vehicles are limited only by `max_trips_day` (A-08).
 
 ### 14.3 Newsvendor demand target (`newsvendor.py`)
@@ -397,7 +403,7 @@ The simulator executes the plan; it does **not** enforce windows/capacities (tha
   `c_u = p·(1 − h_c) − c_var − hc_d` (lost margin per kg short, using the cheapest feasible lane's `c_var`);
   `c_o = s_c + p · NEWSVENDOR_MARKDOWN_REF` (spoilage cost + markdown loss per kg left over, `NEWSVENDOR_MARKDOWN_REF = 0.20`, A-17).
 - `q*` clamped to `[0.05, 0.95]`; if `c_u ≤ 0` the target is 0. The quantile comes from the same piecewise inverse CDF as §14.1.
-- Output is a `demand_target` table; the MILP reads it in place of `demand_kg_p50` (hook `demand_cap_override`, built at C-03). Off by default in the ladder; `--newsvendor` turns it on; an ablation row shows its effect.
+- Output is a `demand_target` table; the MILP reads it in place of `demand_kg_p50` (hook `demand_cap_override`). Off by default in the ladder; `--newsvendor` turns it on; an ablation row shows its effect.
 
 ### 14.4 Narrator (stretch)
 - `narrator.template_narration(diff_json, metrics_json)` is built first (always available, no network).
@@ -418,7 +424,7 @@ Reason codes for the runner-up: `SHELF_LIFE`, `WINDOW`, `CAPACITY_BOUND`, `DEMAN
 
 ## 16. Dashboard (`frontend/`, React SPA over `backend/src/freshroute/api/`)
 
-Components are Mantine 9; GSAP ScrollTrigger drives scroll choreography (hero intro/parallax, section reveals, marquee, anchor nav) and motion springs animate the reason-card drawer, KPI count-ups, table rows and the Replan diff (D-24, D-27). Every animation respects `prefers-reduced-motion` (static page fallback). The page is one Atelier-style scroll: giant display hero, then numbered sections in plain words — no sidebar, no jargon controls on screen (method/seed/flags live under "Advanced settings").
+Components are Mantine 9; GSAP 3.12.5 ScrollTrigger drives scroll choreography (hero intro/parallax, section reveals, marquee, anchor nav) and motion springs animate the reason-card drawer, KPI count-ups, table rows and the Replan diff (D-24, amended by D-27). Recharts draws the charts; there is no leaflet. Every animation respects `prefers-reduced-motion` (static page fallback). The page is one Atelier-style scroll: giant display hero, then numbered sections in plain words — no sidebar, no jargon controls on screen (method/seed/flags live under "Advanced settings").
 
 | Section | Contents |
 |---|---|
@@ -426,7 +432,7 @@ Components are Mantine 9; GSAP ScrollTrigger drives scroll choreography (hero in
 | 01 · Plan | place cards, one big **Plan** button (auto-scrolls to Score when done), older plans under an accordion |
 | 02 · Score | scoreboard (spoilage kg and %, fulfillment %, net ₹, violations: baseline n vs ours; min fill rate, waterfall, attribution ladder, validator panel) |
 | 03 · Trucks | dispatch table, reason card drawer, discount cards, shelf-life map (offline SVG route network over `geo.csv`, D-24; colour table is the fallback) |
-| 04 · What if | 5 canned events (+ NL box if stretch done), apply, diff view, ΔKPIs, narration + MC fan chart / bands, % scenarios beating baseline, sensitivity table |
+| 04 · What if | 5 canned events, apply, diff view, ΔKPIs, narration + MC fan chart / bands, % scenarios beating baseline, sensitivity table |
 | 05 · Trust | assumptions, cost-model coefficients, `run_manifest.json` (seed, git SHA, scenario hash, solver status) |
 
 ### 16.1 Layers and the rules between them
@@ -448,30 +454,31 @@ frontend/ (React, TS)  ──HTTP──►  freshroute/api/ (FastAPI)  ──in-
 ## 17. CLI contract and Makefile
 
 ```
-freshroute generate  --seed 42 --out data/scenarios/practice_01
-freshroute run       --scenario data/scenarios/practice_01 --policy {organizer_baseline,fifo,fefo,last_day_50,milp,milp_markdown}
-                     --seed 42 [--newsvendor] [--no-markdown] --out outputs/<run_id>      → metrics.json (+ all run files)
-freshroute validate  --scenario … --plan outputs/<run_id>/plan.csv                        → validation.json
-freshroute ladder    --scenario … --seed 42 [--newsvendor]                                → ladder.json (+ ablation row), waterfall.json
-freshroute sensitivity --scenario … --seed 42                                             → sensitivity.csv
-freshroute stress    --scenario … --policy milp_markdown --n 200 --seed 42 [--named]      → stress_summary.json, stress.csv
+freshroute generate  [names…] [--out data/scenarios]                                      → regenerates the committed synthetic scenarios (default: all)
+freshroute run       --scenario data/scenarios/practice --policy {fifo,fefo,last_day_50,milp,milp_markdown}
+                     --seed 42 [--newsvendor] [--fail-on-violations] [--out outputs/<run_id>] → metrics.json (+ all run files); exit 1 on violations with the flag
+freshroute ladder    --scenario … --seed 42 [--newsvendor] [--out …]                      → ladder.json (+ ablation row), waterfall.json
+freshroute sensitivity --scenario … --seed 42 [--out …]                                   → sensitivity.csv
+freshroute stress    --scenario … --policy milp_markdown --n 200 --seed 42 [--named] [--out …] → stress_summary.json, stress.csv
 freshroute replan    --run outputs/<run_id> --event event.json [--out …]                   → replan/<event_id>/ (exit 1 on violations)
                      [--scenario … --policy … --seed 42]  creates --run first when it has no plan.csv
 freshroute demo      [--scenario <demo>] [--seed 42] [--with-sensitivity] [--out outputs]  → ladder + waterfall (+ sensitivity.csv); exit 1 if the milp_markdown plan has violations
 ```
 
-Flag semantics: `--no-markdown` skips the §10 markdown stage, so `--policy milp_markdown --no-markdown` ≡ `--policy milp`; `--newsvendor` swaps the demand cap for the §14.3 target. `run_manifest.json → flags.markdown` records the effective setting.
+`--policy organizer_baseline` is accepted by the parser but refuses to run (planned, no organizer material). There is no `freshroute validate` command: the independent validator runs inside `run`, `replan` and the scale model, and writes `validation.json`; `--fail-on-violations` turns its count into the exit code.
 
-`make setup · test · check · demo · api · web · serve · run-stub`. `make check` = ruff + pytest + frontend type/build + validate the demo plan. `make demo` is **the one command** every pitch number comes from. (No `make` on Windows? Run the commands written in the Makefile comments.)
+Flag semantics: markdown is implied by the policy (`milp_markdown` runs the §10 stage, `milp` does not); `--newsvendor` (MILP policies only) swaps the demand cap for the §14.3 target. `run_manifest.json → flags.markdown` records the effective setting.
 
-Toolchain (D-15): uv owns Python. `uv sync` installs the project plus the dev group from `uv.lock`; `uv run <cmd>` is the only way anything is executed; `uv lock --check` fails if `pyproject.toml` and `uv.lock` disagree; `uv python pin` sets `.python-version` (D-22). There is no `requirements.txt` and no `pip install` in any recipe.
+`make setup · test · check · demo · api · web · serve · run-stub`. `make check` = ruff + pytest + frontend type/build + validate the demo plan. `make demo` (`uv run freshroute demo`) is **the one command** every reported number comes from. (No `make` on Windows? Run the commands written in the Makefile comments.)
+
+Toolchain (D-15): uv owns Python. `uv sync` installs the project plus the dev group from `uv.lock`; `uv run <cmd>` is the only way anything is executed; `uv lock --check` fails if `pyproject.toml` and `uv.lock` disagree; `uv python pin` sets `.python-version` (Python 3.13, D-22). There is no `requirements.txt` and no `pip install` in any recipe.
 
 | Target | What it does |
 |---|---|
 | `make setup` | `uv sync` + `npm ci` in `frontend/` |
 | `make test` | `uv run pytest -q` |
 | `make check` | ruff + pytest + `npm run build` (tsc) + validate the demo plan |
-| `make demo` | the one command behind every reported number (still the CLI, never HTTP) |
+| `make demo` | the one command behind every reported number (`uv run freshroute demo`; still the CLI, never HTTP) |
 | `make api` | `uv run uvicorn freshroute.api.app:app --reload` on `127.0.0.1:8000` |
 | `make web` | Vite dev server on `5173`, proxying `/api` |
 | `make serve` | build `frontend/dist`, then run the API serving it — **the demo URL is one command** |
@@ -483,9 +490,9 @@ Toolchain (D-15): uv owns Python. `uv sync` installs the project plus the dev gr
 
 - Seeds: generator seed, MC base seed, tie-breaking seed; defaults 42.
 - `run_manifest.json` records: `schema_version`, git SHA, seed, policy, flags, scenario path + SHA-256 of the sorted scenario CSV bytes, package versions, solver status, `mip_gap`, `solve_seconds`, `slack_usage`, `fallback_used`, timestamp.
-- Determinism test (C-08): run twice → identical `metrics.json`.
+- Determinism test: run twice → identical `metrics.json`.
 - Dependency versions come from `uv.lock` (Python) and `package-lock.json` (Node); both are committed and neither is edited by hand.
-- Fresh-clone test (R-01): clone into a new directory on another machine, `make setup && make demo`, compare headline numbers. The clone needs Node 22+ for `npm ci`; the demo laptop checklist (R-02) covers that.
+- Fresh-clone check: clone into a new directory on another machine, `make setup && make demo`, compare headline numbers. The clone needs Node 22+ for `npm ci`.
 - The API and the frontend are outside the determinism contract: they read run directories and never recompute them, so a given `outputs/` renders identically every time.
 
 ---
@@ -495,37 +502,42 @@ Toolchain (D-15): uv owns Python. `uv sync` installs the project plus the dev gr
 | Parameter | Default | Source |
 |---|---|---|
 | `Q10_DEFAULT` | 2.0 | research doc (unverified convention) — per-commodity value in data wins |
-| `DISPATCH_HOUR` | 5 | team assumption (A-02) |
+| `DISPATCH_HOUR` | 5 | team assumption (A-02); `scenario.json → dispatch_hour` overrides |
 | `LAMBDA_SPOIL` (λ) | 1.0 | team assumption |
 | `EPS_FEFO` | 1.0 (₹·h/kg) | team assumption; test it stays < 1 % of smallest margin |
 | `OVERSHIP_SLACK` | 0.05 | team assumption |
 | `PHI_BALANCE` (φ) | 0.5 | team assumption |
 | `MAX_UPLIFT` | 0.5 | team assumption (A-11) |
 | `MILP_TIME_LIMIT_S` | 30 | research doc |
-| `REPLAN_TIME_LIMIT_S` | 2 | team assumption (AD-02, A-43) — residual re-solve cap that keeps replan under the 5 s gate |
+| `REPLAN_TIME_LIMIT_S` | 2 | team assumption (A-43) — residual re-solve cap for replan |
 | `MIP_REL_GAP` | 0.01 | team assumption |
 | `AGG_RSL_BUCKET_H` | 6 | team assumption |
-| `AGG_ARC_THRESHOLD` | 100,000 candidate arcs (batches × dests × vehicles × days) | team assumption (U-02) — above it the MILP uses the §9.5 aggregation fallback; practice is 14,400, batches-only 10× is 144,000 |
+| `AGG_ARC_THRESHOLD` | 20,000 candidate arcs (batches × dests × vehicles × days) | team assumption (A-50) — above it the MILP uses the fleet-pooled scale model of §9.5; the unpooled practice model finds no incumbent in 30 s on v3 data |
 | `PENALTY_MULT` | 10 (× max price) | team assumption |
-| `DISCOUNT_RISK_BREAKS` / `DISCOUNT_TIERS` | 0.10, 0.30, 0.50 / 0, 10, 20, 35 % | research doc |
+| `DISCOUNT_RISK_BREAKS` / `DISCOUNT_TIERS_PCT` | 0.10, 0.30, 0.50 / 0, 10, 20, 35 % | research doc |
 | `DISCOUNT_TIME_TRIGGER_H` | 24 | research doc |
+| `LAST_DAY_DISCOUNT_PCT` | 50 | research doc (`last_day_50` baseline, §12) |
 | `MC_N` / `MC_N_FALLBACK` | 200 / 50 | research doc |
 | `MC_TRAVEL_CAP_MULT` | 1.5 (× p90) | research doc (§14.1 travel cap) |
 | `MC_NAMED` | optimistic (0.9, 0.5, 0.9) · base (0.5, 0.5, 0.5) · stress (0.1, 0.9, 0.1) as quantile `u` for (demand, travel, RSL) | team assumption (A-42) |
 | `NEWSVENDOR_CLAMP` | [0.05, 0.95] | team assumption |
 | `NEWSVENDOR_MARKDOWN_REF` | 0.20 | team assumption |
-| `SENS_Q10` / `SENS_ELASTICITY_MULT` / `SENS_OVERSHIP_SLACK` / `SENS_DEMAND_MULT` | 1.5, 2, 3 / 1, 0.5 / 0, 0.05, 0.10 / 0.8, 1, 1.2 | team assumption (U-04 sensitivity values) |
+| `SENS_Q10` / `SENS_ELASTICITY_MULT` / `SENS_OVERSHIP_SLACK` / `SENS_DEMAND_MULT` | 1.5, 2, 3 / 1, 0.5 / 0, 0.05, 0.10 / 0.8, 1, 1.2 | team assumption (sensitivity values) |
 | `DEFAULT_SEED` | 42 | research doc (CLI example) |
+| `DEMO_SCENARIO` / `DEMO_SEED` | `data/scenarios/practice` / 42 | team assumption — what `freshroute demo` and `make demo` run |
 | `FLOAT_TOL` | 1e-6 | team assumption (kg and h comparisons) |
+| `HOURS_PER_DAY` | 24 | constant (moved here from `feasibility.py`) |
+| `SCHEMA_VERSION` | 2 | data format version (`DATABASE.md` §1); 2 = `cost_of_goods_sold` in net (D-28); also checked by the validator |
+| `API_VERSION` | 1 | HTTP contract version (`DATABASE.md` §11) |
 | `API_HOST` / `API_PORT` | `127.0.0.1` / `8000` | team assumption (D-18) — loopback only; there is no auth (§21) |
 | `API_CORS_ORIGINS` | `["http://localhost:5173"]` | team assumption — dev only; the demo is same-origin (D-20) |
 | `JOB_WORKERS` | 1 | team assumption (D-21) — solves are serialized so the demo laptop never runs two HiGHS jobs at once |
 
 ---
 
-## 20. Assumption log (disclose all of these in the README)
+## 20. Assumption log
 
-Anything marked **confirm** must be checked against the organizers' documents at H0 and replaced where they differ.
+Anything marked **confirm** must be checked against the organizers' documents once published and replaced where they differ.
 
 | ID | Assumption | Status |
 |---|---|---|
@@ -548,36 +560,37 @@ Anything marked **confirm** must be checked against the organizers' documents at
 | A-17 | Newsvendor `c_u`, `c_o`, markdown reference and clamp as in §14.3 | team |
 | A-18 | `last_day_50` = FIFO-nearest + `min(50 %, max_discount_pct)` markdown, salvage floor respected | team |
 | A-19 | Unshipped stock is penalized as spoilage only if it would expire at origin within the horizon | team |
-| A-20 | Practice prices calibrated from Agmarknet modal ₹/quintal ÷ 100; Agmarknet and post-harvest-loss figures are context, never model inputs claimed as "real" batch data | team |
-| A-21 | Practice data is calibrated so FIFO market-stage spoilage lands near NABCONS tomato ≈ 3.25 % and onion ≈ 1.96 % (sanity check only; those are market-stage % of production incl. godowns/wholesale/retail/transport). Measured on `practice` (seed 42, FIFO per-commodity `spoilage_pct`): tomato 3.51, onion 0.82, banana 1.65, mango 5.40, potato 0.85, spinach 7.83 (overall 3.31 %); FEFO 2.49 %, MILP 2.63 % overall. Onion is capped by its 1 % handling loss (720 h shelf life never expires in 3 days); tomato hinges on one 0.5 t origin-expired batch, so it is a coarse fit (C-10). **Superseded by A-47 (generator v2, S-01g); the fit above is v1 history** | team |
+| A-20 | Practice prices come from a static, report-grounded table (modal ₹/kg from published Agmarknet aggregates); there is no Agmarknet snapshot. Agmarknet and post-harvest-loss figures are context, never model inputs claimed as "real" batch data | team |
+| A-21 | NABCONS post-harvest-loss percentages are context for plausibility only; practice spoilage is not fitted to them (A-47). Onion's 1,440 h shelf life never expires inside a 3-day horizon, so its spoilage is handling loss only | team |
 | A-22 | Markdown tier boundaries: `risk` exactly 0.30 → 20 % tier and exactly 0.50 → 20 % tier (the research ranges "0.10–0.30 / 0.30–0.50" overlap at the boundaries) | team |
-| A-23 | A shipment arriving after the horizon counts as origin-side stock (expired or carry-over by its expiry vs `24·H`), which keeps mass balance (F-06) | team |
-| A-24 | A lot with no discount row for a day has 0 % discount; a day with no price row uses the last earlier price, else 0 (F-06) | team |
-| A-25 | Lot expiry uses the plan's `arrival_h` + `usable_life_at_arrival_h` (base realization); travel/RSL perturbation is not implemented until stress testing (F-06) | team |
-| A-26 | Fulfillment denominator is every demand-table row, including destinations that received nothing (F-06) | team |
-| A-27 | `build_arcs` rejection precedence: `NO_LANE`, `NOT_AVAILABLE`, `RAIL_SLOT`, `WINDOW`, `SHELF_LIFE`, `BEYOND_HORIZON`; a rail slot after the end of dispatch day t is `RAIL_SLOT`, not a delayed dispatch; batch/vehicle origin mismatch is `NO_LANE`; window checks are inclusive within `FLOAT_TOL` (F-02) | team |
-| A-28 | `realization` for `build_arcs` is a dict `{"rsl_h": {batch_id: h}, "travel_h": {(origin, dest, mode): h}}`; for `simulate` it is `{"demand_kg": {(dest, commodity, day): kg}}`. Stress testing (AD-xx) must confirm or replace both (F-02, F-06) | team |
-| A-29 | Usable life is not clamped at 0; `wait_h` decays at store temperature and `handling_h` is consumed 1:1 (F-01) | team |
-| A-30 | Practice data uses a static price table (no Agmarknet snapshot, PRE-02 missed), 0.53–1.0 × base shelf life per batch, 80–480 kg batches, 4 trips/vehicle/day (trip duration not checked; trips are fleet slots), demand p10/p90 = 0.75 / 1.3 × p50, delivery windows spanning the whole horizon, one rail lane per hub with no rail vehicle, fake Bengaluru coordinates. A-20 does not apply to it until PRE-02 is done (F-08). Those knobs (`generator.py` top) are calibrated to the NABCONS sanity targets of A-21 with the static price table, not to real batch data (C-10). **Superseded by generator v2 (S-01c/d): grade-mixed RSL, NABCONS-share commodity mix, report-grounded price table v2 with volatility, binding windows on half the destinations, one rail vehicle per hub; see A-47** | team |
-| A-31 | The FIFO baseline is naive per §12: it respects physical limits but ignores shelf life and delivery windows, and the validator reports the resulting violations honestly (2 `SHELF_LIFE` on `tiny_3batch`, 14 on `practice` after the C-10 regeneration). The `make check` demo-plan step therefore validates the `milp_markdown` plan on the demo scenario (U-06), not FIFO. FIFO and MILP runs carry no markdown (F-07) | team |
-| A-32 | Validator recomputes `arrival_h` from dispatch and lane `travel_h_p50`; has no code for beyond-horizon arrivals; derives trips from `trip_id`; cannot import `config.py`, so `OVERSHIP_SLACK` is passed in by the caller and `PCT` conversion for `discount_pct` is local (F-04) | team |
-| A-33 | MILP: trip `dispatch_h` is the max of its lines' dispatch hours; a TimeLimit result with all-zero `x` is treated as "no incumbent" and falls to the FEFO-greedy; a missing demand row is a target of 0; origin-expiry test matches the simulator (§13 step 3): `available_from_h + rsl_h / decay(storage_temp_c) ≤ 24·H` (F-03, fixed at C-01) | team |
-| A-34 | Markdown: lot stock for risk is `kg` net of handling loss, FEFO residual demand per day; the cap is `min(max_discount_frac, 1 − salvage/price)`; a monotone-forced discount may fall below the salvage floor when a later price is lower (known gap) (F-09) | team |
-| A-35 | MILP C6: `T_d = Σ target` over only the `(d, c, arrival_day)` keys some feasible arc reaches; `avg_fill` = mean over destinations with `T_d > 0`; slack `s_d` is in fill-fraction units, penalised at `PENALTY_MULT × max price × T_d` (= 10 × max price per kg). On `practice` C6 binds: the solve hits the 30 s limit (gap 3.85 %, proven optimal in ~54 s; ~₹79k objective cost of balance). The FEFO-greedy fallback ignores C6 (C-02) | team |
-| A-36 | `last_day_50` runs no worth-it test: it writes discounts.csv rows only for lot-days whose remaining life is ≤ 24 h, with `risk`/`tier_base_pct`/`delta_revenue_inr` = 0, discount `min(50, max_discount_pct, salvage cap)`; if a price fell inside the window the salvage floor would win over monotonicity (not seen on current scenarios) (C-05) | team |
-| A-37 | `milp_markdown` discounts are near-inert while the MILP ships ≤ p50 demand (1 of 551 discount rows non-zero on `practice`; KPIs equal `milp`): lots carry almost no surplus for the worth-it test to sell. `build_discounts` keeps lot stock fixed across days, so it can mark down a lot that already sold out; the simulator ignores that row (known gap) (C-11) | team |
-| A-38 | The MILP is warm-started with the FEFO-greedy plan (`warmStart=True`), so under its own objective the time-limited incumbent is never worse than the `fefo` baseline; practice-size solves still end at a 1–6 % MIP gap at 30 s. C1 covers every batch, including batches with no feasible arc. `solver.objective_inr` = objective at λ = 1 without tie-break and slack terms; it equals the simulator `net_inr` when `overship_slack = 0` (C-04) | team |
-| A-39 | G2 "not worse on spoilage" is measured in kg within the horizon. A plan that sells long-life stock the baseline leaves as carry-over shows that stock's handling loss as extra spoilage (generated `small` seed 1: MILP +4.29 kg of onion handling loss vs FEFO while netting +₹17.6k); that one case is an `xfail` in `tests/test_ladder.py`, not hidden (C-04) | team |
-| A-40 | Measured, not targets (C-09, this laptop): `python -m freshroute.perf --scale 10` scales batches **and** vehicles ×10 (2,000 batches, 30 vehicles → 1.44 M arcs, 470 k feasible, ~100× practice): `build_arcs` 118–141 s; HiGHS reports TimeLimit but `prob.solve` returned after ~4,184 s (PuLP model hand-off dominates, unprofiled), so the 30 s cap is **not** enforced end to end at that size. Practice (200 batches) solves in 30 s at a 1–6 % gap. The wall-clock limit makes time-limited results load-dependent (practice MILP under CPU contention: 1,421 kg / ₹1,575,013 at gap 7.3 %; quiet: 1,244 kg / ₹1,655,781 at gap 1.4 %), so rule 4 determinism holds only for solves that finish below the limit. **U-02 (2026-10-14, same laptop, SYNTHETIC generator seed 42, before = batch-level MILP, after = §9.5 aggregation at `AGG_ARC_THRESHOLD`):** batches-only 10× (`--scale 10 --fleet-scale 1`: 2,000 batches, 3 vehicles, 144,000 candidate / 51,530 feasible arcs, `build_arcs` 10.4 s): before 53,611 vars / 2,258 constraints, `plan` 63.8–70.5 s wall, HiGHS TimeLimit at gap 9.3–13.6 % (load-dependent), simulated net ₹3,485,297, 0 violations; after 505 groups → 13,989 arcs, 14,575 vars / 755 constraints, `plan` 23.2–24.3 s wall (solve 17.8 s, optimal at gap 0.20 %, identical in 3 runs), simulated net ₹3,728,711, 0 lines dropped, 0 validator violations. Batches **and** vehicles 10× (perf default: 30 vehicles, 1.44 M candidate / 503,055 feasible arcs): before ~4,184 s (above); after 137,925 aggregate arcs, 139,159 vars / 1,484 constraints, `plan` 251.9 s wall (solve 226.5 s incl. PuLP hand-off), TimeLimit at gap 43.8 %, 0 validator violations — the 30 s budget is **not** met at that size. **After vehicle pooling (A-46, same laptop and seed):** batches **and** vehicles 10×: 505 groups × 6 vehicle classes in 2 lane classes → 9,195 aggregate arcs, 9,853 vars / 740 constraints, `plan` 10.9–11.2 s wall in 3 runs (solve 6.8–7.0 s, optimal at gap 0.05 %, identical plans), 0 lines dropped, 0 validator violations, simulated net ₹3,741,655 (`freshroute run`, 0 violations); batches-only 10× (3 classes, same 9,195 arcs): `plan` 9.7–9.8 s (solve 5.6 s, gap 0.17 %), net ₹3,726,781 (₹1,930 below the unpooled 23 s plan, within its gap). Not in the `plan` time: `build_arcs` on the full scenario (52–54 s at batches+vehicles, 8.8–9.1 s batches-only) still runs once in `reasons.py`, so `freshroute run` at batches+vehicles 10× took 60 s wall end to end. Follow-up: H-02 (determinism re-check; consider a node limit instead of wall time) | team |
-| A-41 | Aggregation key adds `available_from_h` to the documented `(commodity, origin, RSL bucket)` and the pseudo-batch takes min RSL / max storage temperature, so its feasible arcs are feasible for every member (wait ≥ 0, same dispatch hour) and the batch-level re-check drops nothing in practice; the cost is that members lose arcs only their own (longer) RSL would allow, and the solver's `objective_inr` is the representative's, not the simulator's net ₹ (U-02) | team |
-| A-42 | Stress (AD-03) confirms A-28's keys and extends `simulate`'s realization with `travel_h` {(origin, dest, mode): h} and `rsl_h` {batch_id: h} (replacing A-25 under stress): each plan line keeps its `dispatch_h`, gets `arrival_h = dispatch_h + sampled travel` and §7 usable life from the sampled RSL; origin expiry uses the sampled RSL; a lot whose arrival day moves keeps its discount rows (renamed to the new `lot_id`). Draws are independent per demand row (sorted dest, commodity, day), lane (sorted origin, dest, mode) and batch (sorted id), drawn in that order from `default_rng(base_seed + i)`; no correlation across rows. Plans are not re-optimised. `fefo` is the baseline until C-06. "Beats" is strict beyond `FLOAT_TOL` (higher net ₹, lower spoilage kg). Named fallback quantiles (`MC_NAMED`) are a team choice: "stress" = low demand, late trucks, short life | team |
-| A-45 | Newsvendor details beyond §14.3 (AD-04): `c_var` = cheapest lane into the destination from any origin holding the commodity (mode/vehicle not checked); unreachable or unpriced keys keep the p50 cap; `--newsvendor` only for MILP policies. Scored on the base (p50) realization only, the target cannot pay off there: measured SYNTHETIC seed 42 `milp_markdown` net ₹44,430.75 → ₹42,184.29 (tiny_3batch) and ₹1,655,293.29 → ₹1,577,091.11 (practice, TimeLimit at ~1.2 % gap, load-dependent); spoilage 45.50 → 45.50 kg and 1,244.27 → 1,224.52 kg; 0 violations. Its case rests on the stress test (AD-03), not on these rows | team |
-| A-46 | Scale fallback fleet pooling (U-02): vehicles with the same `(origin, mode, available_from_h)` get identical arcs from §6, so the aggregate model keeps one lane-class arc and splits only C2/C3 by capacity class (same lane, same `capacity_kg`; class trips = sum of member `max_trips_day`; vehicles with `max_trips_day = 0` are dropped). This is exact for the aggregate model, not a heuristic: any class plan disaggregates to concrete vehicles round-robin by `vehicle_id` without breaking C2/C3; the batch-level re-check runs against the lane-class row, which shares every arc attribute with its members, and the validator then checks the concrete plan. Replan frozen trips are summed onto their class. Below `AGG_ARC_THRESHOLD` nothing changes (tiny_3batch and practice `metrics.json` byte-identical, including `--newsvendor`) | team |
-| A-43 | Replan (AD-02). Measured 2026-10-14 on this laptop, SYNTHETIC `practice` seed 42, `milp_markdown` base, one event per type at `at_h = 8` (105 of 313 shipments frozen): `replan_run` wall 3.1–3.4 s (2 runs × 5 events), of which the HiGHS residual solve is the 2 s cap (`REPLAN_TIME_LIMIT_S`; every practice replan stops at TimeLimit, `solver.status` "-4"), `build_arcs` ≈ 0.9 s, four validator passes + two simulations ≈ 0.45 s; `freshroute replan` CLI 4.2 s including interpreter start-up. `tiny_3batch`: 0.13–0.16 s, solved to the 1 % gap. **Quality cost of the cap:** on practice the 2 s solve never improves on its warm start, so the replan is a repair (drop now-infeasible lines, re-split over-capacity trips). For `route_delay` +6 h on all lanes into D3 the replan has 0 violations vs the old plan's 11 but nets ₹75,939 less, because the simulator still sells the old plan's shelf-life-violating lots; with a 30 s cap the same replan solves to 1 % in ≈ 16 s and nets +₹250 vs the old plan. Tried: greedy warm start (−₹80k at 3 s), old-plan warm start (−₹76k at 2–3 s), 30 s (+₹250, 17 s — fails G4). Other semantics: capacity / receiving effects apply from `at_h` by table (no time dimension), so violations caused by frozen rows alone are reported as `FROZEN_<code>` warnings, not counted (DATABASE.md 5.13); `route_delay` re-times only rows still travelling at `at_h` in the simulator, but the validator re-times every row on the lane (an already-arrived frozen row may show a `FROZEN_` warning); the do-nothing side keeps the old `discounts.csv` (a re-timed lot that changes `arrival_day` loses its markdown); a no-op event can still move the plan within the 1 % MIP gap (−₹285 on tiny for `price_shock` ×1.0) because the MILP objective is not the simulator's net ₹. Time-limited replans are load-dependent like A-40; determinism is tested on tiny (solved to the gap) | team |
-
-| A-44 | Reason cards use scoped arcs (U-02 follow-up): `build_cards` builds arcs only for batches in the plan × all destinations × one vehicle per `(origin, mode, available_from_h)` class (A-46 pooling; alternatives carry no `vehicle_id`, DATABASE.md 5.9, so the representative is invisible). Byte-identical to full arcs on tiny_3batch, practice and a 3x scaled check. Measured, SYNTHETIC seed 42, 10x batches+vehicles: scoped cards 2.3 s (was 52-54 s full), full `freshroute run` 18.1 s end to end (was ~60 s), optimal, 0 violations | team |
-
-| A-47 | Quality-dataset calibration spec (S-01 round 2, generator v2): FIFO market-stage-equivalent spoilage on `practice` seed 42 must land in band per commodity, targets = NABCONS 2022 market-stage % of production (PIB PRID 2151371, Annexure-II; context only, never model inputs). Tomato 3.25 ± 1.0 · banana 2.40 ± 0.8 · mango 2.50 ± 0.8 · potato 0.86 ± 0.5 · spinach/leafy 2.3–3.5 band (no NABCONS leafy row; nearest market-stage rows are cabbage 2.32 and guava 3.46) · onion: target 1.96 is unreachable inside a 3-day horizon (720 h shelf life never expires; only the 1 % handling loss bites), so onion-bearing scenarios assert handling-loss-only spoilage and the 1.96 target is recorded as horizon-capped, not fitted by inventing expiry. The v1 fit (tomato 3.51 hinging on one 0.5 t origin-expired batch; mango 5.40; spinach 7.83) is superseded. Bands are asserted by `test_generator_quality.py` (S-01f) | team |
+| A-23 | A shipment arriving after the horizon counts as origin-side stock (expired or carry-over by its expiry vs `24·H`), which keeps mass balance | team |
+| A-24 | A lot with no discount row for a day has 0 % discount; a day with no price row uses the last earlier price, else 0 | team |
+| A-25 | Lot expiry uses the plan's `arrival_h` + `usable_life_at_arrival_h` (base realization); under stress the realization perturbs travel and RSL (A-42) | team |
+| A-26 | Fulfillment denominator is every demand-table row, including destinations that received nothing | team |
+| A-27 | `build_arcs` rejection precedence: `NO_LANE`, `NOT_AVAILABLE`, `RAIL_SLOT`, `WINDOW`, `SHELF_LIFE`, `BEYOND_HORIZON`; a rail slot after the end of dispatch day t is `RAIL_SLOT`, not a delayed dispatch; batch/vehicle origin mismatch is `NO_LANE`; window checks are inclusive within `FLOAT_TOL` | team |
+| A-28 | `realization` for `build_arcs` is a dict `{"rsl_h": {batch_id: h}, "travel_h": {(origin, dest, mode): h}}`; for `simulate` it is `{"demand_kg": {(dest, commodity, day): kg}}`, extended under stress by A-42 | team |
+| A-29 | Usable life is not clamped at 0; `wait_h` decays at store temperature and `handling_h` is consumed 1:1 | team |
+| A-30 | Practice data uses a static price table (no Agmarknet snapshot; `scenario.json → price_source` says so). Trips are fleet slots bounded by `max_trips_day` (A-08); generator v3 sets `max_trips_day` from lane times (A-49). Generator details: A-47, A-49 | team |
+| A-31 | The FIFO baseline is naive per §12: it respects physical limits but ignores shelf life and delivery windows, and the validator reports the resulting violations honestly (current `practice` seed 42: FIFO 19 violations, `last_day_50` 19; `fefo`, `milp`, `milp_markdown` 0). The `make check` demo-plan step therefore validates the `milp_markdown` plan on the demo scenario, not FIFO. FIFO and MILP runs carry no markdown. Reproduce with: `uv run freshroute ladder --scenario data/scenarios/practice --seed 42` | team |
+| A-32 | Validator recomputes `arrival_h` from dispatch and lane `travel_h_p50`; has no code for beyond-horizon arrivals; derives trips from `trip_id`; cannot import `config.py`, so `OVERSHIP_SLACK` is passed in by the caller (`overship_slack`) and `PCT` conversion for `discount_pct` is local | team |
+| A-33 | MILP: trip `dispatch_h` is the max of its lines' dispatch hours; a TimeLimit result with all-zero `x` is treated as "no incumbent" and falls to the FEFO-greedy; a missing demand row is a target of 0; origin-expiry test matches the simulator (§13 step 3): `available_from_h + rsl_h / decay(storage_temp_c) ≤ 24·H` | team |
+| A-34 | Markdown: lot stock for risk is `kg` net of handling loss, FEFO residual demand per day; the cap is `min(max_discount_frac, 1 − salvage/price)`; a monotone-forced discount may fall below the salvage floor when a later price is lower (known gap) | team |
+| A-35 | MILP C6: `T_d = Σ target` over only the `(d, c, arrival_day)` keys some feasible arc reaches; `avg_fill` = mean over destinations with `T_d > 0`; slack `s_d` is in fill-fraction units, penalised at `PENALTY_MULT × max price × T_d` (= 10 × max price per kg). The balance constraint can bind and cost objective value; the FEFO-greedy fallback ignores C6. Reproduce the solve with: `uv run freshroute run --scenario data/scenarios/practice --policy milp --seed 42` and read `solver` in `run_manifest.json` | team |
+| A-36 | `last_day_50` runs no worth-it test: it writes discounts.csv rows only for lot-days whose remaining life is ≤ 24 h, with `risk`/`tier_base_pct`/`delta_revenue_inr` = 0, discount `min(50, max_discount_pct, salvage cap)`; if a price fell inside the window the salvage floor would win over monotonicity (not seen on current scenarios) | team |
+| A-37 | `milp_markdown` is equivalent to `milp` on `practice`: shipped kg stays at or below p50 demand, so lots carry no surplus for the worth-it test to sell and the discounts are inert (KPIs equal). `build_discounts` keeps lot stock fixed across days, so it can mark down a lot that already sold out; the simulator ignores that row (known gap). Check with: `uv run freshroute ladder --scenario data/scenarios/practice --seed 42` | team |
+| A-38 | The MILP is warm-started with the FEFO-greedy plan (`warmStart=True`), so under its own objective the time-limited incumbent is never worse than the `fefo` baseline; time-limited solves can still end at a non-zero MIP gap. C1 covers every batch, including batches with no feasible arc. `solver.objective_inr` = objective at λ = 1 without tie-break and slack terms; it equals the simulator `net_inr` when `overship_slack = 0` | team |
+| A-39 | "Not worse on spoilage" is measured in kg within the horizon. The MILP's spoilage % can exceed FEFO's because it ships and sells more: handling loss scales with delivered kg, so a plan that moves more stock shows more handling loss while netting more. Compare with: `uv run freshroute ladder --scenario data/scenarios/practice --seed 42` | team |
+| A-40 | Scale behaviour is measured with `uv run python -m freshroute.perf --scale 10` (batches and vehicles ×10; `--fleet-scale 1` scales batches only). The wall-clock solver limit makes time-limited results load-dependent, so determinism holds only for solves that finish below the limit; PuLP model hand-off time is not covered by `MILP_TIME_LIMIT_S`. The scale model (A-41, A-46, A-50) exists because the unpooled batch-level model is far too large at 10×. `build_arcs` on the full scenario is a separate cost; reason cards avoid it with scoped arcs (A-44) | team |
+| A-41 | Aggregation key adds `available_from_h` to the documented `(commodity, origin, RSL bucket)` and the pseudo-batch takes min RSL / max storage temperature, so its feasible arcs are feasible for every member (wait ≥ 0, same dispatch hour) and the batch-level re-check drops nothing in practice; the cost is that members lose arcs only their own (longer) RSL would allow, and the solver's `objective_inr` is the representative's, not the simulator's net ₹ | team |
+| A-42 | Stress confirms A-28's keys and extends `simulate`'s realization with `travel_h` {(origin, dest, mode): h} and `rsl_h` {batch_id: h} (replacing A-25 under stress): each plan line keeps its `dispatch_h`, gets `arrival_h = dispatch_h + sampled travel` and §7 usable life from the sampled RSL; origin expiry uses the sampled RSL; a lot whose arrival day moves keeps its discount rows (renamed to the new `lot_id`). Draws are independent per demand row (sorted dest, commodity, day), lane (sorted origin, dest, mode) and batch (sorted id), drawn in that order from `default_rng(base_seed + i)`; no correlation across rows. Plans are not re-optimised. `fefo` is the baseline while there is no organizer baseline. "Beats" is strict beyond `FLOAT_TOL` (higher net ₹, lower spoilage kg). Named fallback quantiles (`MC_NAMED`) are a team choice: "stress" = low demand, late trucks, short life | team |
+| A-43 | Replan. The residual solve is capped at `REPLAN_TIME_LIMIT_S = 2` and is warm-started from the old plan's undispatched rows, so on practice-size scenarios it is a repair of the old plan (drop now-infeasible lines, re-split over-capacity trips) rather than a fresh optimisation; a longer cap solves further but exceeds the replan wall-time budget. Other semantics: capacity / receiving effects apply from `at_h` by table (no time dimension), so violations caused by frozen rows alone are reported as `FROZEN_<code>` warnings, not counted (DATABASE.md 5.13); `route_delay` re-times only rows still travelling at `at_h` in the simulator, but the validator re-times every row on the lane (an already-arrived frozen row may show a `FROZEN_` warning); the do-nothing side keeps the old `discounts.csv` (a re-timed lot that changes `arrival_day` loses its markdown); a no-op event can still move the plan within the MIP gap because the MILP objective is not the simulator's net ₹. Time-limited replans are load-dependent like A-40; determinism is tested on the tiny fixture (solved to the gap). Reproduce with: `uv run freshroute replan --run outputs/<run_id> --event event.json` | team |
+| A-44 | Reason cards use scoped arcs: `build_cards` builds arcs only for batches in the plan × all destinations × one vehicle per `(origin, mode, available_from_h)` class (A-46 pooling; alternatives carry no `vehicle_id`, DATABASE.md 5.9, so the representative is invisible). Byte-identical to full arcs on the tiny fixture and the committed scenarios checked; this keeps `freshroute run` fast at 10× scale | team |
+| A-45 | Newsvendor details beyond §14.3: `c_var` = cheapest lane into the destination from any origin holding the commodity (mode/vehicle not checked); unreachable or unpriced keys keep the p50 cap; `--newsvendor` only for MILP policies (CLI and API). Scored on the base (p50) realization only, the target cannot pay off there, so its case rests on the stress test, not on base-realization rows. Reproduce with: `uv run freshroute ladder --scenario data/scenarios/practice --seed 42 --newsvendor` | team |
+| A-46 | Scale model fleet pooling: vehicles with the same `(origin, mode, available_from_h)` get identical arcs from §6, so the aggregate model keeps one lane-class arc and splits only C2/C3 by capacity class (same lane, same `capacity_kg`; class trips = sum of member `max_trips_day`; vehicles with `max_trips_day = 0` are dropped). This is exact for the aggregate model, not a heuristic: any class plan disaggregates to concrete vehicles round-robin by `vehicle_id` without breaking C2/C3; the batch-level re-check runs against the lane-class row, which shares every arc attribute with its members, and the validator then checks the concrete plan. Replan frozen trips are summed onto their class | team |
+| A-47 | Generator v3 (D-29) is tuned for plausibility, not calibrated to NABCONS: shelf-life base hours / q10 / reference temperature per commodity (`generator._COMM`) are set so expiry binds for spinach, tomato, banana and mango while onion and potato do not; remaining shelf life ~ Beta(5, 2) × base with the quality grade derived from it; storage temperature is drawn per commodity; prices = static table × outlet-type premium × a shared per-commodity daily market walk. Plausibility is asserted by the quality tests in `backend/tests/test_generator.py` (travel time follows distance, demand matches supply and is reachable, fleet is physically possible, expiry binds, net margin is in a believable range). NABCONS and Agmarknet figures are context only | team |
+| A-48 | Procurement is part of net ₹ (D-28): `net = revenue − cost_of_goods_sold − transport − handling − spoilage_cost`, with `cost_of_goods_sold = sold_kg × unit_cost_inr_kg` (`costmodel.cost_of_goods_sold`). Spoilage cost still equals `unit_cost + disposal − salvage` per spoiled kg; stock alive at horizon end is inventory held at cost (carry-over, valued 0 as in A-06, no COGS). `metrics.json → economics_inr` gains `cost_of_goods_sold`; `schema_version` is 2 | team |
+| A-49 | Generator v3 geography, demand and fleet: real node names and coordinates (hubs `HUB1` Kolar, `HUB2` Chikkaballapur; destinations `D1`–`D8` from `generator.DESTS`); road lane time = road km (haversine × 1.3) / 40 km/h + 0.5 h; rail lanes only to destinations ≥ 200 km; outlet type sets the daily delivery window (`window_mode = daily`), price premium, commodity basket and receiving capacity. Demand per commodity ≈ U(0.9, 1.1) × supply, placed only on days some lane can reach the outlet inside its window (no unreachable demand), with lognormal outlet shares capped at 35 %. Fleet: both road modes per hub, capacities 1 / 3 / 5 / 9 t, `max_trips_day = floor(16 / (2 × median lane h))` and at least 1, one rail vehicle per hub that has a rail lane. `price_source = static_table_generator_v3`. Practice = seed 42, 200 batches, 8 destinations, 3 days, 6 road vehicles | team |
+| A-50 | The MILP uses the fleet-pooled scale model by default above `AGG_ARC_THRESHOLD = 20,000` candidate arcs (A-46), which includes `practice`. Solution quality versus the unpooled model cannot be compared there: the unpooled model finds no incumbent in 30 s on practice v3 data | team |
 
 ---
 
@@ -588,30 +601,32 @@ Anything marked **confirm** must be checked against the organizers' documents at
 | Hidden-scenario infeasibility | Soft constraints + penalty slacks; report slack usage |
 | Solve time on large data | 30 s limit → incumbent → FEFO-greedy plan; aggregation by commodity × RSL bucket |
 | Organizer cost model differs | Everything in `costmodel.py`/`config.py`; coefficients read from the dataset |
-| Organizer data format differs | `adapters/organizer.py` + mapping table (`DATABASE.md` §8) |
+| Organizer data format differs | planned `adapters/organizer.py` (not built) + mapping table (`DATABASE.md` §8) |
 | Units bug (₹/quintal vs ₹/kg, % vs fraction) | Single conversion in `io.py`; unit tests |
 | Replan breaks constraints mid-demo | Validator runs inside `replan`; failing replan falls back to precomputed scenario loaded instantly |
 | MC too slow | 200 → 50 → 3 named scenarios |
 | LLM hallucination | Schema validation, number guard, template narration, dropdown fallback |
 | Solver install fails on demo laptop | `outputs/demo_backup/` + recorded video; `make serve` from a previously built `frontend/dist` |
 | Frontend fails to build or the API will not start | Recorded video; `make demo` printed scoreboard; `frontend/dist` rebuilt from the lockfile (`npm ci && npm run build`) |
-| Node missing on the demo laptop | R-02 checklist covers it; the CLI, `make demo` and every reported number work without the frontend at all |
-| Network down at venue | Demo is fully local; nothing calls the internet (the API serves the SPA from disk, so no CDN, no font or map tile is fetched — Leaflet tiles degrade to the colour-table fallback) |
+| Node missing on the demo laptop | The CLI, `make demo` and every reported number work without the frontend at all |
+| Network down at venue | Demo is fully local; nothing calls the internet (the API serves the SPA from disk, so no CDN, font or map tile is fetched; the map is an offline SVG) |
 
 ---
 
-## 22. Performance budget (targets to **measure**, not claims)
+## 22. Performance
 
-| Item | Target | Measured at |
-|---|---|---|
-| `milp_markdown` plan on the demo scenario | ~3 s (hard cap 30 s, incumbent returned) | C-09, U-02 |
-| Replan | < 5 s (gate G4); say only the measured time in the pitch | AD-02: 3.1–3.4 s in-process, 4.2 s CLI incl. start-up on `practice` (A-43) |
-| MC 200 scenarios (evaluate only) | measure; if too slow, drop to 50 | AD-03 |
-| `make demo` end-to-end | team target ~5 min; measure | U-06 |
-| `make serve` to first paint | not a budget item; dev-only numbers, never quoted in the pitch | RF-07 |
+Nothing here is a claim; measure on the machine you demo from.
+
+| Item | How to measure |
+|---|---|
+| `milp_markdown` plan on the demo scenario | hard cap `MILP_TIME_LIMIT_S = 30`, incumbent returned: `uv run freshroute run --scenario data/scenarios/practice --policy milp_markdown --seed 42` (`solve_seconds` in `run_manifest.json`) |
+| Scale | `uv run python -m freshroute.perf --scale 10` (A-40) |
+| Replan | residual solve capped at `REPLAN_TIME_LIMIT_S = 2` (A-43): `uv run freshroute replan --run … --event …` |
+| MC 200 scenarios (evaluate only) | `uv run freshroute stress --scenario … --n 200`; if too slow, `--n 50` or `--named` |
+| `make demo` end to end | time `make demo` |
 
 ---
 
 ## 23. Decision log
 
-Moved to the repo-root `DECISIONS.md` (D-01 … D-23). Add new decisions there.
+Lives in the repo-root `DECISIONS.md` (D-01 … D-30; D-26 is intentionally unused). Add new decisions there.

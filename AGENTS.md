@@ -1,10 +1,9 @@
 # AGENTS.md
 
-Instructions for AI coding assistants working on FreshRoute. Humans: see `docs/CONTRIBUTING.md`.
+Instructions for anyone (human or AI assistant) working on FreshRoute.
 
 ## Read first
-`docs/ARCHITECTURE.md` (behaviour) → `docs/DATABASE.md` (contracts) → `docs/TODO.md` (task IDs, gates) → `DECISIONS.md`.
-Reference tasks by ID (e.g. `C-01`) in commits and PRs.
+`docs/ARCHITECTURE.md` (behaviour) → `docs/DATABASE.md` (contracts) → `DECISIONS.md`.
 
 ## Non-negotiables
 1. **Organizer cost model/data format overrides ours.** Coefficients live only in `costmodel.py`, `config.py` or the dataset. No literals elsewhere.
@@ -26,13 +25,20 @@ Reference tasks by ID (e.g. `C-01`) in commits and PRs.
 - Tolerance: `FLOAT_TOL` from `config.py`, never `==` on floats.
 - Each module starts with a short docstring naming the `ARCHITECTURE.md` section it implements.
 
+## Setup
+```bash
+make setup      # uv sync + npm ci --prefix frontend (Python 3.13 pinned in .python-version; Node 22+)
+```
+No `make` on Windows? Install it (e.g. ezwinports) or run the recipe lines of the `Makefile` by hand.
+
+Targets: `setup`, `test` (pytest), `check` (ruff + pytest + frontend build + validate demo plan), `demo` (ladder + waterfall, seed 42), `api` (FastAPI :8000), `web` (Vite :5173), `serve` (build SPA, serve from the API), `run-stub` (tiny fixture through the full pipeline).
+
 ## Workflow
-- Run `make check` (ruff + pytest + frontend build + validate demo plan) before proposing a commit.
-- Changing a contract (tables, JSON, CLI, API endpoint, function signatures) means updating the doc in the same change, and bumping `schema_version` (data format) or `api_version` (endpoint shape) if a format changed.
-- New assumption → next free `A-xx` in `docs/ARCHITECTURE.md` §20. New decision → next free `D-xx` in `DECISIONS.md`.
-- Commits: `type(scope): summary (TASK-ID)`. Keep changes small, one task per change.
-- Never commit `.env`, keys, `.venv`, `node_modules/`, `frontend/dist/`, `outputs/` (except `outputs/demo_backup/` at freeze) or restricted organizer data. Commit `uv.lock` and `package-lock.json`.
-- After feature freeze (H23): bug fixes only.
+- Run `make check` before every push.
+- Small commits, `type(scope): summary` (types: feat fix test docs chore refactor perf build). `git pull --ff-only` before pushing.
+- Definition of done: `make check` green, tests added or updated, and any contract change (tables, JSON, CLI, API endpoint, function signatures) updates its doc in the same change, bumping `schema_version` (data format) or `api_version` (endpoint shape) if a format changed.
+- New assumption: next free `A-xx` in `docs/ARCHITECTURE.md` §20. New decision: next free `D-xx` in `DECISIONS.md`.
+- Never commit `.env`, keys, `.venv`, `node_modules/`, `frontend/dist/`, `outputs/` (except `outputs/demo_backup/`) or restricted organizer data. Commit `uv.lock` and `package-lock.json`.
 
 ## Out of scope
 statsforecast/demand forecasting, the agentic Copilot stack, DP markdown, OR-Tools routing, live API calls in the demo, a database server, authentication, SSR/routing for the SPA, a global state library.

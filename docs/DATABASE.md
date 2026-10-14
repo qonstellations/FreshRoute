@@ -2,9 +2,9 @@
 
 **FreshRoute — data model.** Every table, column, key, unit, rule, and output file the system reads or writes.
 
-> Companion to `ARCHITECTURE.md` (behaviour), `TODO.md` (schedule), `CONTRIBUTING.md` (workflow).
-> **Rule #1: if the organizers publish a cost model or dataset format, theirs overrides this schema.** Fill in §8 (mapping template) at H0 and adapt `adapters/organizer.py`; this schema exists so every policy and baseline is scored identically and so we can practise before the real data arrives.
-> **Changing any column, file name, or JSON field in this document is a contract change** — see `CONTRIBUTING.md` §7.
+> Companion to `ARCHITECTURE.md` (behaviour) and `DECISIONS.md` (decisions).
+> **Rule #1: if the organizers publish a cost model or dataset format, theirs overrides this schema.** Fill in §8 (mapping template) and write the adapter (`adapters/organizer.py`, planned, not built); this schema exists so every policy and baseline is scored identically and so we can practise before the real data arrives.
+> **Changing any column, file name, or JSON field in this document is a contract change**: update this document in the same change, and bump `schema_version` (data format) or `api_version` (endpoint shape) if a format changed.
 
 ---
 
@@ -14,7 +14,7 @@
 - Why: reproducible, diffable in git, trivial to swap in hidden scenarios, zero setup on the demo laptop.
 - **Source of truth for inputs:** `data/scenarios/<name>/*.csv` + `scenario.json` (or organizer files converted by the adapter).
 - **Source of truth for results:** `outputs/<run_id>/` (never edited by hand; the API serves it and the UI only reads it). The API's own bookkeeping lives in `outputs/.api/` and is never a source of truth (D-18, D-21).
-- `schema_version` (integer, currently **1**) is stored in `scenario.json` and `run_manifest.json`. Bump it on any contract change.
+- `schema_version` (integer, currently **2**; `config.SCHEMA_VERSION`) is stored in `scenario.json`, `run_manifest.json`, `metrics.json` and `validation.json`. The loader rejects a scenario with a different value. Bump it on any data-format change. Version 2 added `economics_inr.cost_of_goods_sold` (D-28).
 
 ---
 
@@ -50,13 +50,13 @@
 | `q10` | float | – | > 0 (typically ≥ 1) | Decay multiplier per +10 °C; default 2 |
 | `min_sell_window_h` | float | h | ≥ 0 | Minimum usable life required at arrival |
 | `handling_loss_pct` | float | % | 0–100 | Share of delivered kg lost in transit/handling |
-| `unit_cost_inr_kg` | float | ₹/kg | ≥ 0 | Procurement/landed cost used in spoilage cost |
+| `unit_cost_inr_kg` | float | ₹/kg | ≥ 0 | Procurement/landed cost: charged as cost of goods sold on sold kg and inside the spoilage cost on spoiled kg (A-48) |
 | `disposal_cost_inr_kg` | float | ₹/kg | ≥ 0 | |
 | `salvage_value_inr_kg` | float | ₹/kg | ≥ 0 | Recovered value of spoiled kg; also the markdown price floor |
 | `price_elasticity` | float | uplift per unit discount fraction | ≥ 0 | ε: `effective_demand = demand·(1 + min(ε·discount, MAX_UPLIFT))` |
 | `max_discount_pct` | float | % | 0–100 | Per-commodity markdown cap |
 
-Practice-data starting points (team assumptions, disclose in README): commodity mix **tomato, spinach/leafy greens, banana, mango, onion, potato** to span FAO's perishability classes — `very_high` (spinach, ripe tomato), `high` (banana, mango), `low` (onion, potato). Ambient base shelf life: tomato ≈ 4–7 days (96–168 h), spinach ≈ 2–3 days (48–72 h), banana ≈ 5–8 days (120–192 h), onion 30+ days (≥ 720 h). Mango and potato values: team to set and disclose. These are de-rated from temperate cold-storage references (FAO, UMaine) and are **not** measured Indian ambient-chain data.
+Practice-data starting points (generator v3, `generator._COMM`; team assumptions): commodity mix **tomato, spinach, banana, mango, onion, potato** to span FAO's perishability classes — `very_high` (spinach, tomato), `high` (banana, mango), `low` (onion, potato). Base shelf life: spinach 48 h, tomato 144 h, mango 144 h, banana 168 h, onion 1,440 h, potato 1,680 h, so expiry binds for the first four inside a 2–3 day horizon and not for onion or potato. These are team figures, not measured Indian ambient-chain data.
 
 ### 3.2 `batches` — PK `batch_id`
 
@@ -166,18 +166,18 @@ Our addition for the shelf-life countdown map. The optimizer never reads it. If 
 
 ```json
 {
-  "schema_version": 1,
-  "name": "practice_01",
+  "schema_version": 2,
+  "name": "practice",
   "source": "synthetic",
   "seed": 42,
   "horizon_days": 3,
-  "window_mode": "absolute",
+  "window_mode": "daily",
   "dispatch_hour": 5,
-  "price_source": "static_table_generator_v1",
+  "price_source": "static_table_generator_v3",
   "notes": "free text"
 }
 ```
-`source` is `synthetic` or `organizer`. `price_source` is optional and informational (e.g. `static_table_generator_v1` or `agmarknet_snapshot`); the loader ignores it. `dispatch_hour` overrides `config.DISPATCH_HOUR`. `horizon_days` bounds `demand.day`, `prices.day`, dispatch days and arrival days.
+`source` is `synthetic` or `organizer`. `price_source` is optional and informational (e.g. `static_table_generator_v3` or a future `agmarknet_snapshot`); the loader ignores it. `dispatch_hour` overrides `config.DISPATCH_HOUR`. `horizon_days` bounds `demand.day`, `prices.day`, dispatch days and arrival days.
 
 ---
 
@@ -195,7 +195,7 @@ Our addition for the shelf-life countdown map. The optimizer never reads it. If 
 | `usable_life_at_arrival_h` | float | ARCHITECTURE §7 |
 | `slack_h` | float | `usable_life_at_arrival_h − min_sell_window_h` (negative ⇒ infeasible by shelf life) |
 | `price_inr_kg` | float | price at `(dest, commodity, arrival_day)` |
-| `margin_inr_kg` | float | `p·(1 − h_c) − cost_var − handling_cost_inr_kg` (before fixed trip cost) |
+| `margin_inr_kg` | float | `costmodel.shipped_margin`: `(p − unit_cost)·(1 − h_c) − cost_var − handling_cost_inr_kg` (before fixed trip cost) |
 | `feasible` | bool | |
 | `reject_reason` | enum | blank if feasible; else `NO_LANE`, `NOT_AVAILABLE`, `RAIL_SLOT`, `WINDOW`, `SHELF_LIFE`, `BEYOND_HORIZON` (first failing check in that order) |
 
@@ -215,10 +215,10 @@ Rejected rows are kept: reason cards read them.
 
 ```json
 {
-  "schema_version": 1,
-  "run_id": "practice_01__milp_markdown__s42",
+  "schema_version": 2,
+  "run_id": "practice__milp_markdown__s42",
   "git_sha": "…",
-  "scenario": "data/scenarios/practice_01",
+  "scenario": "data/scenarios/practice",
   "scenario_sha256": "…",
   "policy": "milp_markdown",
   "flags": {"markdown": true, "newsvendor": false},
@@ -229,7 +229,7 @@ Rejected rows are kept: reason cards read them.
   "timestamp_utc": "…"
 }
 ```
-`flags.newsvendor` is `true` only for `--newsvendor` runs (then `run_id` ends in `__nv`). `solver` is `null` for non-MILP policies. MILP runs also carry `size` (`{"vars", "constraints"}` of the model solved) and, only when the scale fallback ran (ARCHITECTURE §9.5, U-02), `aggregation` (`{"batches", "groups", "vehicle_classes", "agg_arcs", "dropped_lines", "unassigned_kg", "validator_violations"}`). Timestamp and `solve_seconds` are the only fields allowed to differ between identical runs.
+`flags.newsvendor` is `true` only for `--newsvendor` runs (then `run_id` ends in `__nv`). `solver` is `null` for non-MILP policies. MILP runs also carry `size` (`{"vars", "constraints"}` of the model solved) and, only when the scale model ran (ARCHITECTURE §9.5), `aggregation` (`{"batches", "groups", "vehicle_classes", "agg_arcs", "dropped_lines", "unassigned_kg", "validator_violations"}`). Timestamp and `solve_seconds` are the only fields allowed to differ between identical runs.
 
 ### 5.2 `plan.csv` — PK `shipment_id` (one row per batch × destination × trip line)
 
@@ -273,9 +273,9 @@ Loads are assigned to trips by deterministic first-fit in priority order; one ba
 | `forced_by_monotone` | bool | |
 | `delta_revenue_inr` | float | the worth-it test value |
 
-### 5.5 `unshipped.csv` — PK `batch_id`
+### 5.5 Unshipped stock
 
-`batch_id, kg_unshipped, origin_expiry_h, outcome` where `outcome ∈ {expired_at_origin, carryover}`.
+Not written as a file. Unshipped kg and its fate are in `metrics.json`: `volumes_kg.unshipped`, `volumes_kg.carryover.origin` and `spoilage_breakdown_kg.origin_expired` (§5.7).
 
 ### 5.6 `sim_ledger.csv` (PK `(dest_id, commodity, day)`) and `sim_lots.csv` (PK `lot_id`)
 
@@ -288,7 +288,7 @@ Structure (values here are placeholders):
 
 ```json
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "run_id": "…", "scenario": "…", "policy": "…", "seed": 42, "realization": "base",
   "kpis": {
     "spoilage_kg": 0.0, "spoilage_pct": 0.0,
@@ -298,7 +298,7 @@ Structure (values here are placeholders):
   "spoilage_breakdown_kg": {"handling_loss": 0.0, "delivered_unsold_expired": 0.0, "origin_expired": 0.0},
   "economics_inr": {
     "gross_revenue_at_list": 0.0, "discount_cost": 0.0, "revenue": 0.0,
-    "transport": 0.0, "handling": 0.0, "spoilage_cost": 0.0, "net": 0.0
+    "cost_of_goods_sold": 0.0, "transport": 0.0, "handling": 0.0, "spoilage_cost": 0.0, "net": 0.0
   },
   "volumes_kg": {
     "total_supply": 0.0, "shipped": 0.0, "unshipped": 0.0, "sold": 0.0,
@@ -312,17 +312,18 @@ Structure (values here are placeholders):
 
 **Invariants (unit-tested on every policy):**
 1. `revenue = gross_revenue_at_list − discount_cost`
-2. `net = revenue − transport − handling − spoilage_cost`, and `kpis.net_inr == economics_inr.net`
+2. `net = revenue − cost_of_goods_sold − transport − handling − spoilage_cost`, and `kpis.net_inr == economics_inr.net`
 3. `spoilage_kg = handling_loss + delivered_unsold_expired + origin_expired`
 4. **Mass balance:** `total_supply = sold + spoilage_kg + carryover.total`
 5. `total_supply = shipped + unshipped`
 6. `spoilage_pct = spoilage_kg / total_supply × 100`
+7. `cost_of_goods_sold = Σ sold_kg × unit_cost_inr_kg` (A-48)
 
 ### 5.8 `validation.json`
 
 ```json
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "violation_total": 0,
   "counts": {"SHELF_LIFE": 0},
   "violations": [{"code": "SHELF_LIFE", "shipment_id": "S0007", "detail": "…", "observed": 13.0, "limit": 24.0}],
@@ -370,7 +371,7 @@ Arrive by: day 0 17:00
 `ladder.json`:
 ```json
 {"scenario": "…", "seed": 42, "realization": "base",
- "official_baseline": {"policy": "organizer_baseline", "kpis": {}},
+ "official_baseline": null,
  "ladder": [{"policy": "fifo", "kpis": {}}, {"policy": "fefo", "kpis": {}},
             {"policy": "milp", "kpis": {}}, {"policy": "milp_markdown", "kpis": {}}],
  "extras": [{"policy": "last_day_50", "kpis": {}}],
@@ -379,15 +380,16 @@ Arrive by: day 0 17:00
                "delta": {"net_inr": 0.0, "spoilage_kg": 0.0, "spoilage_pct": 0.0,
                          "demand_fulfillment_pct": 0.0}}]}
 ```
-`kpis` has the same keys as `metrics.json → kpis`. `ablation` is present only for `freshroute ladder --newsvendor` (absent otherwise, so the flag-off file is unchanged): the plan policy re-run with the §14.3 target, scored by the same simulator, its run dir written beside the others; `delta` = ablation KPI − `vs` KPI (AD-04).
+`kpis` has the same keys as `metrics.json → kpis`. `ablation` is present only for `freshroute ladder --newsvendor` (absent otherwise, so the flag-off file is unchanged): the plan policy re-run with the §14.3 target, scored by the same simulator, its run dir written beside the others; `delta` = ablation KPI − `vs`.
 
 `waterfall.json`:
 ```json
-{"baseline": "organizer_baseline", "plan": "milp_markdown", "tolerance_inr": 0.01,
+{"baseline": "fefo", "plan": "milp_markdown", "tolerance_inr": 0.01,
  "steps": [
   {"label": "Baseline net", "value": 0.0, "type": "total"},
   {"label": "Spoilage cost avoided", "value": 0.0, "type": "delta"},
   {"label": "Extra sales (list price)", "value": 0.0, "type": "delta"},
+  {"label": "Cost of extra goods sold", "value": 0.0, "type": "delta"},
   {"label": "Extra transport", "value": 0.0, "type": "delta"},
   {"label": "Extra handling", "value": 0.0, "type": "delta"},
   {"label": "Discounts given", "value": 0.0, "type": "delta"},
@@ -395,20 +397,20 @@ Arrive by: day 0 17:00
 ```
 Step formulas: `ARCHITECTURE.md` §12. Signs: cost steps are negative when the plan spends more. Invariant: `first total + Σ deltas = last total` within tolerance.
 
-**Until C-06 lands (no organizer baseline doc yet):** `ladder.json → official_baseline` is `null` and `waterfall.json → baseline` is `"fefo"`. Both switch to `organizer_baseline` once C-06 is implemented. Written by `freshroute ladder` to `outputs/<scenario>__ladder__s<seed>/`; each ladder policy also gets its normal `outputs/<run_id>/`.
+**While there is no organizer baseline (`organizer_baseline` is planned, not built):** `ladder.json → official_baseline` is `null` and `waterfall.json → baseline` is `"fefo"`. Both would switch to `organizer_baseline` once it is implemented. Written by `freshroute ladder` to `outputs/<scenario>__ladder__s<seed>/`; each ladder policy also gets its normal `outputs/<run_id>/`.
 
 ### 5.12 Stress and sensitivity
 
 - `stress.csv` — one row per scenario `i` per policy: `scenario_i, policy, spoilage_kg, spoilage_pct, demand_fulfillment_pct, min_dest_fill_pct, net_inr`.
 - `stress_summary.json`:
 ```json
-{"n": 200, "base_seed": 42, "plan": "milp_markdown", "baseline": "organizer_baseline",
+{"n": 200, "base_seed": 42, "plan": "milp_markdown", "baseline": "fefo",
  "bands": {"net_inr": {"plan": {"p10": 0, "p50": 0, "p90": 0}, "baseline": {"p10": 0, "p50": 0, "p90": 0}},
            "spoilage_kg": {"plan": {}, "baseline": {}},
            "demand_fulfillment_pct": {"plan": {}, "baseline": {}}},
  "share_plan_beats_baseline": {"net_inr": 0.0, "spoilage_kg": 0.0}}
 ```
-`share_plan_beats_baseline` is in 0–1 over **paired** scenarios. Bands are `numpy.percentile` (linear) over the `n` scenarios; `baseline` is `fefo` until C-06. With `--named`, `n = 3` and `scenario_i` 0/1/2 = optimistic/base/stress (`MC_NAMED`, A-42). Written by `freshroute stress` to `outputs/<scenario>__stress__s<seed>/`.
+`share_plan_beats_baseline` is in 0–1 over **paired** scenarios. Bands are `numpy.percentile` (linear) over the `n` scenarios; `baseline` is `fefo` while there is no organizer baseline. With `--named`, `n = 3` and `scenario_i` 0/1/2 = optimistic/base/stress (`MC_NAMED`, A-42). Written by `freshroute stress` to `outputs/<scenario>__stress__s<seed>/`.
 - `sensitivity.csv` — `parameter, value, policy, net_inr, spoilage_kg, demand_fulfillment_pct`. Parameters: `q10` (1.5, 2.0, 3.0; overrides every commodity's `q10`), `elasticity_multiplier` (1, 0.5; scales `price_elasticity`), `overship_slack` (0, 0.05, 0.10), `demand_multiplier` (0.8, 1.0, 1.2; scales p10/p50/p90). One row per (parameter, value), one parameter moved at a time, `policy` = `milp_markdown`; rows at the base value (`elasticity_multiplier` 1, `overship_slack` = `OVERSHIP_SLACK`, `demand_multiplier` 1.0) are the plain run. Values from `config.py` `SENS_*`. Written by `freshroute sensitivity` to `outputs/<scenario>__sensitivity__s<seed>/`.
 
 ### 5.13 Replan outputs — `replan/<event_id>/`
@@ -425,7 +427,7 @@ Step formulas: `ARCHITECTURE.md` §12. Signs: cost steps are negative when the p
 ```
 `kpis_old_plan_under_event` = the old plan executed in the changed world (the honest do-nothing comparison).
 
-Written by `freshroute replan` (`replan.py`, AD-02). Field rules:
+Written by `freshroute replan` (`replan.py`). Field rules:
 - `kpis_old_plan_under_event`, `kpis_replanned`: the six `metrics.json` `kpis` (`spoilage_kg`, `spoilage_pct`, `demand_fulfillment_pct`, `min_dest_fill_pct`, `net_inr`, `violations`), both from the one simulator on the changed world; `delta_kpis` = replanned − old, per key. `violations` counts as in `validation.json` below.
 - `moved_batches`: per batch, the `(dest_id, dispatch_day)` carrying most of its **undispatched** kg in the old plan vs the replan, listed only when they differ; `kg` = kg on the new main line (on the old one if the batch is now unshipped). `dest_id`/`dispatch_day` are `null` on the side where the batch is unshipped.
 - `discount_changes`: every `(lot_id, day)` whose `discount_pct` differs (a missing row counts as 0); `from_pct`/`to_pct` are floats.
@@ -442,8 +444,8 @@ Chaining: `--run` may be a replan directory; its world is its parent run's scena
 
 ```
 data/scenarios/<name>/        commodities.csv batches.csv destinations.csv demand.csv prices.csv
-                              lanes.csv vehicles.csv events.csv [geo.csv] scenario.json
-outputs/<run_id>/             run_manifest.json plan.csv trips.csv discounts.csv unshipped.csv
+                              lanes.csv vehicles.csv events.csv geo.csv scenario.json
+outputs/<run_id>/             run_manifest.json plan.csv trips.csv discounts.csv
                               sim_ledger.csv sim_lots.csv metrics.json validation.json
                               reason_cards.json dispatch_sheet.csv dispatch_sheet.txt
                               [demand_target.csv — --newsvendor runs only]
@@ -453,7 +455,7 @@ outputs/.api/jobs/              API run-queue state only (§11); gitignored with
 outputs/demo_backup/            committed copy of the demo run (fallback if the solver fails on demo day)
 ```
 
-Run-directory contents are unchanged by the API refactor, so `schema_version` stays **1**; the HTTP layer has its own `api_version` (§11).
+The HTTP layer has its own `api_version` (§11).
 
 ---
 
@@ -488,9 +490,9 @@ Canned events for the dropdown (one per type; adjust ids to the scenario): NH-48
 
 ---
 
-## 8. Organizer mapping template (fill at H0 — `TODO.md` S-02)
+## 8. Organizer mapping template (to fill when the organizers publish their data)
 
-Copy this table into the README and complete it. "Status": `OK` mapped · `XFORM` needs a transform · `MISSING` no equivalent (decide + log an assumption) · `N/A`.
+Complete this table from the organizers' material. "Status": `OK` mapped · `XFORM` needs a transform · `MISSING` no equivalent (decide + log an assumption) · `N/A`.
 
 | Our table.column | Organizer file.column | Transform | Status |
 |---|---|---|---|
@@ -520,15 +522,28 @@ Copy this table into the README and complete it. "Status": `OK` mapped · `XFORM
 
 ---
 
-## 9. Agmarknet snapshot (calibration data for practice scenarios)
+## 9. Synthetic generator and the Agmarknet snapshot
+
+### 9.1 Generator v3 (`generator.py`)
+
+All committed scenarios under `data/scenarios/` are produced by `freshroute generate [names…] [--out data/scenarios]` (default: every name in `generator.COMMITTED`). Output is byte-deterministic per seed (`numpy.random.default_rng(seed)`). Every `scenario.json` says `source = synthetic` and `price_source = static_table_generator_v3`. Design rationale: D-29; assumptions: A-47, A-49.
+
+- **Network.** Real node names and coordinates (`geo.csv`): hubs `HUB1` (Kolar) and `HUB2` (Chikkaballapur); destinations `D1`–`D8` from `generator.DESTS` (KR Market, Hoskote, Whitefield, Tumakuru, Chennai, Mysuru, Hyderabad, Electronic City). Scenarios with 4 or fewer destinations use `HUB1` only.
+- **Lanes.** Road travel time = road km (haversine × 1.3) / 40 km/h + 0.5 h, for both `reefer` and `ambient`; p90 = p50 × U(1.15, 1.40). Rail lanes exist only to destinations at least 200 km away (departure slots `18|22`).
+- **Outlets.** Outlet `type` sets the daily delivery window (`window_mode = daily`), price premium over the mandi, commodity basket, handling time and cost, and receiving capacity (headroom over mean daily demand).
+- **Demand.** Per commodity, total p50 ≈ U(0.9, 1.1) × that commodity's supply. It is placed only on days some lane with a vehicle can reach the outlet inside its window, so no demand is unreachable. Outlet shares are lognormal and capped at 35 % when at least three outlets take the commodity; the daily multiplier is AR(1) around 1.
+- **Prices.** Static modal ₹/kg table per commodity × outlet-type premium × a shared per-commodity daily market walk; `price_min`/`price_max` from per-commodity spreads.
+- **Shelf life.** Per-commodity base hours, q10 and reference temperature (`generator._COMM`) chosen so expiry binds for spinach, tomato, banana and mango. Batch RSL = Beta(5, 2) × base; the quality grade (A/B) is derived from that fraction; storage temperature is drawn per commodity.
+- **Fleet.** Both road modes at every hub; capacities 1 / 3 / 5 / 9 t; `max_trips_day = floor(16 / (2 × median lane h))`, at least 1; one `rail` vehicle per hub that has a rail lane.
+- **Committed scenarios.** `practice` and `small` (seed 42), plus a hidden-style suite (`hidden_small`, `hidden_practice`, `hidden_3x`, `hidden_10x`, five `hidden_ev_*` with one event each, `hidden_edge` with an already-expired batch and a zero-trip vehicle). Practice = seed 42, 200 batches, 8 destinations, 3 days, 6 road vehicles.
+
+### 9.2 Agmarknet snapshot (not available)
 
 - **Source:** "Variety-wise Daily Market Prices Data of Commodity" on data.gov.in (Agmarknet via the OGD platform). Fields: state, district, market, commodity, variety, grade, min/max/modal price (₹ per quintal).
-- **Snapshot file:** `data/agmarknet/agmarknet_snapshot.csv` with columns `state, district, market, commodity, variety, arrival_date, min_price, max_price, modal_price` (₹/quintal as published).
-- **Access requires a registered API key.** Resource ids: `35985678-0d79-46b4-9ed6-6f13308a1d24` (current, filters are PascalCase: `filters[Arrival_Date]`, `filters[State]`) and `9ef84268-d588-465a-a308-a864a43d0070` (original, lowercase filters: `filters[arrival_date]`, `filters[state]`). The widely circulated sample key returns `{"error": "Key not authorised"}` — **do not ship one in git.** Put the key in `.env` as `DATAGOV_API_KEY` (git-ignored) and page with `limit=500&offset=…`.
-- **Status 2026-10-14 (PRE-02, re-grounded S-01c):** no snapshot. No key is available to the team, so PRE-02 was closed on its own fallback: the generator's static price table (`scenario.json → price_source = static_table_generator_v2` since S-01c; v1 was `static_table_generator_v1`). V2 keeps the static-table form but re-bases modal levels on published Agmarknet aggregates (Farmer.in ticker, CEDA series — keyless, not a snapshot) and adds per-day volatility and per-destination spreads, with wider bands for onion. A-20 therefore does not apply to our practice data.
-- **The transform below is specified but not implemented:** `scripts/build_prices.py` does not exist yet (`scripts/` is empty). Whoever obtains a key writes it, then re-opens A-20.
-- **Transform** (`scripts/build_prices.py`): `price_inr_kg = modal_price / 100`, `price_min = min_price / 100`, `price_max = max_price / 100`; map markets to `dest_id` by hand; map commodity names by hand (check spelling in the snapshot); replay the most recent `horizon_days` days as day `0…H−1`.
-- Context only: post-harvest-loss statistics (NABCONS/PIB) are used to sanity-check the synthetic baseline (A-21), never as model inputs presented as real batch data.
+- **Access requires a registered API key.** Resource ids: `35985678-0d79-46b4-9ed6-6f13308a1d24` (current, filters are PascalCase: `filters[Arrival_Date]`, `filters[State]`) and `9ef84268-d588-465a-a308-a864a43d0070` (original, lowercase filters: `filters[arrival_date]`, `filters[state]`). The widely circulated sample key returns `{"error": "Key not authorised"}` — **do not ship one in git.** The key would go in `.env` as `DATAGOV_API_KEY` (git-ignored), paging with `limit=500&offset=…`.
+- **Status:** no snapshot exists and `data/agmarknet/` is empty. The generator's static price table stands in for it; its modal levels are re-based on published Agmarknet aggregates (Farmer.in ticker, CEDA series — keyless, not a snapshot). A-20 therefore does not apply to the practice data.
+- **Planned, not built:** `scripts/build_prices.py` (the `scripts/` directory is empty) and a cached `data/agmarknet/agmarknet_snapshot.csv` with columns `state, district, market, commodity, variety, arrival_date, min_price, max_price, modal_price` (₹/quintal as published). The transform would be `price_inr_kg = modal_price / 100`, `price_min = min_price / 100`, `price_max = max_price / 100`; map markets to `dest_id` and commodity names by hand; replay the most recent `horizon_days` days as day `0…H−1`.
+- Context only: post-harvest-loss statistics (NABCONS/PIB) are used to judge whether the synthetic baseline is plausible (A-47), never as model inputs presented as real batch data.
 
 ---
 
@@ -570,20 +585,20 @@ The dashboard's only door to the engine. The API **serves run artifacts verbatim
 
 | Method + path | Success | Body |
 |---|---|---|
-| `GET /api/health` | 200 | `{"status": "ok", "schema_version": 1, "api_version": 1}` |
+| `GET /api/health` | 200 | `{"status": "ok", "schema_version": 2, "api_version": 1}` |
 | `GET /api/config` | 200 | `{"NAME": value, …}` — every public UPPERCASE constant of `config.py` (`ARCHITECTURE.md` §19) whose value is JSON-serialisable, verbatim (tuples become lists), sorted by name. `costmodel.py` has no module constants (its coefficients come from the scenario tables), so nothing else is added. Additive in `api_version` 1 |
 | `GET /api/scenarios` | 200 | `[{"name", "source", "horizon_days", "window_mode"}]` — from `data/scenarios/*/scenario.json`, sorted by `name` |
 | `GET /api/scenarios/{name}/geo` | 200 / 404 | `geo.csv` as records (§3.9), or 404 when absent (the UI uses the colour table) |
 | `GET /api/runs` | 200 | `{"runs": [{"run_id", "scenario", "policy", "seed", "has_ladder"}], "fixture": false}` — `run_id` = the name of each `outputs/<dir>/` holding a `metrics.json` (the key every `/api/runs/{run_id}` endpoint resolves; it can differ from `metrics.run_id` when the CLI wrote to a custom `--out`), sorted; `fixture: true` (and `runs: []`) when no run is on disk; the UI then requests `GET /api/runs/<run_id of backend/tests/fixtures/metrics_example.json>` (e.g. `EXAMPLE-SYNTHETIC`) |
 | `GET /api/runs/{run_id}` | 200 / 404 | `metrics.json` verbatim, plus `baseline` (see `data_access.load_baseline` ordering: ladder `official_baseline` → ladder `fefo` → sibling `fefo` run), `validation` (`validation.json` or `null`), `manifest` (`run_manifest.json` or `null`), `fixture` (`false`; `true` with the three wrappers `null` when this is the fixture run served because nothing is on disk) |
 | `GET /api/runs/{run_id}/tables/{table}` | 200 / 404 | `table ∈ {plan, trips, discounts, sim_ledger, sim_lots}` (§5.2–§5.6) as `{"columns": [...], "records": [...]}`; `?format=csv` returns the file as `text/csv` for download |
-| `GET /api/runs/{run_id}/reason-cards` | 200 | `reason_cards.json` (§5.9), or `null` when the run has none (runs written before U-01) |
+| `GET /api/runs/{run_id}/reason-cards` | 200 | `reason_cards.json` (§5.9), or `null` when the run has none (older runs) |
 | `GET /api/runs/{run_id}/dispatch-sheet` | 200 | `{"csv": [...records...], "text": "..."}` (§5.10), or `null` when absent |
 | `GET /api/ladder?scenario=&seed=` | 200 / 404 | `{"ladder": …, "waterfall": …}` from §5.11, or 404 when not on disk |
-| `POST /api/runs` | 202 | Request `{"scenario": "data/scenarios/practice", "policy": "milp_markdown", "seed": 42, "flags": {"markdown": true, "newsvendor": false}}` → `{"run_id": "…__milp_markdown__s42", "status": "running"}`. `policy ∈ ` the CLI's `POLICIES`; an unknown policy or scenario is `400`. `organizer_baseline` is a *recognised* name that cannot run yet (C-06): the API accepts it in the request shape and answers `400` with the same explanation the CLI prints, rather than a bare "unknown policy". `scenario` is a scenario directory path (`data/scenarios/<name>`), resolved like the CLI's `--scenario`, i.e. against the API's working directory (the repo root). `flags.newsvendor = true` is `400` until the CLI has `--newsvendor`; `flags.markdown` is implied by the policy. A malformed body is FastAPI's `422`. Re-posting a run that is still `running` returns it without enqueueing again. |
+| `POST /api/runs` | 202 | Request `{"scenario": "data/scenarios/practice", "policy": "milp_markdown", "seed": 42, "flags": {"markdown": true, "newsvendor": false}}` → `{"run_id": "…__milp_markdown__s42", "status": "running"}`. `policy ∈ ` the CLI's `POLICIES`; an unknown policy or scenario is `400`. `organizer_baseline` is a *recognised* name that cannot run yet (planned, no organizer material): the API accepts it in the request shape and answers `400` with the same explanation the CLI prints, rather than a bare "unknown policy". `scenario` is a scenario directory path (`data/scenarios/<name>`), resolved like the CLI's `--scenario`, i.e. against the API's working directory (the repo root). `flags.newsvendor = true` is accepted for the MILP policies (`milp`, `milp_markdown`; the run id gets `__nv`) and is `400` for any other policy; `flags.markdown` is implied by the policy. A malformed body is FastAPI's `422`. Re-posting a run that is still `running` returns it without enqueueing again. |
 | `GET /api/runs/{run_id}/status` | 200 / 404 | `{"state": "running" \| "done" \| "error", "started_utc", "finished_utc", "error"}`; a run on disk with no job file (CLI-made, or `.api/` cleared) is `done` with the other three `null` |
 
-Phase 4 endpoints (additive, `api_version` stays 1):
+Robustness and replan endpoints:
 
 | Method + path | Success | Body |
 |---|---|---|
@@ -593,7 +608,7 @@ Phase 4 endpoints (additive, `api_version` stays 1):
 | `POST /api/replan` | 202 / 400 / 404 | Request `{"run_id", "event": {…§6…}}`; invalid event 400, unknown run 404; response `{"run_id", "event_id", "status"}`; poll `GET /api/runs/{run_id}__replan__{event_id}/status` |
 | `GET /api/runs/{run_id}/replan/{event_id}` | 200 / 404 | `{"diff": diff.json (§5.13), "narration": narrator.template_narration(diff, metrics)}`; 404 until the replan has been written |
 
-`POST /api/runs` also accepts `flags.newsvendor` (MILP policies only; run id gets `__nv`). `POST /api/demo` (U-06) is still not exposed.
+There is no `/api/demo` endpoint: the demo scoreboard comes from the CLI (`make demo`), never HTTP.
 
 ### 11.3 Run-queue state file
 
