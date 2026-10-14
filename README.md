@@ -47,7 +47,9 @@ make serve       # build the dashboard and serve it from the API — one URL, th
 
 ## Assumptions and cost-model mapping *(S-02 written on defaults; finalized at V-03)*
 
-The assumption log lives in `docs/ARCHITECTURE.md` §20 and the organizer column mapping template in `docs/DATABASE.md` §8. Both are copied in the sections below (S-02) and finalized at V-03, with each *confirm* item marked resolved or open. The copy below stops at A-22; later assumptions (A-23 onward) live in `ARCHITECTURE.md` §20 only until V-03.
+The assumption log lives in `docs/ARCHITECTURE.md` §20 and the organizer column mapping template in `docs/DATABASE.md` §8. Both are copied below (S-02). With each *confirm* item marked resolved or open. Every **confirm** item is still open: **no organizer material has been received**, so S-01/S-02 cannot be signed off (see `docs/TODO.md` S-01).
+
+Mapping table, cost-model comparison and assumption log were completed on 2026-10-14 (S-02 mechanical parts). The open half is the organizer sign-off, which is blocked on material we do not have.
 
 ## Results *(TBD — V-04)*
 
@@ -55,7 +57,20 @@ To be copied from `make demo` output only. No projected numbers appear here.
 
 ## Sources
 
-Verified, secondhand and vendor-reported claims are labelled in `docs/TODO.md` §10 and `docs/RESEARCH-v1.md` §H.
+Verified, secondhand and vendor-reported claims are labelled in `docs/TODO.md` §10 and `docs/RESEARCH-v1.md` §H. Everything below was re-checked against primary sources on **2026-10-14** (PRE-03). These are framing context, never model inputs.
+
+| Figure we may say | Value | Source | Status |
+|---|---|---|---|
+| Post-harvest loss study | NABCONS for MoFPI, reference year 2020–22, **54 commodities**, **15 agro-climatic zones**, **292 districts**; stages = harvesting, collection, grading/sorting, winnowing/cleaning, drying, packaging, transportation, farm storage, godown, wholesaler, retailer, processing unit, market transport | [PIB PRID 2148529, 25 Jul 2025](https://www.pib.gov.in/PressReleasePage.aspx?PRID=2148529) · [PIB PRID 2151371, 1 Aug 2025](https://www.pib.gov.in/PressReleasePage.aspx?PRID=2151371) · NABCONS study report, §1.3 | **verified (primary)** |
+| Tomato loss | **8.37 % farm stage + 3.25 % market stage = 11.62 %** total | PIB PRID 2151371, Annexure-II | **verified (primary)** |
+| Onion loss | **5.31 % + 1.96 % = 7.27 %** | PIB PRID 2151371, Annexure-II | **verified (primary)** |
+| Loss ranges | Fruits **6.02–15.05 %**, Vegetables **4.87–11.61 %** (guava 15.05 % is the worst fruit) | MoFPI annexure to Lok Sabha USQ 2998, 6 Aug 2026 | **verified (primary)** |
+| **Value of tomato post-harvest loss** | **₹5,921.15 crore** (24.59 lakh MT). Onion ₹5,156.32 crore; potato ₹5,733.84 crore | **Lok Sabha Unstarred Q 2138, 12 Feb 2026**, commodity-wise table "as per NABCONS Study (2022)" | **verified (primary)** — and it **is** an annual estimate, so "a year" may be said |
+| Total economic loss | ₹1,52,790 crore (US$18.5 bn) for 2020–21, on average wholesale prices of 2019-20/2020-21/2021-22; fruits+vegetables = ₹57,004 crore (37 %) | MoFPI figures reported 2024–25; category split ₹26,001 cr cereals, ₹29,545 cr fruits, ₹27,459 cr vegetables | verified (primary annexure + reported) |
+| Cold storage | **8,815 cold storages, 402.18 lakh MT (40.22 MMT)** as of **30 June 2025** | [PIB PRID 2172351, 28 Sep 2025](https://www.pib.gov.in/PressReleasePage.aspx?PRID=2172351) | **verified (primary)** |
+| Agmarknet prices | **not obtained.** data.gov.in requires a registered API key; the published sample key returns `Key not authorised` | [dataset](https://www.data.gov.in/resource/variety-wise-daily-market-prices-data-commodity) · procedure in `docs/DATABASE.md` §9 | **open (PRE-02)** |
+
+**How to say the tomato numbers** (unchanged, now checkable): the 3.25 % is a share of tomato *output*, not a share of the loss; ₹5,921.15 crore covers **all** stages, not the market-stage slice alone; "a year" is supportable.
 
 ## Organizer mapping
 
@@ -90,6 +105,8 @@ Template from `docs/DATABASE.md` §8. No organizer material has been read yet, s
 ## Open questions (S-01)
 
 From `docs/TODO.md` §3. "Default" answers come from the default rule in `DECISIONS.md`; everything else is OPEN until the organizers' material is read.
+
+> **Status 2026-10-14: all eight are OPEN and unverifiable.** No organizer material exists in the repo or on the team's machines: `data/organizer/` has never been populated, there is no `.env` with organizer credentials, and the team's own problem-understanding note lists the organizers' baseline as an open question ("Is a baseline supplied by the organizers? If so, implement that baseline exactly"). S-01, S-02 and C-06 stay blocked on receipt of the material. The defaults below are what the code does in the meantime, and rule #1 applies the moment the real thing is known.
 
 | # | Question | Answer | Assumption |
 |---|---|---|---|
@@ -132,7 +149,7 @@ Every coefficient or formula in `docs/ARCHITECTURE.md` §7 that must change if t
 
 ## Assumption log
 
-Copy of `docs/ARCHITECTURE.md` §20. Every **confirm** item is still open: no organizer material has been read yet.
+Copy of `docs/ARCHITECTURE.md` §20, complete (A-01 … A-40). Every **confirm** item is still open: no organizer material has been read yet.
 
 | ID | Assumption | Status |
 |---|---|---|
@@ -158,6 +175,24 @@ Copy of `docs/ARCHITECTURE.md` §20. Every **confirm** item is still open: no or
 | A-20 | Practice prices calibrated from Agmarknet modal Rs/quintal / 100; Agmarknet and post-harvest-loss figures are context, never model inputs claimed as "real" batch data | team |
 | A-21 | Practice data is calibrated so FIFO market-stage spoilage lands near NABCONS tomato about 3.25 % and onion about 1.96 % (sanity check only; those are market-stage % of production incl. godowns/wholesale/retail/transport). Measured on synthetic `practice` (FIFO): tomato 3.51 %, onion 0.82 % (onion capped by its 1 % handling loss), others 0.85-7.83 %, overall 3.31 % | team |
 | A-22 | Markdown tier boundaries: `risk` exactly 0.30 -> 20 % tier and exactly 0.50 -> 20 % tier (the research ranges "0.10-0.30 / 0.30-0.50" overlap at the boundaries) | team |
+| A-23 | A shipment arriving after the horizon counts as origin-side stock (expired or carry-over by its expiry vs `24·H`), which keeps mass balance (F-06) | team |
+| A-24 | A lot with no discount row for a day has 0 % discount; a day with no price row uses the last earlier price, else 0 (F-06) | team |
+| A-25 | Lot expiry uses the plan's `arrival_h` + `usable_life_at_arrival_h` (base realization); travel/RSL perturbation is not implemented until stress testing (F-06) | team |
+| A-26 | Fulfillment denominator is every demand-table row, including destinations that received nothing (F-06) | team |
+| A-27 | `build_arcs` rejection precedence: `NO_LANE`, `NOT_AVAILABLE`, `RAIL_SLOT`, `WINDOW`, `SHELF_LIFE`, `BEYOND_HORIZON`; a rail slot after the end of dispatch day t is `RAIL_SLOT`, not a delayed dispatch; batch/vehicle origin mismatch is `NO_LANE`; window checks are inclusive within `FLOAT_TOL` (F-02) | team |
+| A-28 | `realization` for `build_arcs` is a dict `{"rsl_h": {batch_id: h}, "travel_h": {(origin, dest, mode): h}}`; for `simulate` it is `{"demand_kg": {(dest, commodity, day): kg}}`. Stress testing (AD-03) must confirm or replace both (F-02, F-06) | team |
+| A-29 | Usable life is not clamped at 0; `wait_h` decays at store temperature and `handling_h` is consumed 1:1 (F-01) | team |
+| A-30 | Practice data uses a static price table (no Agmarknet snapshot: PRE-02 closed on 2026-10-14, no data.gov.in API key), 0.53–1.0 × base shelf life per batch, 80–480 kg batches, 4 trips/vehicle/day, demand p10/p90 = 0.75 / 1.3 × p50, delivery windows spanning the whole horizon, one rail lane per hub with no rail vehicle, fake Bengaluru coordinates. A-20 does not apply until a snapshot exists. Those knobs (`generator.py` top) are calibrated to the NABCONS sanity targets of A-21 with the static price table, not to real batch data (C-10) | team |
+| A-31 | The FIFO baseline is naive per §12: it respects physical limits but ignores shelf life and delivery windows, and the validator reports the resulting violations honestly (2 `SHELF_LIFE` on `tiny_3batch`, 15 on `practice`). The `make check` demo-plan step therefore validates the `milp` plan, not FIFO. FIFO and MILP runs carry no markdown (F-07) | team |
+| A-32 | Validator recomputes `arrival_h` from dispatch and lane `travel_h_p50`; has no code for beyond-horizon arrivals; derives trips from `trip_id`; cannot import `config.py`, so `OVERSHIP_SLACK` is passed in by the caller and `PCT` conversion for `discount_pct` is local (F-04) | team |
+| A-33 | MILP: trip `dispatch_h` is the max of its lines' dispatch hours; a TimeLimit result with all-zero `x` is treated as "no incumbent" and falls to the FEFO-greedy; a missing demand row is a target of 0; origin-expiry test matches the simulator (§13 step 3): `available_from_h + rsl_h / decay(storage_temp_c) ≤ 24·H` (F-03, fixed at C-01) | team |
+| A-34 | Markdown: lot stock for risk is `kg` net of handling loss, FEFO residual demand per day; the cap is `min(max_discount_frac, 1 − salvage/price)`; a monotone-forced discount may fall below the salvage floor when a later price is lower (known gap) (F-09) | team |
+| A-35 | MILP C6: `T_d = Σ target` over only the `(d, c, arrival_day)` keys some feasible arc reaches; `avg_fill` = mean over destinations with `T_d > 0`; slack `s_d` is in fill-fraction units, penalised at `PENALTY_MULT × max price × T_d`. On `practice` C6 binds: the solve hits the 30 s limit (gap 3.85 %, proven optimal in ~54 s; ~₹79k objective cost of balance). The FEFO-greedy fallback ignores C6 (C-02) | team |
+| A-36 | `last_day_50` runs no worth-it test: it writes discounts.csv rows only for lot-days whose remaining life is ≤ 24 h, with `risk`/`tier_base_pct`/`delta_revenue_inr` = 0, discount `min(50, max_discount_pct, salvage cap)` (C-05) | team |
+| A-37 | `milp_markdown` discounts are near-inert while the MILP ships ≤ p50 demand (1 of 551 discount rows non-zero on `practice`; KPIs equal `milp`): lots carry almost no surplus for the worth-it test to sell. `build_discounts` keeps lot stock fixed across days, so it can mark down a lot that already sold out; the simulator ignores that row (known gap) (C-11) | team |
+| A-38 | The MILP is warm-started with the FEFO-greedy plan (`warmStart=True`), so under its own objective the time-limited incumbent is never worse than the `fefo` baseline; practice-size solves still end at a 1–6 % MIP gap at 30 s. C1 covers every batch, including batches with no feasible arc. `solver.objective_inr` equals the simulator `net_inr` when `overship_slack = 0` (C-04) | team |
+| A-39 | G2 "not worse on spoilage" is measured in kg within the horizon. A plan that sells long-life stock the baseline leaves as carry-over shows that stock's handling loss as extra spoilage (generated `small` seed 1: MILP +4.29 kg of onion handling loss vs FEFO while netting +₹17.6k); that one case is an `xfail` in `tests/test_ladder.py`, not hidden (C-04) | team |
+| A-40 | Measured, not targets (C-09): at 10× (2,000 batches, 30 vehicles → 1.44 M arcs) `build_arcs` takes 118–141 s and HiGHS returned only after ~4,184 s despite the 30 s cap, so **the cap is not enforced end to end at that size**. Practice solves in 30 s at a 1–6 % gap. The wall-clock limit makes time-limited results load-dependent, so determinism holds only for solves that finish below the limit. Follow-ups: U-02 (scale fallback) and H-02 (determinism re-check; consider a node limit instead of wall time) | team |
 
 ## Sign-off
 

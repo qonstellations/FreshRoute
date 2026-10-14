@@ -32,7 +32,7 @@ The team adopted these together, before any code moved; each row is implemented 
 | D-19 | **React SPA: Vite + TypeScript + recharts + react-leaflet**, replacing Streamlit, plotly and pydeck. No SSR, no router, no state library | Static `npm run build` output is the fastest offline demo; `tsc` + build is the frontend quality gate; a router and a store would be unused for five tabs | Accepted (RF-05) |
 | D-20 | **One origin in the demo:** FastAPI mounts `frontend/dist` and serves the SPA, so the whole demo is `make serve` on one URL. In development, Vite proxies `/api` to `127.0.0.1:8000` | One command, one URL, nothing to start twice on stage, no CORS in the demo path | Accepted (RF-05, RF-07) |
 | D-21 | **Run triggering is asynchronous and file-backed.** `POST /api/runs` returns 202 + `run_id`; a single serialized worker thread runs the engine; status is written to `outputs/.api/jobs/<run_id>.json`; the frontend polls `GET /api/runs/{id}/status` | A practice-size MILP solve takes up to the 30 s cap, and A-40 measured ~4,184 s at 10x scale. A blocking request would look like a hang. No job database and no websocket, consistent with D-03 (files are the datastore); `metrics.json` existing on disk means the run is done, so status survives a restart | Accepted (RF-04) |
-| D-22 | **Python pinned to 3.11** via `uv python pin` (`.python-version`); `requires-python` floor stays `>=3.10` | Matches the interpreter the team is actually developing on and keeps a newer one available for anyone who prefers it. uv needs a single pinned interpreter to resolve and build against | Accepted (RF-01) |
+| D-22 | **Python pinned to 3.13** via `uv python pin` (`.python-version`); `requires-python` floor stays `>=3.10` for the floor and `>=3.12` for a working install | Matches the interpreter already committed. **Corrected 2026-10-14:** this row first said 3.11, which PRE-01 disproved — the pinned `pulp==4.0.0` declares `Requires-Python >=3.12`, so `uv pip install -r requirements.txt` fails on 3.11 ("pulp==4.0.0 depends on Python>=3.12"). Downgrading pulp instead would invalidate D-14 (the PuLP 4.0 `add_variable(cat=)` API the MILP is written against), so the interpreter moves, not the solver. uv needs a single pinned interpreter to resolve and build against | Accepted (RF-01), corrected at PRE-01 |
 | D-23 | **Amends D-13: the 20-hour clock restarts at the refactor.** Feature freeze moves **H17 -> H23**; G3 H12 -> H18, G4 H15 -> H21, G6 H18 -> H24, G7 H20 -> H26. RF-01 … RF-07 (~7 h of code plus a ~1 h shared docs pass, ≈5 h of wall clock) are budgeted before Phase 3 restarts | Replacing the UI and the toolchain was not in the original 20 h plan. Re-timing is cheaper than cutting the scoreboard, map, robustness and replan surfaces, all of which the pitch script (TODO §10) and the rubric map depend on | Accepted |
 
 ## Open decisions (resolve at H0, `docs/TODO.md` S-01/S-02)
@@ -41,6 +41,19 @@ The team adopted these together, before any code moved; each row is implemented 
 - Window mode (absolute vs daily), horizon, origin handling cost, hard-violation definition.
 - Whether `data/organizer/` may be committed.
 - Whether AI coding assistants and external data are permitted by the event rules.
+
+### Blocked on 2026-10-14 (PRE-01 / PRE-03 audit) — evidence, not assumption
+
+Audited before the refactor. **No organizer material exists anywhere the team can reach**, so these tasks are blocked, not merely undone:
+
+| Item | Evidence checked | Outcome |
+|---|---|---|
+| `data/organizer/` (rubric, dataset, baseline, submission format) | directory has never been created in the repo; `.gitignore` only excludes it | **absent** |
+| Organizer credentials | no `.env`, no key in the environment | **absent** |
+| Agmarknet snapshot (PRE-02) | `api.data.gov.in` rejects the published sample key with `{"error": "Key not authorised"}`; a registered key is required | **absent** |
+| The organizers' own baseline (C-06) | the team's problem-understanding note asks, unanswered, "Is a baseline supplied by the organizers? If so, implement that baseline exactly", and warns that its example baseline is "only an example" | **unknown** |
+
+Consequences, all deliberate: **S-01** cannot be answered, so **S-02** cannot be signed off and **C-06** cannot be implemented "exactly from the organizers' doc". Inventing an `organizer_baseline` and labelling it official would be the one failure rule #1 exists to prevent, so `ladder.json → official_baseline` stays `null` and the waterfall's baseline stays `fefo` (asserted by `tests/test_ladder.py`). **Unblock trigger for all three:** the organizers publish the material → re-read it → fill `DATABASE.md` §8, resolve the eight S-01 questions, sign S-02, then implement C-06 against the real procedure.
 
 ## Default rule: if unspecified, we proceed like this
 

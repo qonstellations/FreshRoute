@@ -499,9 +499,11 @@ Copy this table into the README and complete it. "Status": `OK` mapped · `XFORM
 
 ## 9. Agmarknet snapshot (calibration data for practice scenarios)
 
-- **Source:** "Variety-wise Daily Market Prices Data of Commodity" on data.gov.in (catalogue last updated 10 April 2026 per the research). Fields: state, district, market, commodity, variety, arrival date, min/max/modal price (₹ per quintal).
+- **Source:** "Variety-wise Daily Market Prices Data of Commodity" on data.gov.in (Agmarknet via the OGD platform). Fields: state, district, market, commodity, variety, grade, min/max/modal price (₹ per quintal).
 - **Snapshot file:** `data/agmarknet/agmarknet_snapshot.csv` with columns `state, district, market, commodity, variety, arrival_date, min_price, max_price, modal_price` (₹/quintal as published).
-- **Download a CSV snapshot before the event. Never depend on the live API in the demo.** The public sample API key reportedly caps responses at 10 records per request (from a third-party GitHub collector — unverified).
+- **Access requires a registered API key.** Resource ids: `35985678-0d79-46b4-9ed6-6f13308a1d24` (current, filters are PascalCase: `filters[Arrival_Date]`, `filters[State]`) and `9ef84268-d588-465a-a308-a864a43d0070` (original, lowercase filters: `filters[arrival_date]`, `filters[state]`). The widely circulated sample key returns `{"error": "Key not authorised"}` — **do not ship one in git.** Put the key in `.env` as `DATAGOV_API_KEY` (git-ignored) and page with `limit=500&offset=…`.
+- **Status 2026-10-14 (PRE-02):** no snapshot. No key is available to the team, so PRE-02 was closed on its own fallback: the generator's static price table (`scenario.json → price_source = static_table_generator_v1`, A-30). A-20 therefore does not apply to our practice data.
+- **The transform below is specified but not implemented:** `scripts/build_prices.py` does not exist yet (`scripts/` is empty). Whoever obtains a key writes it, then re-opens A-20.
 - **Transform** (`scripts/build_prices.py`): `price_inr_kg = modal_price / 100`, `price_min = min_price / 100`, `price_max = max_price / 100`; map markets to `dest_id` by hand; map commodity names by hand (check spelling in the snapshot); replay the most recent `horizon_days` days as day `0…H−1`.
 - Context only: post-harvest-loss statistics (NABCONS/PIB) are used to sanity-check the synthetic baseline (A-21), never as model inputs presented as real batch data.
 
@@ -554,7 +556,7 @@ The dashboard's only door to the engine. The API **serves run artifacts verbatim
 | `GET /api/runs/{run_id}/reason-cards` | 200 | `reason_cards.json` (§5.9), or `null` when the run has none yet (nothing writes them before U-01) |
 | `GET /api/runs/{run_id}/dispatch-sheet` | 200 | `{"csv": [...records...], "text": "..."}` (§5.10), or `null` when absent |
 | `GET /api/ladder?scenario=&seed=` | 200 / 404 | `{"ladder": …, "waterfall": …}` from §5.11, or 404 when not on disk |
-| `POST /api/runs` | 202 | Request `{"scenario": "data/scenarios/practice", "policy": "milp_markdown", "seed": 42, "flags": {"markdown": true, "newsvendor": false}}` → `{"run_id": "…__milp_markdown__s42", "status": "running"}`. `policy ∈ ` the CLI's `POLICIES`; an unknown policy or scenario is `400` |
+| `POST /api/runs` | 202 | Request `{"scenario": "data/scenarios/practice", "policy": "milp_markdown", "seed": 42, "flags": {"markdown": true, "newsvendor": false}}` → `{"run_id": "…__milp_markdown__s42", "status": "running"}`. `policy ∈ ` the CLI's `POLICIES`; an unknown policy or scenario is `400`. `organizer_baseline` is a *recognised* name that cannot run yet (C-06): the API accepts it in the request shape and answers `400` with the same explanation the CLI prints, rather than a bare "unknown policy". |
 | `GET /api/runs/{run_id}/status` | 200 / 404 | `{"state": "running" \| "done" \| "error", "started_utc", "finished_utc", "error"}` |
 
 Added later, same shape, only when the CLI command exists: `POST /api/replan` (AD-02), `POST /api/stress` (AD-03), `POST /api/demo` (U-06).
