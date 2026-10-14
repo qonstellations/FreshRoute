@@ -47,7 +47,7 @@ make serve       # build the dashboard and serve it from the API — one URL, th
 
 ## Assumptions and cost-model mapping *(S-02 written on defaults; finalized at V-03)*
 
-The assumption log lives in `docs/ARCHITECTURE.md` §20 and the organizer column mapping template in `docs/DATABASE.md` §8. Both are copied below (S-02). With each *confirm* item marked resolved or open. Every **confirm** item is still open: **no organizer material has been received**, so S-01/S-02 cannot be signed off (see `docs/TODO.md` S-01).
+The assumption log lives in `docs/ARCHITECTURE.md` §20 and the organizer column mapping template in `docs/DATABASE.md` §8. Both are copied below (S-02). S-01 was answered 2026-10-14 under the synthetic-data ruling (D-25): every *confirm* item that depended on organizer material is now team-confirmed, except pitch/venue details (flagged back to the organizers). S-02 sign-off lands at the S-01 close-out.
 
 Mapping table, cost-model comparison and assumption log were completed on 2026-10-14 (S-02 mechanical parts). The open half is the organizer sign-off, which is blocked on material we do not have.
 
@@ -74,52 +74,52 @@ Verified, secondhand and vendor-reported claims are labelled in `docs/TODO.md` �
 
 ## Organizer mapping
 
-Template from `docs/DATABASE.md` §8. No organizer material has been read yet, so every row is on the `DECISIONS.md` default rule: our own field is used and the row is marked `default applied (no organizer data yet)`. Organizer file/column and transform stay empty until S-01 is done with real material; rule #1 applies the moment it is known.
+Template from `docs/DATABASE.md` §8. The organizers have ruled that all datasets may be synthetically generated (D-25), so there is no organizer format to map: every row below is team-confirmed on our own schema. Rule #1 still applies the moment real organizer material is known.
 
 | Our table.column | Organizer file.column | Transform | Status |
 |---|---|---|---|
-| `batches.*` (qty, RSL, temp, availability, origin) | our own field | none | default applied (no organizer data yet) |
-| `commodities.base_shelf_life_h / ref_temp_c / q10` | our own field | none | default applied (no organizer data yet) |
-| `commodities.min_sell_window_h` | our own field | none | default applied (no organizer data yet) |
-| `commodities.handling_loss_pct` | our own field | none | default applied (no organizer data yet) |
-| `commodities.unit_cost / disposal_cost / salvage_value` | our own field | none | default applied (no organizer data yet) |
-| `commodities.price_elasticity / max_discount_pct` | our own field | none | default applied (no organizer data yet) |
-| `destinations.receive_cap_kg_day` | our own field | none | default applied (no organizer data yet) |
-| `destinations.handling_time_h / handling_cost_inr_kg` | our own field | none | default applied (no organizer data yet) |
-| `destinations.window_open_h / window_close_h` (+ `window_mode`) | our own field | none; absolute hours from day 0 at 00:00 (A-01) | default applied (no organizer data yet) |
-| `demand.demand_kg_p10/p50/p90` | our own field | none | default applied (no organizer data yet) |
-| `prices.*` | our own field | none | default applied (no organizer data yet) |
-| `lanes.travel_h_p50/p90` | our own field | none | default applied (no organizer data yet) |
-| `lanes.cost_fixed_inr_trip / cost_var_inr_kg` | our own field | none | default applied (no organizer data yet) |
-| `lanes.transit_temp_c` | our own field | none | default applied (no organizer data yet) |
-| `lanes.departure_slots` (rail) | our own field | none | default applied (no organizer data yet) |
-| `vehicles.*` (capacity, trips/day, availability) | our own field | none | default applied (no organizer data yet) |
-| `events.*` | our own field (`docs/DATABASE.md` §6, A-14) | none | default applied (no organizer data yet) |
-| Origin handling cost | our own field: 0 (A-07) | none | default applied (no organizer data yet) |
-| Discount / markdown rules (tiers, caps, elasticity) | our own rule (`docs/ARCHITECTURE.md` §10) | none | default applied (no organizer data yet) |
-| Spoilage definition and cost | our own definition (`docs/ARCHITECTURE.md` §7) | none | default applied (no organizer data yet) |
-| Fulfillment definition | our own definition (`docs/ARCHITECTURE.md` §7) | none | default applied (no organizer data yet) |
-| Hard-constraint list (what counts as a violation) | codes in `validator/` as built in F-04 | none | default applied (no organizer data yet) |
-| Submission/plan output format (for `organizer_baseline` export) | our own `plan.csv` (`docs/DATABASE.md` §5.2) | none | default applied (no organizer data yet) |
+| `batches.*` (qty, RSL, temp, availability, origin) | our own field | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| `commodities.base_shelf_life_h / ref_temp_c / q10` | our own field | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| `commodities.min_sell_window_h` | our own field | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| `commodities.handling_loss_pct` | our own field | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| `commodities.unit_cost / disposal_cost / salvage_value` | our own field | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| `commodities.price_elasticity / max_discount_pct` | our own field | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| `destinations.receive_cap_kg_day` | our own field | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| `destinations.handling_time_h / handling_cost_inr_kg` | our own field | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| `destinations.window_open_h / window_close_h` (+ `window_mode`) | our own field | none; absolute hours from day 0 at 00:00 (A-01) | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| `demand.demand_kg_p10/p50/p90` | our own field | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| `prices.*` | our own field | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| `lanes.travel_h_p50/p90` | our own field | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| `lanes.cost_fixed_inr_trip / cost_var_inr_kg` | our own field | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| `lanes.transit_temp_c` | our own field | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| `lanes.departure_slots` (rail) | our own field | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| `vehicles.*` (capacity, trips/day, availability) | our own field | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| `events.*` | our own field (`docs/DATABASE.md` §6, A-14) | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| Origin handling cost | our own field: 0 (A-07) | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| Discount / markdown rules (tiers, caps, elasticity) | our own rule (`docs/ARCHITECTURE.md` §10) | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| Spoilage definition and cost | our own definition (`docs/ARCHITECTURE.md` §7) | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| Fulfillment definition | our own definition (`docs/ARCHITECTURE.md` §7) | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| Hard-constraint list (what counts as a violation) | codes in `validator/` as built in F-04 | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
+| Submission/plan output format (for `organizer_baseline` export) | our own `plan.csv` (`docs/DATABASE.md` §5.2) | none | default applied → team-confirmed (synthetic-data ruling, D-25) |
 
 ## Open questions (S-01)
 
-From `docs/TODO.md` §3. "Default" answers come from the default rule in `DECISIONS.md`; everything else is OPEN until the organizers' material is read.
+From `docs/TODO.md` §3. Answered in writing 2026-10-14 under the synthetic-data ruling (D-25): there is no organizer dataset to discover, so six questions resolve to team-confirmed defaults and Q7's pitch/venue half is flagged back to the organizers.
 
-> **Status 2026-10-14: all eight are OPEN and unverifiable.** No organizer material exists in the repo or on the team's machines: `data/organizer/` has never been populated, there is no `.env` with organizer credentials, and the team's own problem-understanding note lists the organizers' baseline as an open question ("Is a baseline supplied by the organizers? If so, implement that baseline exactly"). S-01, S-02 and C-06 stay blocked on receipt of the material. The defaults below are what the code does in the meantime, and rule #1 applies the moment the real thing is known.
+> **Status 2026-10-14: S-01 answered (D-25).** The organizers confirmed all datasets may be synthetically generated, which settles the dataset half of every question below. Only pitch length, live-vs-video, venue network/hardware still need a real organizer answer (flagged back, assumed 3:00 / offline demo meanwhile). Rule #1 applies the moment any real organizer material is known.
 
 | # | Question | Answer | Assumption |
 |---|---|---|---|
-| 1 | Exact cost model (revenue, transport, handling incl. origin, spoilage/disposal, discount accounting) | Default: our `docs/ARCHITECTURE.md` §7; origin handling cost 0. Organizer model overrides when known. | A-07, A-19 |
-| 2 | Organizers' baseline: documented procedure and how it is scored | OPEN | none |
-| 3 | Submission format for plans; is a scoring/checker script provided | OPEN | none |
-| 4 | Hidden scenarios: same file format as the dataset, size, events, horizon | OPEN (event semantics default: `docs/DATABASE.md` §6) | A-14 |
-| 5 | Time conventions: epoch, absolute vs daily-repeating windows | Default: absolute hours from day 0 at 00:00 | A-01 |
-| 6 | What counts as a hard-constraint violation | Default: the codes in `validator/` as built in F-04 | none |
-| 7 | Rules: AI assistants, external data, open-source libraries; pitch length (assumed 3:00), live demo vs video, venue network and hardware | Default for AI assistants / external data: allowed, human owner reviews every merge; if the rules forbid it, stop and flag at the next gate. Libraries, pitch format, venue: OPEN | none |
-| 8 | Are rail lanes, P10/P90 columns and events present in the real data | OPEN | none |
+| 1 | Exact cost model (revenue, transport, handling incl. origin, spoilage/disposal, discount accounting) | Team-confirmed: our `docs/ARCHITECTURE.md` §7; origin handling cost 0. S-02 signs this off as final, not as a comparison. | A-07, A-19 |
+| 2 | Organizers' baseline: documented procedure and how it is scored | No organizer baseline exists → C-06 closes as N/A; `fefo` stays the official comparison (`official_baseline: null`, asserted by `tests/test_ladder.py`). | none |
+| 3 | Submission format for plans; is a scoring/checker script provided | Our `plan.csv` (`docs/DATABASE.md` §5.2) + `run_manifest.json` **is** the submission format; our `validator/` is the checker. | none |
+| 4 | Hidden scenarios: same file format as the dataset, size, events, horizon | Same schema by construction; the team designs the held-out hidden suite (S-01e: scale ladder, one event-bearing scenario per event type, edge cases as data). Event semantics: `docs/DATABASE.md` §6. | A-14 |
+| 5 | Time conventions: epoch, absolute vs daily-repeating windows | Team-confirmed: absolute hours from day 0 at 00:00. | A-01 |
+| 6 | What counts as a hard-constraint violation | Team-confirmed: the codes in `validator/` as built in F-04; list freezes at G5. | none |
+| 7 | Rules: AI assistants, external data, open-source libraries; pitch length (assumed 3:00), live demo vs video, venue network and hardware | AI assistants / external data / open-source: allowed, human owner reviews every merge (unchanged). Pitch length, live-vs-video, venue: **flagged back to the organizers** — assumed 3:00, offline demo, until told otherwise. | none |
+| 8 | Are rail lanes, P10/P90 columns and events present in the real data | Present in our schema and now used: practice data gains a rail vehicle per hub (S-01d) so rail arcs are live; P10/P90 per-commodity ratios; event-bearing hidden scenarios (S-01e). | none |
 
-Also open in `DECISIONS.md`: horizon end (default: carry-over valued 0, A-06) and whether `data/organizer/` may be committed (default: git-ignored, never committed).
+Also resolved in `DECISIONS.md` (D-25): horizon end (carry-over valued 0, A-06, team-confirmed) and `data/organizer/` (stays git-ignored; nothing to commit under the ruling).
 
 ## Cost-model comparison (S-02)
 
