@@ -131,3 +131,18 @@ def test_plan_trips_export():
     assert ranks == list(range(1, len(ranks) + 1)) and p.priority_rank.is_monotonic_increasing
     score = p.drop_duplicates("priority_rank").priority_score
     assert (score.diff().dropna() <= TOL).all()
+
+
+def test_aggregation_fallback_valid(tmp_path):
+    """U-02: the scale fallback (forced via agg_threshold) yields a plan with 0 validator
+    violations; the default threshold leaves tiny_3batch on the batch-level path."""
+    from freshroute.generator import generate
+    from validator.validate import validate
+
+    assert "aggregation" not in MilpPolicy().plan(sc()).solver
+    s = load_scenario(generate("agg", 7, 60, 3, 2, 2, tmp_path))
+    plan = MilpPolicy().plan(s, {"agg_threshold": 0})
+    agg = plan.solver["aggregation"]
+    assert agg["groups"] < agg["batches"] == 60 and agg["validator_violations"] == 0
+    assert not plan.solver["fallback_used"] and validate(s, plan.plan).violation_total == 0
+    check_valid(plan, s)

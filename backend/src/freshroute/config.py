@@ -13,6 +13,7 @@ MAX_UPLIFT = 0.5  # [team] A-11
 MILP_TIME_LIMIT_S = 30  # [doc]
 MIP_REL_GAP = 0.01  # [team]
 AGG_RSL_BUCKET_H = 6  # [team]
+AGG_ARC_THRESHOLD = 100_000  # [team] U-02: candidate arcs above this -> aggregation fallback
 PENALTY_MULT = 10  # [team] x max price
 DISCOUNT_RISK_BREAKS = (0.10, 0.30, 0.50)  # [doc]
 DISCOUNT_TIERS_PCT = (0, 10, 20, 35)  # [doc]

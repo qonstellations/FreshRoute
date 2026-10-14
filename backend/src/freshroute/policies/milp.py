@@ -11,12 +11,15 @@ from __future__ import annotations
 
 import math
 import time
+from dataclasses import replace
 
 import pandas as pd
 import pulp
 
 from freshroute import costmodel
 from freshroute.config import (
+    AGG_ARC_THRESHOLD,
+    AGG_RSL_BUCKET_H,
     EPS_FEFO,
     FLOAT_TOL,
     LAMBDA_SPOIL,
@@ -126,7 +129,8 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None
         var.setInitialValue(max(0.0, PHI_BALANCE * g_avg - gxd[d] / tot[d]))
     t0 = time.perf_counter()
     stats = prob.solve(pulp.HiGHS(msg=False, timeLimit=time_limit_s, gapRel=gap, warmStart=True))
-    info = {"status": str(stats.status), "solve_seconds": time.perf_counter() - t0}
+    info = {"status": str(stats.status), "solve_seconds": time.perf_counter() - t0,
+            "size": {"vars": prob.numVariables(), "constraints": prob.numConstraints()}}
     try:  # HiGHS's own gap; pulp's stats.gap_rel is None for HiGHS
         g = float(prob.solverModel.getInfo().mip_gap)
     except Exception:  # noqa: BLE001
@@ -235,11 +239,85 @@ def _build_plan(sc: Scenario, arcs, x, n, solver: dict, policy: str) -> Plan:
                 pd.DataFrame(trips, columns=list(TRIP_COLUMNS)), solver)
 
 
+def _aggregate(sc: Scenario) -> tuple[Scenario, dict[str, pd.DataFrame]]:
+    """Section 9.5 scale fallback: one pseudo-batch per (commodity, origin, available_from_h,
+    RSL bucket). The representative takes the group's min RSL and max storage temp, so every
+    arc feasible for it is feasible for each member (wait >= 0, same dispatch hour)."""
+    b = sc.tables["batches"].sort_values("batch_id")
+    key = [b.commodity, b.origin_hub, b.available_from_h,
+           (b.remaining_shelf_life_h // AGG_RSL_BUCKET_H).rename("bucket")]
+    rows, members = [], {}
+    for i, (_, g) in enumerate(b.groupby(key, sort=True)):
+        gid = f"G{i + 1:05d}"
+        members[gid] = g
+        rows.append({**g.iloc[0].to_dict(), "batch_id": gid, "qty_kg": float(g.qty_kg.sum()),
+                     "remaining_shelf_life_h": float(g.remaining_shelf_life_h.min()),
+                     "rsl_p10_h": float(g.rsl_p10_h.min()), "rsl_p90_h": float(g.rsl_p90_h.min()),
+                     "storage_temp_c": float(g.storage_temp_c.max())})
+    agg = replace(sc, tables={**sc.tables, "batches": pd.DataFrame(rows, columns=b.columns)})
+    return agg, members
+
+
+def _plan_aggregated(sc: Scenario, ctx: dict, policy: str) -> Plan:
+    """Aggregate -> solve -> split each pseudo-batch arc pro rata to qty_kg -> keep only lines
+    whose batch-level arc is feasible -> independent validator; any violation left -> FEFO-greedy
+    on the full scenario (section 9.5, U-02)."""
+    from validator.validate import validate  # independent re-check (D-04); validator never
+    # imports this module, so the dependency stays one-way.
+
+    agg, members = _aggregate(sc)
+    arcs, batches, unship = _model_data(agg)
+    ov, slack = ctx.get("demand_cap_override"), ctx.get("overship_slack", OVERSHIP_SLACK)
+    sol, info = _solve(agg, arcs, batches, unship, ctx.get("time_limit_s", MILP_TIME_LIMIT_S),
+                       ctx.get("gap", MIP_REL_GAP), override=ov, overship=slack)
+    info["fallback_used"] = sol is None
+    if sol is None:
+        info.update(slack_usage={}, mip_gap=None)
+    x, n = _greedy(agg, arcs, batches, ov, slack) if sol is None else sol
+    keys = ["batch_id", "dest_id", "vehicle_id", "dispatch_day"]
+    lines = []
+    for a, kg in zip(arcs[keys].itertuples(index=False), x, strict=True):
+        if kg > FLOAT_TOL:
+            g = members[a.batch_id]
+            lines += [(bid, a.dest_id, a.vehicle_id, a.dispatch_day, kg * q / g.qty_kg.sum())
+                      for bid, q in zip(g.batch_id, g.qty_kg, strict=True)]
+    lines = pd.DataFrame(lines, columns=[*keys, "kg"])
+    # Batch-level feasibility re-check, only for the batches, dests and vehicles in use.
+    t = sc.tables
+    sub = replace(sc, tables={
+        **t, "batches": t["batches"][t["batches"].batch_id.isin(lines.batch_id)],
+        "destinations": t["destinations"][t["destinations"].dest_id.isin(lines.dest_id)],
+        "vehicles": t["vehicles"][t["vehicles"].vehicle_id.isin(lines.vehicle_id)]})
+    full, _, _ = _model_data(sub) if len(lines) else (arcs.iloc[:0], None, None)
+    full = full.merge(lines, on=keys, how="inner")  # infeasible batch-level arcs drop out
+    n_drop = len(lines) - len(full)
+    plan = _build_plan(sc, full.drop(columns="kg"), list(full.kg), n, info, policy)
+    viol = validate(sc, plan.plan).violation_total
+    info["aggregation"] = {"batches": len(t["batches"]), "groups": len(members),
+                           "agg_arcs": len(arcs), "dropped_lines": n_drop,
+                           "validator_violations": viol}
+    if viol:  # AGENTS.md rule 6: never ship a violating plan
+        arcs, batches, _ = _model_data(sc)
+        info.update(fallback_used=True, slack_usage={}, mip_gap=None)
+        x, n = _greedy(sc, arcs, batches, ov, slack)
+        plan = _build_plan(sc, arcs, x, n, info, policy)
+    return plan
+
+
+def _candidate_arcs(sc: Scenario) -> int:
+    """Rows build_arcs would produce: batches x dests x vehicles x days (cheap size check)."""
+    t = sc.tables
+    return (len(t["batches"]) * len(t["destinations"]) * len(t["vehicles"])
+            * int(sc.meta["horizon_days"]))
+
+
 class MilpPolicy(Policy):
     name = "milp"
 
     def plan(self, scenario: Scenario, ctx: dict | None = None) -> Plan:
         ctx = ctx or {}
+        if _candidate_arcs(scenario) > ctx.get("agg_threshold", AGG_ARC_THRESHOLD):
+            return _plan_aggregated(scenario, ctx, self.name)
         arcs, batches, unship = _model_data(scenario)
         ov = ctx.get("demand_cap_override")
         slack = ctx.get("overship_slack", OVERSHIP_SLACK)  # sensitivity (U-04)

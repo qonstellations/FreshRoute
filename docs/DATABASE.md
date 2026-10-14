@@ -229,7 +229,7 @@ Rejected rows are kept: reason cards read them.
   "timestamp_utc": "…"
 }
 ```
-`solver` is `null` for non-MILP policies. Timestamp and `solve_seconds` are the only fields allowed to differ between identical runs.
+`solver` is `null` for non-MILP policies. MILP runs also carry `size` (`{"vars", "constraints"}` of the model solved) and, only when the scale fallback ran (ARCHITECTURE §9.5, U-02), `aggregation` (`{"batches", "groups", "agg_arcs", "dropped_lines", "validator_violations"}`). Timestamp and `solve_seconds` are the only fields allowed to differ between identical runs.
 
 ### 5.2 `plan.csv` — PK `shipment_id` (one row per batch × destination × trip line)
 
