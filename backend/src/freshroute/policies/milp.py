@@ -183,6 +183,19 @@ def _solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None
         return None, info
     if stats.status == pulp.LpSolveStatus.TimeLimit and sum(xv) <= FLOAT_TOL:
         return None, info  # limit hit before any real incumbent: all-zero is not a plan
+    if stats.status != pulp.LpSolveStatus.Optimal:
+        # A time-limited incumbent can be worse than the FEFO-greedy plan (HiGHS may drop the
+        # warm start for a trivial point): keep whichever earns more at lambda = 1.
+        gx, gn = _greedy(sc, arcs, batches, override, overship, used, fleet)
+        by = pd.Series(gx).groupby(arcs.batch_id.values).sum()
+        g_obj = float(
+            sum(float(c) * xi for c, xi in zip(econ, gx, strict=True))
+            - sum(fixed[k] * q for k, q in gn.items())
+            - sum(unship[b] * max(0.0, float(batches.qty_kg[b]) - float(by.get(b, 0.0)))
+                  for b in u))
+        if g_obj > info["objective_inr"] + FLOAT_TOL:
+            info.update(objective_inr=g_obj, incumbent="greedy")
+            return (gx, gn), info
     return (xv, nv), info
 
 
