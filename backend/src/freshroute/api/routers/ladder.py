@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from freshroute import cli, stress
 from freshroute.api import data_access as da
 from freshroute.api import deps, jobs
 from freshroute.api.schemas import StressRequest, SubmitResponse
 from freshroute.api.services import outputs as out
 from freshroute.api.services import runs as svc
+from freshroute.runs import runner, stress
 
 router = APIRouter(prefix="/api")
 
@@ -34,7 +34,7 @@ def stress_summary(scenario: str, seed: int) -> dict:
 
 @router.post("/stress", status_code=202)
 def start_stress(req: StressRequest) -> SubmitResponse:
-    if req.policy not in cli.POLICIES:
+    if req.policy not in runner.POLICIES:
         raise deps.BadRequest(f"policy {req.policy!r} cannot be stressed")
     scen, name = svc.loaded_scenario(req.scenario)
     job_id = out.name(name, "stress", req.seed)

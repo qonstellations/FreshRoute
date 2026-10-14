@@ -1,8 +1,8 @@
 """smoke: perf harness runs at scale 1 on a tiny generated base scenario."""
 import json
 
-from freshroute import perf
 from freshroute.generator import generate
+from freshroute.runs import perf
 
 
 def test_perf_smoke(tmp_path):

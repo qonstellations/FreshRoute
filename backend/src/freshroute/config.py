@@ -36,6 +36,8 @@ SENS_DEMAND_MULT = (0.8, 1.0, 1.2)  # [doc] demand +-20 %
 DEFAULT_SEED = 42  # [doc]
 DEMO_SCENARIO = "data/scenarios/practice"  # [team] the pitch scenario
 DEMO_SEED = 42  # [team]
+# ponytail: fefo stands in for organizer_baseline until the organizers publish their baseline.
+BASELINE, PLAN = "fefo", "milp_markdown"  # attribution ladder / waterfall endpoints
 FLOAT_TOL = 1e-6  # [team] kg and h comparisons
 HOURS_PER_DAY = 24
 SCHEMA_VERSION = 2  # DATABASE.md section 1; 2 = cost_of_goods_sold in net (D-28)

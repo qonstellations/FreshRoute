@@ -7,7 +7,7 @@ import pytest
 
 from freshroute.cli import main, run
 from freshroute.narrator import template_narration
-from freshroute.replan import DECISION_COLUMNS, replan_run
+from freshroute.runs.replan import DECISION_COLUMNS, replan_run
 from test_narrator import _guard
 
 FIX = Path(__file__).parent / "fixtures"

@@ -5,9 +5,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from freshroute import config, stress
+from freshroute import config
 from freshroute.cli import main
 from freshroute.io import load_scenario
+from freshroute.runs import stress
 from freshroute.simulator import simulate
 
 FIX = Path(__file__).parent / "fixtures"

@@ -1,17 +1,17 @@
 """Attribution ladder and waterfall (ARCHITECTURE.md section 12): runs every ladder policy
-through cli.run (one simulator) and writes ladder.json + waterfall.json (DATABASE.md 5.11)."""
+through runs.runner.run (one simulator); writes ladder.json + waterfall.json (DATABASE.md 5.11)."""
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
-from freshroute import cli
+from freshroute.config import BASELINE, PLAN
 from freshroute.io import load_scenario
+from freshroute.runs import naming
+from freshroute.runs.runner import run
 
 LADDER = ("fifo", "fefo", "milp", "milp_markdown")
 EXTRAS = ("last_day_50",)
-# ponytail: fefo stands in for organizer_baseline until the organizers publish their baseline.
-BASELINE, PLAN = "fefo", "milp_markdown"
 TOLERANCE_INR = 0.01
 ABLATION_DELTAS = ("net_inr", "spoilage_kg", "spoilage_pct", "demand_fulfillment_pct")
 
@@ -41,10 +41,10 @@ def run_ladder(scenario: str, seed: int, out: str | None = None,
     name = load_scenario(scenario).name
     metrics = {}
     for pol in LADDER + EXTRAS:
-        run_dir = cli.run(scenario, pol, seed, str(root / f"{name}__{pol}__s{seed}"))
+        run_dir = run(scenario, pol, seed, str(root / naming.run_id(name, pol, seed)))
         metrics[pol] = json.loads((run_dir / "metrics.json").read_text(encoding="utf-8"))
 
-    out_dir = root / f"{name}__ladder__s{seed}"
+    out_dir = root / naming.run_id(name, "ladder", seed)
     out_dir.mkdir(parents=True, exist_ok=True)
     ladder = {
         "scenario": name, "seed": seed, "realization": "base",
@@ -53,8 +53,8 @@ def run_ladder(scenario: str, seed: int, out: str | None = None,
         "extras": [{"policy": p, "kpis": metrics[p]["kpis"]} for p in EXTRAS],
     }
     if newsvendor:  # flag off: ladder.json unchanged (AGENTS.md rule 9)
-        nv_id = f"{name}__{PLAN}__s{seed}__nv"
-        k = json.loads((cli.run(scenario, PLAN, seed, str(root / nv_id), newsvendor=True)
+        nv_id = naming.run_id(name, PLAN, seed, True)
+        k = json.loads((run(scenario, PLAN, seed, str(root / nv_id), newsvendor=True)
                         / "metrics.json").read_text(encoding="utf-8"))["kpis"]
         ref = metrics[PLAN]["kpis"]
         ladder["ablation"] = [{

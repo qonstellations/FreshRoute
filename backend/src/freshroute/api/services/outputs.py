@@ -7,12 +7,7 @@ from pathlib import Path
 import pandas as pd
 
 from freshroute.api import deps
-
-
-def name(scenario: str, kind: str, seed: int, newsvendor: bool = False) -> str:
-    """The one place output directory / job ids are named: <scenario>__<kind>__s<seed>[__nv].
-    `kind` is a policy, "ladder", "stress" or "sensitivity"."""
-    return f"{scenario}__{kind}__s{seed}{'__nv' if newsvendor else ''}"
+from freshroute.runs.naming import run_id as name  # noqa: F401  (the one naming function)
 
 
 def out_dir(scenario: str, kind: str, seed: int) -> Path:

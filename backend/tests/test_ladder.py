@@ -4,8 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from freshroute import cli, generator, ladder
+from freshroute import cli, generator
 from freshroute.policies import milp
+from freshroute.runs import ladder
 
 ROOT = Path(__file__).parents[2]
 TINY = str(ROOT / "backend" / "tests" / "fixtures" / "tiny_3batch")

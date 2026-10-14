@@ -24,6 +24,7 @@ from freshroute.config import (
 )
 from freshroute.io import Scenario, load_scenario
 from freshroute.policies.milp import MilpMarkdownPolicy
+from freshroute.runs import naming
 from freshroute.simulator import simulate
 
 POLICY = "milp_markdown"
@@ -63,7 +64,7 @@ def run_sensitivity(scenario: str, seed: int, out: str | None = None) -> Path:
         k = base if abs(is_base.get(param, math.nan) - value) <= FLOAT_TOL else _kpis(s, c)
         rows.append({"parameter": param, "value": value, "policy": POLICY,
                      **{col: k[col] for col in COLUMNS[3:]}})
-    out_dir = Path(out) if out else Path("outputs") / f"{sc.name}__sensitivity__s{seed}"
+    out_dir = Path(out) if out else Path("outputs") / naming.run_id(sc.name, "sensitivity", seed)
     out_dir.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(rows, columns=list(COLUMNS)).to_csv(out_dir / "sensitivity.csv", index=False)
     return out_dir

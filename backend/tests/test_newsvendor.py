@@ -5,10 +5,11 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from freshroute import cli, ladder, newsvendor
+from freshroute import cli, newsvendor
 from freshroute.config import FLOAT_TOL, NEWSVENDOR_CLAMP
 from freshroute.io import load_scenario
 from freshroute.policies.milp import MilpPolicy
+from freshroute.runs import ladder
 
 ROOT = Path(__file__).parents[2]
 TINY = str(ROOT / "backend" / "tests" / "fixtures" / "tiny_3batch")

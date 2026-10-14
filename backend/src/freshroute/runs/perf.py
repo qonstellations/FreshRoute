@@ -2,7 +2,7 @@
 SYNTHETIC scenario and time `build_arcs` and `MilpPolicy().plan`. Numbers printed and
 written to perf.json are measurements on this machine, not claims.
 
-    python -m freshroute.perf [--scale 10] [--fleet-scale N] [--seed 42] [--out outputs/perf]
+    python -m freshroute.runs.perf [--scale 10] [--fleet-scale N] [--seed 42] [--out outputs/perf]
 
 --fleet-scale defaults to --scale; --fleet-scale 1 measures batches-only scaling.
 """
@@ -53,7 +53,7 @@ def run(scale: int = 10, seed: int = DEFAULT_SEED, out: str = "outputs/perf",
 
 
 def main(argv: list[str] | None = None) -> None:
-    p = argparse.ArgumentParser(prog="freshroute.perf")
+    p = argparse.ArgumentParser(prog="freshroute.runs.perf")
     p.add_argument("--scale", type=int, default=10)
     p.add_argument("--fleet-scale", type=int, default=None)
     p.add_argument("--seed", type=int, default=DEFAULT_SEED)

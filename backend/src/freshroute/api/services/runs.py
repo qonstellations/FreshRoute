@@ -2,12 +2,12 @@
 DATABASE.md section 11.2)."""
 from __future__ import annotations
 
-from freshroute import cli
 from freshroute.api import data_access as da
 from freshroute.api import deps, jobs
 from freshroute.api.schemas import RunRequest
 from freshroute.api.services import outputs as out
 from freshroute.io import load_scenario
+from freshroute.runs import runner
 
 
 def list_runs() -> dict:
@@ -59,19 +59,19 @@ def loaded_scenario(scenario: str) -> tuple[str, str]:
 
 
 def start_run(req: RunRequest) -> dict:
-    if req.policy in cli.BLOCKED_POLICIES:
-        raise deps.BadRequest(cli.ORGANIZER_BASELINE_BLOCKED)
-    if req.policy not in cli.POLICIES:
+    if req.policy in runner.BLOCKED_POLICIES:
+        raise deps.BadRequest(runner.ORGANIZER_BASELINE_BLOCKED)
+    if req.policy not in runner.POLICIES:
         raise deps.BadRequest(f"unknown policy {req.policy!r}; available: "
-                              f"{', '.join(cli.POLICIES)}")
+                              f"{', '.join(runner.POLICIES)}")
     nv = bool(req.flags.get("newsvendor"))
-    if nv and req.policy not in cli.NEWSVENDOR_POLICIES:
+    if nv and req.policy not in runner.NEWSVENDOR_POLICIES:
         raise deps.BadRequest(f"--newsvendor needs a MILP policy, not {req.policy!r}")
     scen, scen_name = loaded_scenario(req.scenario)
-    run_id = out.name(scen_name, req.policy, req.seed, nv)  # id cli.run computes
+    run_id = out.name(scen_name, req.policy, req.seed, nv)  # id runner.run computes
     run_dir = deps.outputs() / run_id
     job = jobs.queue.submit_if_idle(
         deps.outputs(), run_id,
-        lambda: cli.run(scen, req.policy, req.seed, str(run_dir), newsvendor=nv),
+        lambda: runner.run(scen, req.policy, req.seed, str(run_dir), newsvendor=nv),
         run_dir / "metrics.json", scenario=scen, policy=req.policy, seed=req.seed)
     return {"run_id": run_id, "status": job["state"]}

@@ -12,12 +12,20 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from freshroute import cli
 from freshroute import metrics as M
-from freshroute.config import DEFAULT_SEED, FLOAT_TOL, MC_N, MC_NAMED, MC_TRAVEL_CAP_MULT
+from freshroute.config import (
+    BASELINE,
+    DEFAULT_SEED,
+    FLOAT_TOL,
+    MC_N,
+    MC_NAMED,
+    MC_TRAVEL_CAP_MULT,
+    PLAN,
+)
 from freshroute.discount import COLUMNS as DISCOUNT_COLUMNS
 from freshroute.io import Scenario, load_scenario
-from freshroute.ladder import BASELINE, PLAN
+from freshroute.runs import naming
+from freshroute.runs.runner import _policy
 from freshroute.simulator import simulate
 
 COLUMNS = ("scenario_i", "policy", "spoilage_kg", "spoilage_pct", "demand_fulfillment_pct",
@@ -76,7 +84,7 @@ def draws(sc: Scenario, n: int, seed: int, named: bool = False) -> list[tuple]:
 
 
 def _solve(sc: Scenario, policy: str, seed: int):
-    res = cli._policy(policy).plan(sc, {"seed": seed})
+    res = _policy(policy).plan(sc, {"seed": seed})
     disc = res.discounts if res.discounts is not None else pd.DataFrame(
         columns=list(DISCOUNT_COLUMNS))
     return res.plan, disc
@@ -114,7 +122,7 @@ def run_stress(scenario: str, policy: str = PLAN, n: int = MC_N, seed: int = DEF
                                          - col("plan", "spoilage_kg") > FLOAT_TOL)),
         },
     }
-    out_dir = Path(out) if out else Path("outputs") / f"{sc.name}__stress__s{seed}"
+    out_dir = Path(out) if out else Path("outputs") / naming.run_id(sc.name, "stress", seed)
     out_dir.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(rows, columns=list(COLUMNS)).to_csv(out_dir / "stress.csv", index=False)
     (out_dir / "stress_summary.json").write_text(json.dumps(summary, indent=2) + "\n",

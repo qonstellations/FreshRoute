@@ -7,6 +7,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from freshroute.runs.naming import run_id
+
 ROOT = Path(__file__).resolve().parents[4]  # backend/src/freshroute/api/ -> repo root
 OUTPUTS = ROOT / "outputs"
 FIXTURE = ROOT / "backend" / "tests" / "fixtures" / "metrics_example.json"
@@ -45,7 +47,7 @@ def load_manifest(run_id: str | None, outputs: Path = OUTPUTS) -> dict | None:
 
 def load_ladder(scenario: str, seed: int, outputs: Path = OUTPUTS) -> dict | None:
     """ladder.json (DATABASE §5.11) at outputs/<scenario>__ladder__s<seed>/, or None."""
-    return read_json(outputs / f"{scenario}__ladder__s{seed}" / "ladder.json")
+    return read_json(outputs / run_id(scenario, "ladder", seed) / "ladder.json")
 
 
 def load_baseline(scenario: str, seed: int, outputs: Path = OUTPUTS) -> dict | None:
@@ -61,5 +63,5 @@ def load_baseline(scenario: str, seed: int, outputs: Path = OUTPUTS) -> dict | N
         for e in ladder.get("ladder", []):
             if e.get("policy") == "fefo":
                 return {**e, "source": "ladder"}
-    m = read_json(outputs / f"{scenario}__fefo__s{seed}" / "metrics.json")
+    m = read_json(outputs / run_id(scenario, "fefo", seed) / "metrics.json")
     return {"policy": "fefo", "kpis": m["kpis"], "source": "run"} if m else None
