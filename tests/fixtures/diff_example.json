@@ -1,0 +1,12 @@
+{"_note": "Format example per DATABASE.md 5.13; numbers are made up, not a measured replan.",
+ "event_id": "E-001", "at_h": 8.0, "frozen_shipments": 5,
+ "moved_batches": [
+  {"batch_id": "B014", "from": {"dest_id": "D2", "dispatch_day": 0}, "to": {"dest_id": "D5", "dispatch_day": 0}, "kg": 420.0},
+  {"batch_id": "B009", "from": {"dest_id": "D2", "dispatch_day": 0}, "to": {"dest_id": "D5", "dispatch_day": 1}, "kg": 180.5},
+  {"batch_id": "B031", "from": {"dest_id": "D2", "dispatch_day": 1}, "to": {"dest_id": "D3", "dispatch_day": 1}, "kg": 260.0},
+  {"batch_id": "B040", "from": {"dest_id": "D2", "dispatch_day": 1}, "to": {"dest_id": "D1", "dispatch_day": 1}, "kg": 95.25}],
+ "discount_changes": [{"lot_id": "B014@D5@0.0", "day": 2, "from_pct": 10, "to_pct": 20}],
+ "kpis_old_plan_under_event": {"spoilage_kg": 1400.0, "demand_fulfillment_pct": 80.2, "net_inr": 1500000.0},
+ "kpis_replanned": {"spoilage_kg": 1310.0, "demand_fulfillment_pct": 81.0, "net_inr": 1532000.0},
+ "delta_kpis": {"spoilage_kg": -90.0, "demand_fulfillment_pct": 0.8, "net_inr": 32000.0},
+ "solve_seconds": 3.4}
