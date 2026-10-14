@@ -1,0 +1,2 @@
+event_id,type,target,magnitude,at_h
+EV1,capacity_drop,vehicle:V1,0.5,8.0

@@ -1,0 +1,2 @@
+event_id,type,target,magnitude,at_h
+EV1,price_shock,dest:D3|tomato,0.8,8.0

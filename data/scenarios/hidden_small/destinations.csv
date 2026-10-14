@@ -1,0 +1,4 @@
+dest_id,name,type,receive_cap_kg_day,handling_time_h,handling_cost_inr_kg,window_open_h,window_close_h
+D1,Destination 1,mandi,2996.0,1.0,1.43,0.0,48.0
+D2,Destination 2,retail_DC,2936.0,3.0,0.94,0.0,24.0
+D3,Destination 3,HoReCa,536.0,3.0,1.56,0.0,48.0

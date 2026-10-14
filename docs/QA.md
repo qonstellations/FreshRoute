@@ -37,7 +37,7 @@ An independent validator re-implements the rules and imports no optimizer code; 
 Hard limits stay hard. Fairness across destinations (C6) is soft: slack is penalised and reported in `run_manifest.json`. If there's no solution by the time limit, the FEFO-greedy plan is used and the manifest flags `fallback_used`. That's tested.
 
 **8. "Is this real data?"**
-No. It's synthetic and labelled synthetic everywhere. The generator is calibrated so the naive-FIFO baseline loses about what NABCONS reports at market stage: tomato 3.25 %, our FIFO about 3.3 % overall on practice. Onion is capped at 0.82 % against a 1.96 % target, because our onions don't expire within 3 days (A-21/A-30). Loss statistics are context, not model inputs.
+No. It's synthetic and labelled synthetic everywhere. The generator is calibrated per commodity to what NABCONS reports at market stage (A-47): FIFO on practice seed 42 loses tomato 2.65 % (target 3.25), banana 1.84 % (2.40), mango 2.70 % (2.50), potato 0.88 % (0.86), spinach 2.82 % (band 2.3–3.5), 1.70 % overall. Onion is horizon-capped at 0.90 % against a 1.96 % target, because our onions don't expire within 3 days — only the 1 % handling loss bites. Loss statistics are context, not model inputs.
 
 ---
 

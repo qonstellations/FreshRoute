@@ -6,6 +6,6 @@
   "horizon_days": 2,
   "window_mode": "absolute",
   "dispatch_hour": 5,
-  "price_source": "static_table_generator_v1",
-  "notes": "SYNTHETIC data from freshroute.generator. Prices are a static table, not Agmarknet. Not real."
+  "price_source": "static_table_generator_v2",
+  "notes": "SYNTHETIC data from freshroute.generator v2. Prices are a static table grounded on published Agmarknet aggregates, not a snapshot. Not real."
 }

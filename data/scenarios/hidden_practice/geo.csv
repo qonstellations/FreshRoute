@@ -1,0 +1,11 @@
+node_id,node_type,name,lat,lon
+HUB1,hub,HUB1,13.5487,76.695
+HUB2,hub,HUB2,13.8838,78.4863
+D1,destination,D1,14.7623,77.9775
+D2,destination,D2,11.6797,75.7791
+D3,destination,D3,13.9262,78.2447
+D4,destination,D4,11.9747,76.0098
+D5,destination,D5,12.3126,78.9559
+D6,destination,D6,13.477,75.8434
+D7,destination,D7,13.3647,78.0059
+D8,destination,D8,14.1097,78.2378
