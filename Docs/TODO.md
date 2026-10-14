@@ -121,8 +121,8 @@ Order matters: **validator and metrics before the optimizer.**
 - [x] **C-05** · 0.75 h — `policies/fefo.py` (FEFO-greedy over feasible arcs, same demand caps) and `policies/last_day_50.py`.
 - [ ] **C-06** · 1.0 h — `policies/organizer_baseline.py` implemented exactly from the organizers' doc + export of plans in the organizers' submission format. *Blocked: no organizer doc yet (S-01); until then `ladder.json` has `official_baseline: null` and the waterfall baseline is `fefo`.*
 - [x] **C-07** · 1.25 h — `ladder.py`: `fifo → fefo → milp → milp_markdown` through the same simulator, `ladder.json`, `waterfall.json` with the **reconciliation test** (±₹0.01).
-- [ ] **C-08** · 0.5 h — `run_manifest.json` + **determinism test** (same seed ⇒ identical `metrics.json`).
-- [ ] **C-09** · 0.5 h — Perf harness: generate a 10× scenario and time plan solves (feeds U-02 and the performance budget).
+- [x] **C-08** · 0.5 h — `run_manifest.json` + **determinism test** (same seed ⇒ identical `metrics.json`).
+- [x] **C-09** · 0.5 h — Perf harness: generate a 10× scenario and time plan solves (feeds U-02 and the performance budget).
 
 **P3**
 - [x] **C-10** · 1.0 h — Calibrate the generator so the FIFO baseline's market-stage spoilage lands near NABCONS tomato ≈ 3.25 % and onion ≈ 1.96 % (sanity check — A-21), so the baseline is plausible, not a strawman.
@@ -132,6 +132,8 @@ Order matters: **validator and metrics before the optimizer.**
 
 **Gate G2 (H9):** on **3 seeds**, `milp` has higher net ₹ than **FEFO** (not just FIFO) and is not worse on spoilage · independent validator reports **0 violations** for `milp` and `milp_markdown` · plan → simulator → metrics → scoreboard works · consistency test C-04 passes.
 *If MILP does not beat FEFO:* check objective coefficients against the simulator (C-04) before touching anything else; do not start Phase 4 until the spine wins.
+
+*G2 result (2026-10-14, synthetic data, base realization, quiet machine):* **passed** on practice (seed 42) and 3 generated practice-size scenarios (seeds 1–3). Spoilage kg / net ₹, fefo → milp: practice 1,342 / 1,413,264 → 1,244 / 1,655,781 · s1 1,857 / 1,682,657 → 1,311 / 1,793,291 · s2 2,134 / 1,385,359 → 1,620 / 1,510,745 · s3 2,350 / 1,421,459 → 2,289 / 1,535,890. Validator 0 violations for `milp` and `milp_markdown` on all four; C-04 passes; scoreboard renders the `milp_markdown` run with deltas vs fefo. Caveats: A-39 (generated `small` seed 1 is an `xfail` on spoilage), A-37 (markdown near-inert), A-40 (time-limited solves are load-dependent; 10× scale far over budget).
 
 ---
 
