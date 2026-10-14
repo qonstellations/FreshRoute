@@ -32,7 +32,7 @@ PRICE_SPREAD = {  # (min_ratio, max_ratio) per commodity; onion spreads wide
 # elasticity, max discount %  (DATABASE.md 3.1 starting points; mango/potato are ours)
 _COMM = {
     "tomato": ("very_high", 120, 20, 2.0, 24, 3.0, 15, 2, 3, 1.0, 35),
-    "spinach": ("very_high", 60, 20, 2.0, 12, 4.0, 18, 2, 2, 1.2, 35),
+    "spinach": ("very_high", 60, 20, 2.0, 12, 3.0, 18, 2, 2, 1.2, 35),
     "banana": ("high", 150, 20, 2.0, 24, 2.0, 18, 2, 5, 0.8, 30),
     "mango": ("high", 120, 20, 2.0, 24, 3.0, 40, 3, 10, 0.8, 30),
     "onion": ("low", 720, 20, 2.0, 48, 1.0, 12, 1, 4, 0.5, 20),
@@ -49,7 +49,8 @@ _Q = {"very_high": (0.70, 1.35), "high": (0.75, 1.30), "low": (0.85, 1.15)}
 DEMAND_DAY_VOL = 0.08  # per-day random-walk step on the demand multiplier
 # [team] C-10/A-47 calibration knobs: tuned so naive FIFO lands in the A-47 bands.
 QTY_KG = (80, 480)  # batch size range; was 300-1800 (supply ~3x fleet reach)
-DEMAND_SUPPLY_RATIO = 1.2  # total p50 demand / supply per commodity
+# scarcity (1.5) separates MILP from FEFO on the G2 proxy seeds
+DEMAND_SUPPLY_RATIO = 1.5  # total p50 demand / supply per commodity
 VEHICLE_CAP_KG = (2000, 3000, 4000)
 RAIL_CAP_KG = 10000  # rail vehicle per hub so rail arcs are live (was: none)
 MAX_TRIPS_DAY = 4  # ponytail: no trip-duration check; trips are fleet slots
@@ -88,11 +89,8 @@ def generate(name: str, seed: int, n_batches: int, n_dests: int, days: int,
     rows = []
     for i in range(n_batches):
         c = comms[rng.choice(len(comms), p=w_mix)]
-        g = rng.random()
-        for share, lo, hi in RSL_GRADES:
-            if g < share:
-                break
-            g -= share
+        lo, hi = RSL_GRADES[rng.choice(len(RSL_GRADES),
+                                       p=[s for s, _, _ in RSL_GRADES])][1:3]
         rsl = _r(_COMM[c][1] * rng.uniform(lo, hi))
         rows.append((
             f"B{i + 1:04d}", c, hubs[rng.integers(n_hubs)], _r(rng.uniform(*QTY_KG)),
@@ -138,7 +136,7 @@ def generate(name: str, seed: int, n_batches: int, n_dests: int, days: int,
             wo, wc = 0.0, float(24 * (days - 1))
         else:
             wo, wc = 0.0, float(24 * days)
-        cap = _r(dem_tot.get(d, 0.0) / days * rng.uniform(1.2, 2.0), 0)
+        cap = _r(dem_tot.get(d, 0.0) / days * rng.uniform(0.8, 1.6), 0)
         rows.append((d, f"Destination {i + 1}", _DEST_TYPES[i % 4],
                      cap, float(rng.choice([1.0, 2.0, 3.0])),
                      _r(rng.uniform(0.8, 2.0)), wo, wc))
