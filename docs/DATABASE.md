@@ -444,7 +444,7 @@ Run-directory contents are unchanged by the API refactor, so `schema_version` st
 ```json
 {"event_id": "E-001", "type": "route_delay", "target": "NASHIK|PUNE|*", "magnitude": 6, "at_h": 8, "note": "NH-48 jam"}
 ```
-Validated with pydantic (`events.py`). `note` is optional and never used by the solver. **Semantics are our interpretation (A-14) — confirm against the organizers' event definitions.**
+Validated with pydantic (`events.py`: `Event`, `load_event`, `apply_event`). `note` is optional and never used by the solver. Unknown fields, an unknown `type`, a malformed `target` or a `magnitude` out of range are rejected at parse time; a `target` naming a lane, vehicle, destination or commodity the scenario does not have raises `EventError` when the event is applied. `day(at_h) = ⌊at_h / 24⌋`. A `new_order` for a `(dest, commodity, day)` with no demand row creates one (p10 = p50 = p90 = `magnitude`, `event_flag` = `event_id`). **Semantics are our interpretation (A-14) — confirm against the organizers' event definitions.**
 
 | `type` | `target` syntax | `magnitude` | Effect |
 |---|---|---|---|
