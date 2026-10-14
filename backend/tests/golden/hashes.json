@@ -1,0 +1,98 @@
+{
+ "practice/fefo": {
+  "discounts.csv": "5c7dad1804dbd72ce0b6fbd317f9ad959a79111a542c8b41dde8c53bbd69eb58",
+  "dispatch_sheet.csv": "c2c480bf21ac62db7fcc1e40313c1e5475c1f8e733b40147ef9b68e7c18bc877",
+  "dispatch_sheet.txt": "4379d5c8b34523065341e9ee90ff4ba20349f51ea9a2e7b73826cc2172b2e5f1",
+  "metrics.json": "8eb65490eaa66ec32152f67169c5442a9f2801ee3483c4ec722d0b230dca5d3a",
+  "plan.csv": "45f8bd49e4f2bb2df3d81fc6291507f691a5cc98465534e3d2a7379db4329441",
+  "reason_cards.json": "beb7a99dc04b4e5bb62b4f0e3c782efea11bfc624d756b5a0804ee63405a5a71",
+  "sim_ledger.csv": "ef0bfd03ea736654331c1e2efa9c7af0066d07b5d4a5d644c9024b3694089837",
+  "sim_lots.csv": "533850e18ffcd9cf56ae2b894587d5e8fa5f5c2c81e4f0879b377474fd781cc6",
+  "trips.csv": "c08ce47b8e7a4a520530087dcbc1cb612da534105530ac76580a533487492a92",
+  "validation.json": "596ac5a90095b4d70c2635fefe64067396e3517a8265963dad7129ff6d8da0fd"
+ },
+ "practice/fifo": {
+  "discounts.csv": "5c7dad1804dbd72ce0b6fbd317f9ad959a79111a542c8b41dde8c53bbd69eb58",
+  "dispatch_sheet.csv": "0011e4d4b493fafa637f0e6d2b131f27d1aaba3c3066abdda0428a90d5dc8e37",
+  "dispatch_sheet.txt": "22193a445d12442ba35edd3d8fea3a66478ccba760d039f38049896f8c6ab8a0",
+  "metrics.json": "2cffc4b967f59104858e86110c4dbe7fbceac7a468c245bfbad29e27e21849bd",
+  "plan.csv": "5863d671ecb8b26bba1c64bac352d0d4cc66294944025e405b765a50331e781a",
+  "reason_cards.json": "049aa79559bf44e5d17913813136e67d4c9059c7e8d77f2a4d3eb1c1a378e5f5",
+  "sim_ledger.csv": "b96c94ddd2c687f65045fd95f55b6cd24d061c48e8e75183feeeaeeacab480dd",
+  "sim_lots.csv": "7eff32c97fead86114cc928b8d0f3bcd87d252517983a3a63b02b107e46133c0",
+  "trips.csv": "db7fb6f0b4da69b4fc84d7d8ebcdbfbb9489ceed1a888d208efca14153313e5e",
+  "validation.json": "33c5ef69300ad58148fdd331691bca62c3fca9fdc1f318cdea4ace313ebd5b41"
+ },
+ "practice/last_day_50": {
+  "discounts.csv": "92f76260e4f5dc1b765d7979531d57a0114b586217a5b4780ad1963ce402a23c",
+  "dispatch_sheet.csv": "0011e4d4b493fafa637f0e6d2b131f27d1aaba3c3066abdda0428a90d5dc8e37",
+  "dispatch_sheet.txt": "22193a445d12442ba35edd3d8fea3a66478ccba760d039f38049896f8c6ab8a0",
+  "metrics.json": "ececa77f3e61bcefe8131ce9543a6ec72b7343d5a57b10eac0ccc964a3a38e2e",
+  "plan.csv": "584ea3f9fc892d04e652bad5a6d43a81e07da78cb96056d1f03a4500b59baf62",
+  "reason_cards.json": "aa4f88cb7ed89153ac2c19e5715debb0aaaee1ef979da3b048799e640be1e6fa",
+  "sim_ledger.csv": "8999a6de196c6436a0fd7a74278335ed1e323ff8659d0f4cc2d52dfabc906a61",
+  "sim_lots.csv": "7eff32c97fead86114cc928b8d0f3bcd87d252517983a3a63b02b107e46133c0",
+  "trips.csv": "db7fb6f0b4da69b4fc84d7d8ebcdbfbb9489ceed1a888d208efca14153313e5e",
+  "validation.json": "33c5ef69300ad58148fdd331691bca62c3fca9fdc1f318cdea4ace313ebd5b41"
+ },
+ "tiny_3batch/fefo": {
+  "discounts.csv": "5c7dad1804dbd72ce0b6fbd317f9ad959a79111a542c8b41dde8c53bbd69eb58",
+  "dispatch_sheet.csv": "bff9bd9e8096cbb5913894dc3aadfc324525aa6933bf93ad283cf6600ba0fe1a",
+  "dispatch_sheet.txt": "88a7cccdfcf80bffbca570efb5e46059be6a1fbaf177981283536a77cd4fbbd0",
+  "metrics.json": "9e99bdcf71e192ab919a1dbd9bdb3ca31c065b039d75d3728c47393e35b2722f",
+  "plan.csv": "e79775071cd0d08474fdef7533158fda6cafb478c5a2163499877770eb74f1d0",
+  "reason_cards.json": "1402217581677461580dc8a0f92f5ba44c0e97df06b01d9c1660a2f42b553805",
+  "sim_ledger.csv": "37e83382e3dc346f3da53e7e4264d5c1d30aa65cb30961b2cd9243dfbb95ed48",
+  "sim_lots.csv": "99ee9960efa78e850497c18c6ed5b3cb1cdebd030232c94d6eb59992efc15a19",
+  "trips.csv": "d0f53c826ef04348a8544a949c12988c2b115374053478decafc659dad681ee8",
+  "validation.json": "596ac5a90095b4d70c2635fefe64067396e3517a8265963dad7129ff6d8da0fd"
+ },
+ "tiny_3batch/fifo": {
+  "discounts.csv": "5c7dad1804dbd72ce0b6fbd317f9ad959a79111a542c8b41dde8c53bbd69eb58",
+  "dispatch_sheet.csv": "1d5815f77c5e559bdf6b39e09b3c3b86221a2a8743567701586b445faf097609",
+  "dispatch_sheet.txt": "164fb8c53873601e4b31a771a6beee891fd5f28aa7dba1e1896ab83d1af579e8",
+  "metrics.json": "6a429250b33886777fe9257a528c50a01ae2f5395ccd4aaef9fcb27951a60f6b",
+  "plan.csv": "1df05048877a2d10e2026c348d7b7f9e6ca466592dea8de02776111ef912976d",
+  "reason_cards.json": "69360e3fd9fdd675060eacca582e88bb03b3fde17bbb76c53ca0dac6620b7422",
+  "sim_ledger.csv": "04942bdd325df8463bb89c4eb11dfaf0fc7318e075fb855a95a724c1ef13786b",
+  "sim_lots.csv": "7efc90b99ca82a16fb8cfe74b7bf7f8982d7aa6b11d700cae85a124a49de7a91",
+  "trips.csv": "ecb8643c2c97acaddb4e88e98c9f0472fd4d6469b63499f9065f743def5c811f",
+  "validation.json": "cdbf1293f791f78d2b4fae5b4d905842ce02a6e93b126da8483b0fe42ab451f0"
+ },
+ "tiny_3batch/last_day_50": {
+  "discounts.csv": "6c8ed8aaf5478204c57cff2909046bb448a71bee754138897952f8a88ed4dd78",
+  "dispatch_sheet.csv": "1d5815f77c5e559bdf6b39e09b3c3b86221a2a8743567701586b445faf097609",
+  "dispatch_sheet.txt": "164fb8c53873601e4b31a771a6beee891fd5f28aa7dba1e1896ab83d1af579e8",
+  "metrics.json": "48074c75ea3011061afe6255722e5bd40f5593cfed02cc3d62ef7b4a5a3c14ef",
+  "plan.csv": "85ce87d9214bf097f0c88a6dd04e159072ed7ccc76165216a84d69adf2dc1b22",
+  "reason_cards.json": "6d99789e397051c2ceb44a5eb5f986799c2cb9db1b8ce4fd6ac1acf1379d3dfc",
+  "sim_ledger.csv": "5b37b2f130a35ceae4348bdcf90475ce9cb39ebc7c2be15f98214facccb7692b",
+  "sim_lots.csv": "7efc90b99ca82a16fb8cfe74b7bf7f8982d7aa6b11d700cae85a124a49de7a91",
+  "trips.csv": "ecb8643c2c97acaddb4e88e98c9f0472fd4d6469b63499f9065f743def5c811f",
+  "validation.json": "cdbf1293f791f78d2b4fae5b4d905842ce02a6e93b126da8483b0fe42ab451f0"
+ },
+ "tiny_3batch/milp": {
+  "discounts.csv": "5c7dad1804dbd72ce0b6fbd317f9ad959a79111a542c8b41dde8c53bbd69eb58",
+  "dispatch_sheet.csv": "d554d0f4daf74e9dd9817447fd5f3480b303f4f8b7874ff9b47c77e603a5ca57",
+  "dispatch_sheet.txt": "bb2c194d6fed0d33f343dc5d08f19b2a2f5611cfdc07b286ffb6e39503bbefb9",
+  "metrics.json": "3e92f46d04e2e8b76f4cc106ae72d8832bbbffe76067c1367f56d272cd6028c1",
+  "plan.csv": "104a7b766aac9661f92855fdedeb38fb3f5a62751347414daee05500408d464c",
+  "reason_cards.json": "2768c23ac39d91213625e9effc11cbfe8b1239eb1ed27eea632de8131b00c81f",
+  "sim_ledger.csv": "1d7e0159d088930d2c2d4319a56cd89ad758a0c9ce4d31e40950479addf5191b",
+  "sim_lots.csv": "1eeffb9c3a038584d8686032d9de57fbd2a2759e21e6f29275f14229beb9e496",
+  "trips.csv": "cd2e2b642b0672762367973e8b3eb3d83eb3231f91f9be4f2d43a585cb5de14a",
+  "validation.json": "596ac5a90095b4d70c2635fefe64067396e3517a8265963dad7129ff6d8da0fd"
+ },
+ "tiny_3batch/milp_markdown": {
+  "discounts.csv": "54c39562b379ed19c298a6c0147995bb5aeffc9acbe1dbc9339079c241b588c9",
+  "dispatch_sheet.csv": "d554d0f4daf74e9dd9817447fd5f3480b303f4f8b7874ff9b47c77e603a5ca57",
+  "dispatch_sheet.txt": "bb2c194d6fed0d33f343dc5d08f19b2a2f5611cfdc07b286ffb6e39503bbefb9",
+  "metrics.json": "d422f312590fff89004f6bf72f8cd03223528086bc0073321f6fb30fb43f8367",
+  "plan.csv": "93adcfe67b31b19f428223bb34d2c39164ca6c0a7f95a807e6a6c64ba1886528",
+  "reason_cards.json": "2768c23ac39d91213625e9effc11cbfe8b1239eb1ed27eea632de8131b00c81f",
+  "sim_ledger.csv": "1d7e0159d088930d2c2d4319a56cd89ad758a0c9ce4d31e40950479addf5191b",
+  "sim_lots.csv": "1eeffb9c3a038584d8686032d9de57fbd2a2759e21e6f29275f14229beb9e496",
+  "trips.csv": "cd2e2b642b0672762367973e8b3eb3d83eb3231f91f9be4f2d43a585cb5de14a",
+  "validation.json": "596ac5a90095b4d70c2635fefe64067396e3517a8265963dad7129ff6d8da0fd"
+ }
+}
