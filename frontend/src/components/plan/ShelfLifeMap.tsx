@@ -1,41 +1,37 @@
-// Shelf-life countdown map (ARCHITECTURE §16): offline react-leaflet (no tiles) or a colour table without geo.csv.
+// Shelf-life countdown map (ARCHITECTURE §16): offline SVG route network over geo.csv, or a colour table without it.
 // Colours pick the smallest served slack_h per destination; routes are the served trips' origin → dest_id pairs.
-import 'leaflet/dist/leaflet.css'
-import type { CircleMarker as LCircleMarker, LatLngTuple } from 'leaflet'
-import { Badge, ColorSwatch, Group, Paper, Skeleton, Stack, Table, Text, Title } from '@mantine/core'
-import { useEffect, useRef, useState } from 'react'
-import { CircleMarker, MapContainer, Polyline, Tooltip, useMap } from 'react-leaflet'
+import { ColorSwatch, Group, Paper, Skeleton, Stack, Table, Text, Title, Tooltip } from '@mantine/core'
+import { m, type Variants } from 'motion/react'
+import { useEffect, useId, useState } from 'react'
 import { api } from '../../api/client'
 import type { DispatchRow, GeoRecord } from '../../types'
 import { band, BANDS, HUB, num } from './format'
 
-// ponytail: decorative only — trucks glide origin → destination on a loop, they are not vehicle positions.
-// Pixel offsets are recomputed on zoom so the CSS transform stays on the line.
-function Truck({ a, b, i }: { a: LatLngTuple; b: LatLngTuple; i: number }) {
-  const map = useMap()
-  const ref = useRef<LCircleMarker>(null)
-  useEffect(() => {
-    const place = () => {
-      const el = ref.current?.getElement() as SVGElement | undefined
-      if (!el) return
-      const p = map.latLngToLayerPoint(a), q = map.latLngToLayerPoint(b)
-      el.style.setProperty('--dx', `${q.x - p.x}px`)
-      el.style.setProperty('--dy', `${q.y - p.y}px`)
-      el.style.animationDelay = `${1.2 + i * 0.45}s`
-    }
-    place()
-    map.on('zoomend', place)
-    return () => { map.off('zoomend', place) }
-  }, [map, a, b, i])
-  return <CircleMarker ref={ref} center={a} radius={4} interactive={false}
-    pathOptions={{ className: 'truck', color: '#1d2430', weight: 2, fillColor: '#fff', fillOpacity: 1 }} />
+// Fixed viewBox; points are fitted inside it with equal x/y scale (lon squeezed by cos(lat) so shapes stay true).
+const W = 1000, H = 460, PAD = 70
+
+const draw: Variants = { hidden: {}, show: { transition: { staggerChildren: 0.09, delayChildren: 0.15 } } }
+const stroke: Variants = {
+  hidden: { pathLength: 0, opacity: 0 },
+  show: { pathLength: 1, opacity: 1, transition: { pathLength: { duration: 0.9, ease: 'easeOut' }, opacity: { duration: 0.1 } } },
 }
 
 const pulse = (h: number) => (h < 6 ? 'fast' : h < 24 ? 'mid' : 'slow')
 
-export function ShelfLifeMap({ scenario, runId, rows }: { scenario: string; runId: string; rows: DispatchRow[] }) {
+// Quadratic Bézier hub → destination, bowed sideways by a fraction of its length so parallel lanes separate.
+function curve([x1, y1]: number[], [x2, y2]: number[]) {
+  const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, k = 0.18
+  return `M${x1},${y1} Q${mx - (y2 - y1) * k},${my + (x2 - x1) * k} ${x2},${y2}`
+}
+
+export function ShelfLifeMap({ scenario, runId, rows, filter, onPick }: {
+  scenario: string; runId: string; rows: DispatchRow[]
+  filter?: string; onPick: (destId: string | undefined) => void
+}) {
+  const uid = useId().replace(/:/g, '')
   const [geo, setGeo] = useState<GeoRecord[] | null | undefined>(undefined)
   const [routes, setRoutes] = useState<[string, string][]>([])
+  const [hover, setHover] = useState<string | undefined>(undefined)
   useEffect(() => {
     setGeo(undefined)
     api.geo(scenario).then(setGeo).catch(() => setGeo(null)) // 404 = no geo.csv → colour table
@@ -60,36 +56,39 @@ export function ShelfLifeMap({ scenario, runId, rows }: { scenario: string; runI
   const maxKg = Math.max(1, ...kg.values())
 
   const legend = (
-    <Stack gap={6}>
-      <Group gap="md">
-        {BANDS.map(([c, l]) => <Group key={l} gap={6}><ColorSwatch color={c} size={14} /><Text size="sm">{l}</Text></Group>)}
-        <Group gap={6}><ColorSwatch color={HUB} size={14} /><Text size="sm">hub</Text></Group>
-        <Text size="sm" c="dimmed">· marker size ∝ kg shipped</Text>
-      </Group>
-      <Group gap={6}>
-        <Text size="sm" c="dimmed" mr={4}>Tightest slack per destination:</Text>
-        {dests.map(d => (
-          <Badge key={d.dest_id} variant="outline" color="gray" radius="sm" size="lg" tt="none" fw={500}
-            leftSection={<ColorSwatch color={band(d.slack_h)[0]} size={10} />}>
-            {d.dest_id} <b>{num(d.slack_h)} h</b>
-          </Badge>))}
-      </Group>
-    </Stack>
+    <Group gap="md">
+      {BANDS.map(([c, l]) => <Group key={l} gap={6}><ColorSwatch color={c} size={14} /><Text size="sm">{l}</Text></Group>)}
+      <Group gap={6}><ColorSwatch color={HUB} size={14} radius={3} /><Text size="sm">hub</Text></Group>
+      <Text size="sm" c="dimmed">· circle size ∝ kg shipped · label = tightest slack h · click a destination to filter the sheet</Text>
+    </Group>
   )
 
   if (geo === undefined) return (
-    <Paper withBorder radius="md" p="md"><Skeleton h={22} w={260} mb="sm" /><Skeleton h={380} /></Paper>
+    <Paper withBorder radius="md" p="md"><Skeleton h={22} w={260} mb="sm" /><Skeleton h={420} /></Paper>
   )
   const pts = (geo ?? []).filter(g => typeof g.lat === 'number' && typeof g.lon === 'number')
-  const at = new Map(pts.map(g => [String(g.node_id), [g.lat, g.lon] as LatLngTuple]))
+
+  // Linear projection into the viewBox (display geometry only).
+  const lats = pts.map(g => g.lat as number), lons = pts.map(g => g.lon as number)
+  const midLat = (Math.min(...lats) + Math.max(...lats)) / 2
+  const sx = Math.cos((midLat * Math.PI) / 180)
+  const spanX = Math.max((Math.max(...lons) - Math.min(...lons)) * sx, 1e-6)
+  const spanY = Math.max(Math.max(...lats) - Math.min(...lats), 1e-6)
+  const s = Math.min((W - 2 * PAD) / spanX, (H - 2 * PAD) / spanY)
+  const ox = (W - spanX * s) / 2, oy = (H - spanY * s) / 2
+  const at = new Map(pts.map(g => [String(g.node_id), [
+    ox + ((g.lon as number) - Math.min(...lons)) * sx * s,
+    oy + (Math.max(...lats) - (g.lat as number)) * s,
+  ]]))
   const lines = routes.filter(([o, d]) => at.has(o) && at.has(d))
+  const active = hover ?? filter
 
   return (
     <Paper withBorder radius="md" p="md">
       <Stack gap="sm">
         <div>
           <Title order={3}>Shelf-life countdown</Title>
-          <Text size="sm" c="dimmed">{pts.length ? 'Offline, no map tiles · routes from served trips' : 'No geo.csv for this scenario, table view'}</Text>
+          <Text size="sm" c="dimmed">{pts.length ? 'Offline route network · routes from served trips' : 'No geo.csv for this scenario, table view'}</Text>
         </div>
         {legend}
         {!pts.length ? (
@@ -105,32 +104,75 @@ export function ShelfLifeMap({ scenario, runId, rows }: { scenario: string; runI
             </Table.Tbody>
           </Table>
         ) : (
-          <MapContainer className="plan-map" bounds={pts.map(g => [g.lat, g.lon] as LatLngTuple)}
-            boundsOptions={{ padding: [50, 50] }} attributionControl={false} scrollWheelZoom={false}>
-            {lines.map(([o, d]) => (
-              <Polyline key={`r-${o}-${d}`} positions={[at.get(o)!, at.get(d)!]} interactive={false}
-                pathOptions={{ className: 'route', color: '#7d8797', weight: 2.5, opacity: 0.75 }} />
-            ))}
-            {lines.map(([o, d], i) => <Truck key={`t-${o}-${d}`} a={at.get(o)!} b={at.get(d)!} i={i} />)}
+          <svg className="plan-map" viewBox={`0 0 ${W} ${H}`} role="img"
+            aria-label="Route network: hubs, destinations coloured by tightest slack, served routes">
+            <defs>
+              <filter id={`glow-${uid}`} x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="9" />
+              </filter>
+            </defs>
+
+            <m.g variants={draw} initial="hidden" animate="show" fill="none">
+              {lines.map(([o, d]) => {
+                const cls = active ? (d === active ? ' on' : ' dim') : ''
+                return (
+                  <g key={`r-${o}-${d}`} className={`route${cls}`}>
+                    <m.path variants={stroke} d={curve(at.get(o)!, at.get(d)!)} className="route-base" />
+                    <path d={curve(at.get(o)!, at.get(d)!)} className="route-flow" />
+                  </g>
+                )
+              })}
+            </m.g>
+
+            {/* ponytail: decorative only — dots glide along each route on a loop; they are not vehicle positions. */}
+            <g className="trucks">
+              {lines.map(([o, d], i) => (
+                <circle key={`t-${o}-${d}`} r={4.5} className="truck">
+                  <animateMotion dur={`${3.2 + (i % 4) * 0.5}s`} begin={`${1.4 + i * 0.35}s`} repeatCount="indefinite"
+                    path={curve(at.get(o)!, at.get(d)!)} />
+                </circle>
+              ))}
+            </g>
+
             {pts.map(g => {
               const id = String(g.node_id)
-              const hub = g.node_type === 'hub'
+              const [x, y] = at.get(id)!
+              if (g.node_type === 'hub') return (
+                <g key={id} className="node hub">
+                  <rect x={x - 12} y={y - 12} width={24} height={24} rx={6} fill={HUB} className="node-mark" />
+                  <text x={x} y={y - 20} textAnchor="middle" className="node-label">{String(g.name)} <tspan className="dim-label">hub</tspan></text>
+                </g>
+              )
               const u = urgent.get(id)
-              const colour = hub ? HUB : u ? band(u.slack_h)[0] : '#b8c0cc'
-              const r = hub ? 8 : 8 + 10 * Math.sqrt((kg.get(id) ?? 0) / maxKg)
-              const pos = [g.lat, g.lon] as LatLngTuple
-              return [
-                !hub && u && <CircleMarker key={`h-${id}`} center={pos} radius={r} interactive={false}
-                  pathOptions={{ className: `halo halo-${pulse(u.slack_h)}`, color: colour, weight: 3, fill: false }} />,
-                <CircleMarker key={`m-${id}`} center={pos} radius={r}
-                  pathOptions={{ color: '#fff', weight: 2, fillColor: colour, fillOpacity: 0.95 }}>
-                  <Tooltip permanent direction={hub ? 'left' : 'right'} offset={[hub ? -10 : r + 2, 0]} className="plan-tip">
-                    <b>{g.name}</b>{hub ? ' (hub)' : u ? ` · ${num(u.slack_h)} h` : ' · no load'}
-                  </Tooltip>
-                </CircleMarker>,
-              ]
+              const colour = u ? band(u.slack_h)[0] : undefined
+              const r = 9 + 13 * Math.sqrt((kg.get(id) ?? 0) / maxKg)
+              const node = (
+                <g className={`node dest${u ? '' : ' idle'}${active === id ? ' on' : active ? ' dim' : ''}`}
+                  onMouseEnter={() => setHover(id)} onMouseLeave={() => setHover(undefined)}
+                  onClick={() => u && onPick(filter === id ? undefined : id)}
+                  onKeyDown={e => u && (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onPick(filter === id ? undefined : id))}
+                  tabIndex={u ? 0 : undefined} role={u ? 'button' : undefined}
+                  aria-label={u ? `${g.name}: tightest slack ${num(u.slack_h)} h. Filter dispatch sheet` : `${g.name}: no load`}>
+                  {u && <circle cx={x} cy={y} r={r + 6} fill={colour} filter={`url(#glow-${uid})`} className="glow" />}
+                  {u && <circle cx={x} cy={y} r={r} fill="none" stroke={colour} className={`halo halo-${pulse(u.slack_h)}`} />}
+                  <circle cx={x} cy={y} r={r} fill={colour} className="node-mark" />
+                  <text x={x + r + 7} y={y + 5} className="node-label">
+                    {String(g.name)}{u && <tspan className="slack" fill={colour}> {num(u.slack_h)} h</tspan>}
+                  </text>
+                </g>
+              )
+              return u ? (
+                <Tooltip key={id} withArrow position="top" offset={r + 4} transitionProps={{ transition: 'pop', duration: 150 }}
+                  label={<Stack gap={0}>
+                    <Text size="sm" fw={700}>{u.dest_name} ({u.dest_id})</Text>
+                    <Text size="xs">Tightest slack {num(u.slack_h)} h · arrive by {num(u.arrive_by_h)} h</Text>
+                    <Text size="xs">{u.batch_id} {u.commodity} · {num(u.kg)} kg · {u.vehicle_id} {u.depart_clock}</Text>
+                  </Stack>}>
+                  {node}
+                </Tooltip>
+              ) : <g key={id}>{node}</g>
             })}
-          </MapContainer>
+          </svg>
         )}
       </Stack>
     </Paper>

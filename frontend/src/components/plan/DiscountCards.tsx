@@ -23,8 +23,8 @@ export function DiscountCards({ cards, onOpen }: { cards: ReasonCard[]; onOpen: 
             <m.div key={c.shipment_id} layoutId={cardLayoutId(c)} transition={spring.soft}
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0, transition: { ...spring.soft, delay: i * 0.06 } }}
               whileHover={{ y: -4, scale: 1.02, transition: spring.bouncy }} whileTap={{ scale: 0.98 }}>
-              <Card component="button" onClick={() => onOpen(c)} withBorder radius="md" padding="md" bg="yellow.0"
-                w="100%" ta="left" style={{ cursor: 'pointer', borderColor: 'var(--mantine-color-yellow-3)' }}>
+              <Card component="button" onClick={() => onOpen(c)} withBorder radius="md" padding="md" bg="var(--mantine-color-yellow-light)"
+                w="100%" ta="left" style={{ cursor: 'pointer', borderColor: 'var(--mantine-color-yellow-outline)' }}>
                 <Group justify="space-between" align="flex-start">
                   <Text fw={800} fz={26} lh={1}>{num(c.discount.tier_pct)} %<Text span fz="sm" fw={500}> off</Text></Text>
                   <Badge variant="light" color="yellow">day {c.discount.day}</Badge>

@@ -1,5 +1,5 @@
 // Dispatch sheet (ARCHITECTURE §16, DATABASE §5.10): priority table, CSV download, copyable driver message.
-import { Badge, Button, Code, CopyButton, Group, Paper, Stack, Table, Text, Title } from '@mantine/core'
+import { Badge, Button, Code, CopyButton, Group, Paper, Pill, Stack, Table, Text, Title } from '@mantine/core'
 import { IconCheck, IconCopy, IconDownload } from '@tabler/icons-react'
 import { AnimatePresence, m, type HTMLMotionProps, type Variants } from 'motion/react'
 import { useEffect, useState } from 'react'
@@ -32,8 +32,11 @@ const MTr = (p: HTMLMotionProps<'tr'>) => <Table.Tr {...({ ...p, component: m.tr
 
 export const rowLayoutId = (r: { priority_rank: number }) => `rank-${r.priority_rank}`
 
-export function Dispatch({ sheet, runId, onRow }:
-  { sheet: DispatchSheet; runId: string; onRow: (r: DispatchRow) => void }) {
+export function Dispatch({ sheet, runId, onRow, filter, onClear }: {
+  sheet: DispatchSheet; runId: string; onRow: (r: DispatchRow) => void
+  filter?: string; onClear: () => void // filter = dest_id picked on the map; display filter only
+}) {
+  const rows = filter ? sheet.csv.filter(r => r.dest_id === filter) : sheet.csv
   const [href, setHref] = useState('')
   useEffect(() => {
     const u = csvUrl(sheet.csv)
@@ -46,9 +49,11 @@ export function Dispatch({ sheet, runId, onRow }:
       <Group justify="space-between" align="flex-end">
         <div>
           <Title order={3}>Dispatch sheet</Title>
-          <Text size="sm" c="dimmed">{sheet.csv.length} lines in priority order · click a line for its reason card ·
+          <Text size="sm" c="dimmed">{filter ? `${rows.length} of ${sheet.csv.length}` : sheet.csv.length} lines in priority order · click a line for its reason card ·
             fuse = slack h on a {FUSE_SCALE_H} h scale</Text>
         </div>
+        {filter && <Pill size="lg" withRemoveButton onRemove={onClear} ml="auto"
+          removeButtonProps={{ 'aria-label': 'Clear destination filter' }}>Destination: {rows[0]?.dest_name ?? filter}</Pill>}
         <Button component="a" href={href} download={`${runId}__dispatch_sheet.csv`} variant="light"
           leftSection={<IconDownload size={18} />}>Download CSV</Button>
       </Group>
@@ -61,7 +66,7 @@ export function Dispatch({ sheet, runId, onRow }:
               <Table.Th ta="right">kg</Table.Th><Table.Th>Slack h</Table.Th><Table.Th ta="right">Arrive by h</Table.Th>
             </Table.Tr></Table.Thead>
             <MTbody variants={body} initial="hidden" animate="show">
-              {sheet.csv.map((r, i) => {
+              {rows.map((r, i) => {
                 const lively = i < ANIMATED_ROWS
                 return (
                   <MTr key={`${r.trip_id}|${r.batch_id}|${r.priority_rank}`} variants={lively ? row : undefined}

@@ -27,7 +27,7 @@ function Body({ open }: { open: DrawerOpen }) {
   const c = card?.chosen
   const rankBadge = (rank: number | string) => (
     <m.span layoutId={open.from === 'row' ? open.layoutId : undefined} style={{ display: 'inline-block' }}>
-      <Badge size="lg" radius="sm" variant="filled" color="dark">#{rank}</Badge>
+      <Badge size="lg" radius="sm" variant="filled" color="green">#{rank}</Badge>
     </m.span>
   )
   if (!card || !c) return (
@@ -41,7 +41,7 @@ function Body({ open }: { open: DrawerOpen }) {
     <m.div variants={list} initial="hidden" animate="show">
       <Stack gap="md">
         <m.div layoutId={open.from === 'card' ? open.layoutId : undefined} transition={spring.soft}>
-          <Paper p="md" radius="md" bg={card.discount ? 'yellow.0' : 'gray.0'} withBorder>
+          <Paper p="md" radius="md" bg={card.discount ? 'var(--mantine-color-yellow-light)' : 'var(--mantine-color-default-hover)'} withBorder>
             <Group gap="sm" wrap="nowrap" align="center">
               {rankBadge(card.priority.rank)}
               <div style={{ minWidth: 0 }}>
@@ -53,7 +53,7 @@ function Body({ open }: { open: DrawerOpen }) {
         </m.div>
 
         <m.div variants={item}>
-          <Paper p="sm" radius="md" bg="blue.0"><Text size="sm">{card.text}</Text></Paper>
+          <Paper p="sm" radius="md" bg="var(--mantine-color-blue-light)"><Text size="sm">{card.text}</Text></Paper>
         </m.div>
 
         <m.div variants={item}>
@@ -91,7 +91,7 @@ function Body({ open }: { open: DrawerOpen }) {
         </m.div>
 
         {card.discount && <m.div variants={item}>
-          <Paper withBorder radius="md" p="sm" bg="yellow.0">
+          <Paper withBorder radius="md" p="sm" bg="var(--mantine-color-yellow-light)">
             <Group justify="space-between">
               <Text fw={700} size="lg">{num(card.discount.tier_pct)} % off</Text>
               <Text size="sm">from day {card.discount.day}</Text>
