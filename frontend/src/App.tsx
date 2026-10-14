@@ -4,7 +4,7 @@ import {
   IconArrowsShuffle, IconChartBar, IconFlask, IconLeaf, IconRoute, IconShieldCheck, IconTimeline,
 } from '@tabler/icons-react'
 import { AnimatePresence, m } from 'motion/react'
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { memo, useCallback, useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react'
 import { api } from './api/client'
 import { StatusBanner, SyntheticBanner } from './components/Banners'
 import { RunButton } from './components/RunButton'
@@ -17,8 +17,13 @@ import { Trust } from './tabs/Trust'
 import { spring } from './theme'
 import type { RunDetail, RunsList, ScenarioInfo } from './types'
 
-const TABS = { Scoreboard, Plan, Robustness, Replan, Trust }
-type TabName = keyof typeof TABS
+type TabProps = { run: RunDetail; runId: string }
+const TAB_NAMES = ['Scoreboard', 'Plan', 'Robustness', 'Replan', 'Trust'] as const
+type TabName = (typeof TAB_NAMES)[number]
+// memo: a kept-mounted tab only re-renders when its own props change (tab files stay untouched)
+const TABS: Record<TabName, ComponentType<TabProps>> = {
+  Scoreboard: memo(Scoreboard), Plan: memo(Plan), Robustness: memo(Robustness), Replan: memo(Replan), Trust: memo(Trust),
+}
 const TAB_ICONS: Record<TabName, ReactNode> = {
   Scoreboard: <IconChartBar size={18} />, Plan: <IconRoute size={18} />, Robustness: <IconTimeline size={18} />,
   Replan: <IconArrowsShuffle size={18} />, Trust: <IconShieldCheck size={18} />,
@@ -35,10 +40,27 @@ const reveal = (t: (typeof spring)[keyof typeof spring], from: { x?: number; y?:
   transition: t,
 })
 
+// Tabs stay mounted after first visit (no remount/refetch); the inactive ones are display:none.
+// Only an enter animation, no exit: a rapid switch interrupts instantly instead of queueing.
+function TabPane({ active, children }: { active: boolean; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const willChange = (v: string) => { if (ref.current) ref.current.style.willChange = v }
+  return (
+    <m.div ref={ref} hidden={!active} initial={{ opacity: 0, y: 6 }}
+      animate={active ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+      transition={active ? spring.snappy : { duration: 0 }}
+      onAnimationStart={() => active && willChange('transform, opacity')} onAnimationComplete={() => willChange('auto')}>
+      {children}
+    </m.div>
+  )
+}
+
 export default function App() {
   // ?tab=plan opens a tab directly (screenshots, demo links)
-  const [tab, setTab] = useState<TabName>(() => (Object.keys(TABS) as TabName[]).find(
+  const [tab, setTab] = useState<TabName>(() => TAB_NAMES.find(
     t => t.toLowerCase() === new URLSearchParams(location.search).get('tab')?.toLowerCase()) ?? 'Scoreboard')
+  const [visited, setVisited] = useState<TabName[]>([tab])
+  if (!visited.includes(tab)) setVisited([...visited, tab]) // render-phase update: mounts in the same commit
   const [scenarios, setScenarios] = useState<ScenarioInfo[]>([])
   const [runs, setRuns] = useState<RunsList>({ runs: [], fixture: false })
   const [runId, setRunId] = useState<string | null>(null)
@@ -74,7 +96,6 @@ export default function App() {
   // shown unless the run's scenario is a listed one with a non-synthetic source (§16.1)
   const synthetic = fixture || (!!run && (!info || info.source === 'synthetic'))
   // runId = the outputs/ dir key (§11.2); it can differ from metrics.run_id
-  const Tab: (p: { run: RunDetail; runId: string }) => ReactNode = TABS[tab]
 
   return (
     <AppShell header={{ height: 64 }} navbar={{ width: 290, breakpoint: 'sm' }} padding="lg">
@@ -127,7 +148,7 @@ export default function App() {
           <Tabs value={tab} onChange={v => v && setTab(v as TabName)} variant="pills" radius="xl" mb="md"
             classNames={{ tab: 'shell-tab' }}>
             <Tabs.List className="shell-tabs">
-              {(Object.keys(TABS) as TabName[]).map(t => (
+              {TAB_NAMES.map(t => (
                 <Tabs.Tab key={t} value={t}>
                   {t === tab && (
                     <m.span layoutId="tab-pill" className="tab-pill" transition={spring.snappy}>
@@ -141,12 +162,12 @@ export default function App() {
               ))}
             </Tabs.List>
           </Tabs>
-          <AnimatePresence mode="wait" initial={false}>
-            <m.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6, transition: spring.snappy }}
-              transition={spring.soft}>
-              {run && runId ? <Tab run={run} runId={runId} /> : <p className="placeholder">No run loaded.</p>}
-            </m.div>
-          </AnimatePresence>
+          {run && runId
+            ? TAB_NAMES.filter(t => visited.includes(t)).map(t => {
+              const T = TABS[t]
+              return <TabPane key={t} active={t === tab}><T run={run} runId={runId} /></TabPane>
+            })
+            : <p className="placeholder">No run loaded.</p>}
         </m.div>
       </AppShell.Main>
     </AppShell>
