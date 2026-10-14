@@ -6,6 +6,12 @@ export function delta(ours: number, baseline: number | null | undefined): number
   return baseline == null ? null : ours - baseline
 }
 
+/** DISPLAY-ONLY: ours / baseline, used only to decide how many spoilage-melt crates stay drawn.
+ * Null without a positive baseline (nothing to melt). Not a KPI; never shown as a number. */
+export function ratio(ours: number, baseline: number | null | undefined): number | null {
+  return baseline == null || baseline <= 0 ? null : ours / baseline
+}
+
 /** DISPLAY-ONLY: [low, high] bar extents for waterfall.json steps (running total for placement).
  * Steps and their values are the engine's; this only decides where each floating bar is drawn. */
 export function waterfallBars<T extends { value: number; type: 'total' | 'delta' }>(steps: T[]) {
