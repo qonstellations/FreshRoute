@@ -1,0 +1,93 @@
+// DATABASE.md §11.2 responses (api_version 1), field for field; file shapes from §5.1, §5.7–§5.11.
+export const API_VERSION = 1
+
+export interface Health { status: 'ok'; schema_version: number; api_version: number }
+
+export interface ScenarioInfo { name: string; source: string; horizon_days: number; window_mode: string }
+
+export type GeoRecord = Record<string, string | number | null> // §3.9, UI only
+
+export interface RunSummary { run_id: string; scenario: string; policy: string; seed: number; has_ladder: boolean }
+export interface RunsList { runs: RunSummary[]; fixture: boolean }
+
+export interface Kpis {
+  spoilage_kg: number; spoilage_pct: number
+  demand_fulfillment_pct: number; min_dest_fill_pct: number
+  net_inr: number; violations: number
+}
+
+export interface Metrics { // §5.7
+  schema_version: number
+  run_id: string; scenario: string; policy: string; seed: number; realization: string
+  kpis: Kpis
+  spoilage_breakdown_kg: { handling_loss: number; delivered_unsold_expired: number; origin_expired: number }
+  economics_inr: {
+    gross_revenue_at_list: number; discount_cost: number; revenue: number
+    transport: number; handling: number; spoilage_cost: number; net: number
+  }
+  volumes_kg: {
+    total_supply: number; shipped: number; unshipped: number; sold: number
+    carryover: { destination: number; origin: number; total: number }
+  }
+  trips: { count: number; avg_utilization_pct: number }
+  per_destination: { dest_id: string; fill_pct: number; sold_kg: number; spoiled_kg: number }[]
+  per_commodity: { commodity: string; spoilage_kg: number; spoilage_pct: number; sold_kg: number }[]
+}
+
+export interface Baseline { policy: string; kpis: Kpis; source: 'ladder' | 'run' }
+
+export interface Validation { // §5.8
+  schema_version: number
+  violation_total: number
+  counts: Record<string, number>
+  violations: { code: string; shipment_id: string; detail: string; observed: number; limit: number }[]
+  warnings: { code: string; detail: string }[]
+}
+
+export interface Manifest { // §5.1
+  schema_version: number
+  run_id: string; git_sha: string; scenario: string; scenario_sha256: string; policy: string
+  flags: Flags; seed: number; realization: string
+  package_versions: Record<string, string>
+  solver: {
+    status: string; mip_gap: number; solve_seconds: number
+    fallback_used: boolean; slack_usage: Record<string, number>
+  } | null
+  timestamp_utc: string
+}
+
+export interface RunDetail extends Metrics {
+  baseline: Baseline | null
+  validation: Validation | null
+  manifest: Manifest | null
+  fixture?: boolean
+}
+
+export type TableName = 'plan' | 'trips' | 'discounts' | 'sim_ledger' | 'sim_lots'
+export interface Table { columns: string[]; records: Record<string, string | number | boolean | null>[] }
+
+export type ReasonCards = Record<string, unknown>[] | null // §5.9, typed when U-01 renders it
+
+export interface DispatchSheet { csv: Record<string, string | number | null>[]; text: string } // §5.10
+
+export interface LadderEntry { policy: string; kpis: Kpis }
+export interface Ladder { // §5.11
+  ladder: {
+    scenario: string; seed: number; realization: string
+    official_baseline: LadderEntry | null
+    ladder: LadderEntry[]; extras: LadderEntry[]
+  }
+  waterfall: {
+    baseline: string; plan: string; tolerance_inr: number
+    steps: { label: string; value: number; type: 'total' | 'delta' }[]
+  }
+}
+
+export interface Flags { markdown: boolean; newsvendor: boolean }
+export interface PostRunRequest { scenario: string; policy: string; seed: number; flags: Flags }
+export interface PostRunResponse { run_id: string; status: 'running' }
+
+export interface StatusResponse {
+  state: 'running' | 'done' | 'error'
+  started_utc: string | null; finished_utc: string | null; error: string | null
+}
