@@ -1,11 +1,11 @@
 node_id,node_type,name,lat,lon
-HUB1,hub,HUB1,14.7025,79.451
-HUB2,hub,HUB2,14.6482,77.5347
-D1,destination,D1,11.6813,77.6494
-D2,destination,D2,14.4711,78.4952
-D3,destination,D3,13.7526,76.3841
-D4,destination,D4,11.5544,77.2402
-D5,destination,D5,13.1447,76.8059
-D6,destination,D6,11.6778,79.0611
-D7,destination,D7,13.4097,77.4075
-D8,destination,D8,14.2857,78.2628
+HUB1,hub,Kolar APMC aggregation point,13.136,78.129
+HUB2,hub,Chikkaballapur aggregation point,13.4355,77.7315
+D1,destination,"KR Market mandi, Bengaluru",12.9634,77.5772
+D2,destination,Hoskote retail DC,13.0707,77.7982
+D3,destination,Whitefield HoReCa cluster,12.9698,77.75
+D4,destination,Tumakuru food processor,13.3409,77.101
+D5,destination,"Koyambedu market, Chennai",13.0694,80.1948
+D6,destination,Mysuru retail DC,12.2958,76.6394
+D7,destination,"Bowenpally market, Hyderabad",17.471,78.484
+D8,destination,Electronic City HoReCa cluster,12.8452,77.6602

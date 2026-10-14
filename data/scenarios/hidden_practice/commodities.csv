@@ -1,7 +1,7 @@
 commodity,perishability_class,base_shelf_life_h,ref_temp_c,q10,min_sell_window_h,handling_loss_pct,unit_cost_inr_kg,disposal_cost_inr_kg,salvage_value_inr_kg,price_elasticity,max_discount_pct
-banana,high,150,20,2.0,24,2.0,18,2,5,0.8,30
-mango,high,120,20,2.0,24,3.0,40,3,10,0.8,30
-onion,low,720,20,2.0,48,1.0,12,1,4,0.5,20
-potato,low,900,20,2.0,48,1.0,10,1,4,0.5,20
-spinach,very_high,60,20,2.0,12,3.0,18,2,2,1.2,35
-tomato,very_high,120,20,2.0,24,3.0,15,2,3,1.0,35
+banana,high,168,20,2.2,24,2.0,18,2,5,0.8,30
+mango,high,144,25,2.5,24,3.0,40,3,10,0.8,30
+onion,low,1440,25,1.8,48,1.0,14,1,4,0.5,20
+potato,low,1680,25,1.8,48,1.0,10,1,4,0.5,20
+spinach,very_high,48,20,3.0,12,4.0,20,2,1,1.2,40
+tomato,very_high,144,20,2.5,24,3.0,16,2,3,1.0,35

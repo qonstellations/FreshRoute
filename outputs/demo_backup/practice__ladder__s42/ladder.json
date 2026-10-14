@@ -7,44 +7,44 @@
     {
       "policy": "fifo",
       "kpis": {
-        "spoilage_kg": 945.5231000000006,
-        "spoilage_pct": 1.6990941021760462,
-        "demand_fulfillment_pct": 59.59305965281196,
-        "min_dest_fill_pct": 24.528868976559288,
-        "net_inr": 1271668.4249300002,
-        "violations": 37
+        "spoilage_kg": 937.0331000000006,
+        "spoilage_pct": 1.7337779073799349,
+        "demand_fulfillment_pct": 77.58938670774941,
+        "min_dest_fill_pct": 34.70565953969896,
+        "net_inr": 318667.983946,
+        "violations": 19
       }
     },
     {
       "policy": "fefo",
       "kpis": {
-        "spoilage_kg": 928.3253400000006,
-        "spoilage_pct": 1.668189925867039,
-        "demand_fulfillment_pct": 54.02238927179263,
-        "min_dest_fill_pct": 35.34788138475756,
-        "net_inr": 1263250.2956457003,
+        "spoilage_kg": 904.1245350000006,
+        "spoilage_pct": 1.672887696606616,
+        "demand_fulfillment_pct": 64.5316025424536,
+        "min_dest_fill_pct": 0.0,
+        "net_inr": 271027.23577599996,
         "violations": 0
       }
     },
     {
       "policy": "milp",
       "kpis": {
-        "spoilage_kg": 1012.7162800000007,
-        "spoilage_pct": 1.8198394714266266,
-        "demand_fulfillment_pct": 62.50682893942249,
-        "min_dest_fill_pct": 18.724866408819338,
-        "net_inr": 1431617.560667413,
+        "spoilage_kg": 835.0025450000012,
+        "spoilage_pct": 1.5449923435223594,
+        "demand_fulfillment_pct": 75.19586697346132,
+        "min_dest_fill_pct": 32.323689049274144,
+        "net_inr": 395344.13243070006,
         "violations": 0
       }
     },
     {
       "policy": "milp_markdown",
       "kpis": {
-        "spoilage_kg": 1012.7162800000007,
-        "spoilage_pct": 1.8198394714266266,
-        "demand_fulfillment_pct": 62.50682893942249,
-        "min_dest_fill_pct": 18.724866408819338,
-        "net_inr": 1431590.6362199232,
+        "spoilage_kg": 835.0025450000012,
+        "spoilage_pct": 1.5449923435223594,
+        "demand_fulfillment_pct": 75.19586697346132,
+        "min_dest_fill_pct": 32.323689049274144,
+        "net_inr": 395344.13243070006,
         "violations": 0
       }
     }
@@ -53,12 +53,12 @@
     {
       "policy": "last_day_50",
       "kpis": {
-        "spoilage_kg": 945.5231000000006,
-        "spoilage_pct": 1.6990941021760462,
-        "demand_fulfillment_pct": 59.59305965281196,
-        "min_dest_fill_pct": 24.528868976559288,
-        "net_inr": 1227514.8714906,
-        "violations": 37
+        "spoilage_kg": 937.0331000000006,
+        "spoilage_pct": 1.7337779073799349,
+        "demand_fulfillment_pct": 77.58938670774941,
+        "min_dest_fill_pct": 34.70565953969896,
+        "net_inr": 300673.7010531998,
+        "violations": 19
       }
     }
   ]

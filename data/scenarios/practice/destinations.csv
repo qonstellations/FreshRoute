@@ -1,9 +1,9 @@
 dest_id,name,type,receive_cap_kg_day,handling_time_h,handling_cost_inr_kg,window_open_h,window_close_h
-D1,Destination 1,mandi,2427.0,3.0,1.74,0.0,72.0
-D2,Destination 2,retail_DC,2990.0,2.0,1.1,0.0,48.0
-D3,Destination 3,HoReCa,21720.0,1.0,1.43,0.0,72.0
-D4,Destination 4,processor,5265.0,3.0,1.75,24.0,72.0
-D5,Destination 5,mandi,230.0,1.0,1.9,0.0,72.0
-D6,Destination 6,retail_DC,667.0,3.0,1.22,0.0,48.0
-D7,Destination 7,HoReCa,1283.0,2.0,1.98,0.0,72.0
-D8,Destination 8,processor,831.0,2.0,1.29,24.0,72.0
+D1,"KR Market mandi, Bengaluru",mandi,5275.0,1.0,1.02,2.0,14.0
+D2,Hoskote retail DC,retail_DC,3234.0,2.0,1.48,4.0,20.0
+D3,Whitefield HoReCa cluster,HoReCa,852.0,1.0,1.84,6.0,16.0
+D4,Tumakuru food processor,processor,1199.0,3.0,0.59,0.0,24.0
+D5,"Koyambedu market, Chennai",mandi,6573.0,1.0,1.0,2.0,14.0
+D6,Mysuru retail DC,retail_DC,3459.0,2.0,1.38,4.0,20.0
+D7,"Bowenpally market, Hyderabad",mandi,4168.0,1.0,1.09,2.0,14.0
+D8,Electronic City HoReCa cluster,HoReCa,1107.0,1.0,1.93,6.0,16.0

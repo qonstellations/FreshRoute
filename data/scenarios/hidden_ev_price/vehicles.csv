@@ -1,6 +1,7 @@
 vehicle_id,origin,mode,capacity_kg,available_from_h,max_trips_day
-V1,HUB1,reefer,2000.0,0.0,4
-V2,HUB2,ambient,4000.0,0.0,4
-V3,HUB1,reefer,2000.0,0.0,4
-VR1,HUB1,rail,10000.0,0.0,2
-VR2,HUB2,rail,10000.0,0.0,2
+V1,HUB1,reefer,1000.0,0.0,2
+V2,HUB2,reefer,3000.0,0.0,2
+V3,HUB1,ambient,3000.0,0.0,2
+V4,HUB2,ambient,1000.0,0.0,2
+VR1,HUB1,rail,10000.0,0.0,1
+VR2,HUB2,rail,10000.0,0.0,1

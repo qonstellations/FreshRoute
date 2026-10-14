@@ -1,133 +1,134 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "run_id": "practice__fifo__s42",
   "scenario": "practice",
   "policy": "fifo",
   "seed": 42,
   "realization": "base",
   "kpis": {
-    "spoilage_kg": 945.5231000000006,
-    "spoilage_pct": 1.6990941021760462,
-    "demand_fulfillment_pct": 59.59305965281196,
-    "min_dest_fill_pct": 24.528868976559288,
-    "net_inr": 1271668.4249300002,
-    "violations": 37
+    "spoilage_kg": 937.0331000000006,
+    "spoilage_pct": 1.7337779073799349,
+    "demand_fulfillment_pct": 77.58938670774941,
+    "min_dest_fill_pct": 34.70565953969896,
+    "net_inr": 318667.983946,
+    "violations": 19
   },
   "spoilage_breakdown_kg": {
-    "handling_loss": 945.5231000000006,
-    "delivered_unsold_expired": 0.0,
-    "origin_expired": 0.0
+    "handling_loss": 767.2435000000006,
+    "delivered_unsold_expired": 24.009599999999992,
+    "origin_expired": 145.78000000000003
   },
   "economics_inr": {
-    "gross_revenue_at_list": 1522226.95803,
+    "gross_revenue_at_list": 1315470.953646,
     "discount_cost": 0.0,
-    "revenue": 1522226.95803,
-    "transport": 157086.6282,
-    "handling": 76900.6093,
-    "spoilage_cost": 16571.29560000001,
-    "net": 1271668.4249300002
+    "revenue": 1315470.953646,
+    "cost_of_goods_sold": 703270.9512,
+    "transport": 224940.62459999998,
+    "handling": 51532.8956,
+    "spoilage_cost": 17058.498300000014,
+    "net": 318667.983946
   },
   "volumes_kg": {
-    "total_supply": 55648.66,
-    "shipped": 50177.06,
-    "unshipped": 5471.600000000006,
-    "sold": 49231.5369,
+    "total_supply": 54045.740000000005,
+    "shipped": 41363.689999999995,
+    "unshipped": 12682.05000000001,
+    "sold": 40572.4369,
     "carryover": {
       "destination": 0.0,
-      "origin": 5471.599999999999,
-      "total": 5471.599999999999
+      "origin": 12536.27,
+      "total": 12536.27
     }
   },
   "trips": {
-    "count": 34,
-    "avg_utilization_pct": 71.59045294117648
+    "count": 40,
+    "avg_utilization_pct": 43.50672333333333
   },
   "per_destination": [
     {
       "dest_id": "D1",
-      "fill_pct": 31.896448299784574,
-      "sold_kg": 1834.47,
-      "spoiled_kg": 34.97000000000001
+      "fill_pct": 96.26919078031064,
+      "sold_kg": 9870.3261,
+      "spoiled_kg": 186.1339000000001
     },
     {
       "dest_id": "D2",
-      "fill_pct": 53.17970971963224,
-      "sold_kg": 3116.9851000000012,
-      "spoiled_kg": 58.024900000000045
+      "fill_pct": 97.80294900758432,
+      "sold_kg": 7273.0185,
+      "spoiled_kg": 163.38150000000022
     },
     {
       "dest_id": "D3",
-      "fill_pct": 57.09786443560175,
-      "sold_kg": 26781.0453,
-      "spoiled_kg": 519.4747000000003
+      "fill_pct": 98.25923561029157,
+      "sold_kg": 2246.7269,
+      "spoiled_kg": 39.80310000000004
     },
     {
       "dest_id": "D4",
-      "fill_pct": 85.84117489472244,
-      "sold_kg": 14258.9488,
-      "spoiled_kg": 271.0512000000001
+      "fill_pct": 97.0,
+      "sold_kg": 2115.4341999999997,
+      "spoiled_kg": 65.42580000000005
     },
     {
       "dest_id": "D5",
-      "fill_pct": 86.17423569851351,
-      "sold_kg": 378.5548,
-      "spoiled_kg": 7.435200000000006
+      "fill_pct": 57.09877754149916,
+      "sold_kg": 6548.95,
+      "spoiled_kg": 105.43000000000008
     },
     {
       "dest_id": "D6",
-      "fill_pct": 33.424920710434506,
-      "sold_kg": 421.5551,
-      "spoiled_kg": 8.114900000000006
+      "fill_pct": 92.52209910830221,
+      "sold_kg": 7082.6222,
+      "spoiled_kg": 125.6578000000001
     },
     {
       "dest_id": "D7",
-      "fill_pct": 59.28787914897673,
-      "sold_kg": 1741.3858,
-      "spoiled_kg": 31.01420000000006
+      "fill_pct": 34.70565953969896,
+      "sold_kg": 2939.3055999999997,
+      "spoiled_kg": 60.694400000000094
     },
     {
       "dest_id": "D8",
-      "fill_pct": 24.528868976559288,
-      "sold_kg": 698.5919999999991,
-      "spoiled_kg": 15.437999999999994
+      "fill_pct": 98.23965081589117,
+      "sold_kg": 2496.0534,
+      "spoiled_kg": 44.72659999999998
     }
   ],
   "per_commodity": [
     {
       "commodity": "banana",
-      "spoilage_kg": 242.05020000000007,
-      "spoilage_pct": 1.8423896165579736,
-      "sold_kg": 11860.4598
+      "spoilage_kg": 129.04000000000005,
+      "spoilage_pct": 1.374265954115876,
+      "sold_kg": 6322.96
     },
     {
       "commodity": "mango",
-      "spoilage_kg": 206.1942000000002,
-      "spoilage_pct": 2.69557805565179,
-      "sold_kg": 6666.9458
+      "spoilage_kg": 168.38370000000023,
+      "spoilage_pct": 2.5030949811357814,
+      "sold_kg": 5444.4063
     },
     {
       "commodity": "onion",
-      "spoilage_kg": 92.6348000000001,
-      "spoilage_pct": 0.8988276936750581,
-      "sold_kg": 9170.8452
+      "spoilage_kg": 78.83460000000005,
+      "spoilage_pct": 0.7402893749366153,
+      "sold_kg": 7804.6254
     },
     {
       "commodity": "potato",
-      "spoilage_kg": 126.74699999999999,
-      "spoilage_pct": 0.8823467986934692,
-      "sold_kg": 12547.953
+      "spoilage_kg": 132.6042000000002,
+      "spoilage_pct": 0.8005290810446645,
+      "sold_kg": 13127.8158
     },
     {
       "commodity": "spinach",
-      "spoilage_kg": 131.15880000000013,
-      "spoilage_pct": 2.8192430791850023,
-      "sold_kg": 4240.8012
+      "spoilage_kg": 224.71120000000008,
+      "spoilage_pct": 13.333918801846604,
+      "sold_kg": 1294.1088
     },
     {
       "commodity": "tomato",
-      "spoilage_kg": 146.73810000000006,
-      "spoilage_pct": 2.6495343302770196,
-      "sold_kg": 4744.5319
+      "spoilage_kg": 203.4594000000001,
+      "spoilage_pct": 2.2531519968460665,
+      "sold_kg": 6578.5206
     }
   ]
 }

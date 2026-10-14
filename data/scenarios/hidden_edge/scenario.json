@@ -1,11 +1,11 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "hidden_edge",
   "source": "synthetic",
   "seed": 206,
   "horizon_days": 2,
-  "window_mode": "absolute",
+  "window_mode": "daily",
   "dispatch_hour": 5,
-  "price_source": "static_table_generator_v2",
-  "notes": "SYNTHETIC data from freshroute.generator v2. Prices are a static table grounded on published Agmarknet aggregates, not a snapshot. Not real."
+  "price_source": "static_table_generator_v3",
+  "notes": "SYNTHETIC data from freshroute.generator v3. Real place names and coordinates; quantities, demand, costs and prices are generated (prices from a static table grounded on published Agmarknet aggregates, not a snapshot). Not real."
 }

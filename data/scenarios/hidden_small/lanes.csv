@@ -1,8 +1,7 @@
 origin,dest_id,mode,travel_h_p50,travel_h_p90,cost_fixed_inr_trip,cost_var_inr_kg,transit_temp_c,departure_slots
-HUB1,D1,ambient,5.11,6.64,1157.0,1.22,28.0,
-HUB1,D1,rail,30.0,38.0,1500.0,0.8,22.0,18|22
-HUB1,D1,reefer,5.11,6.64,2314.0,2.04,10.0,
-HUB1,D2,ambient,10.14,13.18,810.0,1.55,28.0,
-HUB1,D2,reefer,10.14,13.18,1619.0,2.58,10.0,
-HUB1,D3,ambient,16.22,21.09,990.0,1.24,28.0,
-HUB1,D3,reefer,16.22,21.09,1979.0,2.06,10.0,
+HUB1,D1,ambient,2.54,2.94,2736.0,0.63,30.0,
+HUB1,D1,reefer,2.54,2.94,3660.0,0.84,12.0,
+HUB1,D2,ambient,1.69,2.33,1829.0,0.54,30.0,
+HUB1,D2,reefer,1.69,2.33,2839.0,0.76,12.0,
+HUB1,D3,ambient,1.96,2.29,1875.0,0.59,30.0,
+HUB1,D3,reefer,1.96,2.29,2902.0,0.71,12.0,

@@ -1,4 +1,4 @@
 dest_id,name,type,receive_cap_kg_day,handling_time_h,handling_cost_inr_kg,window_open_h,window_close_h
-D1,Destination 1,mandi,2027.0,2.0,1.03,0.0,48.0
-D2,Destination 2,retail_DC,1510.0,3.0,1.58,0.0,24.0
-D3,Destination 3,HoReCa,3378.0,1.0,1.47,0.0,48.0
+D1,"KR Market mandi, Bengaluru",mandi,2890.0,1.0,0.94,2.0,14.0
+D2,Hoskote retail DC,retail_DC,2155.0,2.0,1.49,4.0,20.0
+D3,Whitefield HoReCa cluster,HoReCa,1310.0,1.0,1.83,6.0,16.0

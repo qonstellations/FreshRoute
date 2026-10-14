@@ -1,9 +1,9 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "run_id": "practice__milp__s42",
-  "git_sha": "e70f566be32e405938ac69f82dc22f0b5e7aec7b",
+  "git_sha": "bd598018d4f7bf9b143e56f7a7322be1eb36d5ba",
   "scenario": "data/scenarios/practice",
-  "scenario_sha256": "fbeea2f29fb9babb3ee9c7ad15580d897c4782ad8f74142e8ea320200d94c5a0",
+  "scenario_sha256": "213c6b296c0614a0bcf9d49e7fa86bfc8c5a98e7001a724ca738a6325e96d09b",
   "policy": "milp",
   "flags": {
     "markdown": false,
@@ -12,23 +12,32 @@
   "seed": 42,
   "realization": "base",
   "package_versions": {
-    "python": "3.13.16",
+    "python": "3.13.7",
     "scipy": "1.18.1",
     "pulp": "4.0.0",
     "highspy": "1.15.1",
     "pandas": "2.3.3"
   },
   "solver": {
-    "status": "1",
-    "solve_seconds": 9.483031584000855,
+    "status": "-4",
+    "solve_seconds": 30.310139700000036,
     "size": {
-      "vars": 4906,
-      "constraints": 422
+      "vars": 5002,
+      "constraints": 465
     },
-    "mip_gap": 0.008154203600534584,
+    "mip_gap": 0.20014345264493139,
     "slack_usage": {},
-    "objective_inr": 1454944.58547345,
-    "fallback_used": false
+    "objective_inr": 407154.33710580005,
+    "fallback_used": false,
+    "aggregation": {
+      "batches": 200,
+      "groups": 189,
+      "vehicle_classes": 8,
+      "agg_arcs": 4679,
+      "dropped_lines": 0,
+      "unassigned_kg": -7.275957614183426e-12,
+      "validator_violations": 0
+    }
   },
-  "timestamp_utc": "2026-10-14T13:50:23+00:00"
+  "timestamp_utc": "2026-10-14T17:52:24+00:00"
 }

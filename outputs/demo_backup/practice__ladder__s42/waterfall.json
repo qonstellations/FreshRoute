@@ -5,37 +5,42 @@
   "steps": [
     {
       "label": "Baseline net",
-      "value": 1263250.2956457003,
+      "value": 271027.23577599996,
       "type": "total"
     },
     {
       "label": "Spoilage cost avoided",
-      "value": -884.7082450000016,
+      "value": 1858.4772699999903,
       "type": "delta"
     },
     {
       "label": "Extra sales (list price)",
-      "value": 168922.9760871753,
+      "value": 176583.2411797,
+      "type": "delta"
+    },
+    {
+      "label": "Cost of extra goods sold",
+      "value": -122539.07808999997,
       "type": "delta"
     },
     {
       "label": "Extra transport",
-      "value": 9167.101528108935,
+      "value": 70886.14730500002,
       "type": "delta"
     },
     {
       "label": "Extra handling",
-      "value": -8838.104348571127,
+      "value": -2471.891009999992,
       "type": "delta"
     },
     {
       "label": "Discounts given",
-      "value": -26.924447490000084,
+      "value": 0.0,
       "type": "delta"
     },
     {
       "label": "FreshRoute net",
-      "value": 1431590.6362199232,
+      "value": 395344.13243070006,
       "type": "total"
     }
   ]
