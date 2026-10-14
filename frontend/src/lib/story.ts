@@ -23,6 +23,9 @@ export const BEATS: Beat[] = [
   { tab: 'Robustness', step: 0, title: 'Plan beats baseline across sampled futures' },
   { tab: 'Robustness', step: 1, title: 'P10–P90 bands: net, spoilage, fulfilment' },
   { tab: 'Robustness', step: 2, title: 'Sensitivity: Q10 and ε' },
+  { tab: 'Replan', step: 0, title: 'Event: NH-48 jam' },
+  { tab: 'Replan', step: 1, title: 'Replan: batches re-routed, dispatched ones frozen' },
+  { tab: 'Replan', step: 2, title: 'ΔKPIs vs doing nothing + narration' },
   { tab: 'Trust', step: 0, title: 'Reproducible: manifest + seed' },
 ]
 
