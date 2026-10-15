@@ -18,30 +18,30 @@ The solver decides, the simulator measures, the validator audits, the UI display
 
 ## Results
 
-Synthetic `practice` scenario, seed 42, base realization. Source: `outputs/demo_backup/practice__ladder__s42/`. A fresh 30 s solve can land lower or higher depending on the machine (one measured re-run: ₹404,432, 72.0 % fulfilment); the figures here are the stored run.
+Synthetic `practice` scenario, seed 42, base realization. Source: `outputs/demo_backup/practice__ladder__s42/`. Refreshed on 2026-10-15 so the ladder, stress, sensitivity and dashboard all come from one `milp` run (an earlier stored 30 s solve gave ₹442,214; a fresh solve can land higher or lower depending on the machine). The figures here are the stored run.
 
 | Policy | Spoilage kg | Spoilage % | Demand fulfilled % | Min destination fill % | Net ₹ | Violations |
 |---|---|---|---|---|---|---|
 | fifo | 937.0 | 1.73 | 77.6 | 34.7 | 318,668 | 19 |
 | **fefo** (baseline) | 904.1 | 1.67 | 64.5 | 0.0 | 271,027 | 0 |
-| **milp** (FreshRoute) | 854.1 | 1.58 | 83.0 | 52.8 | 442,214 | 0 |
+| **milp** (FreshRoute) | 736.1 | 1.36 | 72.0 | 34.1 | 404,432 | 0 |
 | last_day_50 | 937.0 | 1.73 | 77.6 | 34.7 | 300,674 | 19 |
 
 How to read it honestly:
 
 - **FIFO and `last_day_50` break the rules** (19 violations each). Their higher fulfilment comes from a plan that is not feasible.
-- **FEFO is the fair baseline**: it respects shelf life and windows. Against it, FreshRoute adds about **₹171k net** (+63 %) and raises fulfilment from 64.5 % to 83.0 %, mostly by serving more demand at a lower transport bill.
-- **Spoilage falls only modestly** (904 → 854 kg). It is not the main driver here.
+- **FEFO is the fair baseline**: it respects shelf life and windows. Against it, FreshRoute adds about **₹133k net** (+49 %), raises fulfilment from 64.5 % to 72.0 % and the worst-served market from 0 % to 34.1 %, with a ₹79k lower transport bill.
+- **Spoilage falls 19 %** (904 → 736 kg).
 - **No markdown in FreshRoute's own plan**: a tiered markdown policy gave results identical to `milp` on `practice` and was removed (D-33). `last_day_50` stays as the fair "just discount it" baseline.
 - **The MILP is time-limited** (30 s), so its net can differ by a few percent between machines or runs; the figures above are one measured run.
 
-Waterfall, FEFO → FreshRoute: spoilage cost avoided +₹1,357 · extra sales +₹321,101 · extra goods sold −₹186,364 · transport +₹45,543 · handling −₹10,450 · discounts ₹0.
+Waterfall, FEFO → FreshRoute: spoilage cost avoided +₹3,524 · extra sales +₹141,153 · extra goods sold −₹87,525 · transport +₹79,244 · handling −₹2,991 · discounts ₹0.
 
-**Robustness** (200 sampled futures, plan evaluated without re-solving, paired against FEFO): net ₹ P10/P50/P90 is 403,414 / 416,334 / 426,584 for FreshRoute against 238,588 / 249,720 / 258,322 for FEFO. FreshRoute wins on net in 100 % of futures and on spoilage in 84.5 %. Source: `outputs/demo_backup/practice__stress__s42/`.
+**Robustness** (200 sampled futures, plan evaluated without re-solving, paired against FEFO): net ₹ P10/P50/P90 is 370,072 / 380,974 / 391,590 for FreshRoute against 238,588 / 249,720 / 258,322 for FEFO; spoilage P50 773 kg against 932 kg. FreshRoute wins on net and on spoilage in 100 % of futures. Source: `outputs/demo_backup/practice__stress__s42/`.
 
-**Robust variant** (`milp_robust`: planned on P10 shelf life and P90 travel, scored on normal data): 726 kg spoilage and ₹396,895 net on the base case (against 854 kg and ₹442,214 for `milp`), 70.8 % fulfilment, worst-served market 0 %. Under the same 200 futures it beats FEFO on spoilage in **100 %** of them (P50 759 kg) and on net in 100 % (P50 ₹374,889). It is a choice, not a free win: it ships less to be safe. Source: `outputs/demo_backup/practice__milp_robust__s42/`, `practice__stress_robust__s42/`.
+**Robust variant** (`milp_robust`: planned on P10 shelf life and P90 travel, scored on normal data): 726 kg spoilage and ₹396,895 net on the base case (against 736 kg and ₹404,432 for `milp`), 70.8 % fulfilment, worst-served market 0 % (against 34.1 %). Under the same 200 futures it beats FEFO on spoilage and net in 100 % (P50 759 kg, ₹374,889; `milp` P50 773 kg, ₹380,974). On this run it buys little extra safety for a lower net and a starved market, so `milp` stays the default. Source: `outputs/demo_backup/practice__milp_robust__s42/`, `practice__stress_robust__s42/`.
 
-**Where spoilage comes from** (`milp`, base case): 838 kg handling loss, 3 kg expired unsold at markets, 13 kg expired at the depot. Handling loss scales with kg delivered, so a plan that sells more shows more of it; this is why discounts cannot cut spoilage here.
+**Where spoilage comes from** (`milp`, base case): 733 kg handling loss, 3 kg expired unsold at markets, 0 kg expired at the depot. Handling loss scales with kg delivered, so a plan that sells more shows more of it; this is why discounts cannot cut spoilage here.
 
 **Gauntlet** — Hidden-style scenarios (synthetic, seed 42, `milp`): 10/10 run with 0 violations, fallback used in 0, slowest 62.9 s (`hidden_10x`), then 42.4 s (`hidden_3x`); the rest 34.7 s or less. Source: `outputs/demo_backup/gauntlet/gauntlet.csv`.
 
