@@ -273,9 +273,9 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
               </Text>
             </div>
             <div className="landing-stat-cell" data-cursor="RE-PLAN">
-              <Text className="landing-stat-num">2 SEC</Text>
+              <Text className="landing-stat-num">~3 SEC</Text>
               <Text size="xs" c="var(--muted)" fw={600}>
-                SOLVER TIME LIMIT FOR A MID-DAY RE-PLAN
+                TO RE-PLAN THE REST OF THE DAY (2 SEC SOLVER CAP)
               </Text>
             </div>
           </SimpleGrid>

@@ -7,7 +7,7 @@ A script and a safety net for the pitch. The length (assumed 3:00) and format (l
 1. Fresh clone check passed (`SUBMISSION.md`).
 2. `make setup`, then `make check` is green.
 3. Close heavy apps. The solver takes up to 30 s and shares the CPU (`10-determinism-and-reproducibility.md`).
-4. Run `make demo` once and keep its output open. Confirm headline numbers match the README.
+4. Run `make demo` once and keep its output open. Confirm headline numbers match the README. A fresh 30 s solve can land lower or higher depending on the laptop's load (we measured ₹404,432 and 72.0 % fulfilment in one `make check` run, against the stored ₹442,214 and 83.0 %); the solver stops at its time limit, so the exact plan is not repeatable. Exact figures always come from the stored run. The live demo stays honest if you say which run you are showing.
 5. Start `make serve` and open `http://127.0.0.1:8000`. Click "Open the live demo", then "Run the optimiser" once so a result is already on screen.
 6. Have `outputs/demo_backup/` and the CLI scoreboard ready. The API reads only `outputs/<run_id>/`, so to show the backup in the dashboard, copy its directories up first (`cp -r outputs/demo_backup/practice__* outputs/`).
 
@@ -36,4 +36,4 @@ Do not say: projected rubric scores; "a year" about the ₹5,921 crore tomato lo
 | UI blank or crashed | Run `make demo` in the terminal and present the CLI scoreboard |
 | Port 8000 busy | Stop the dev API, then rerun `make serve` |
 | Wi-Fi gone | Nothing needs it; the demo is fully local |
-| Numbers differ from README | Do not improvise; quote the README / `demo_backup` figures and say which run they came from |
+| Numbers differ from README | Expected after a fresh solve (the 30 s limit makes it load-dependent). Do not improvise: quote the README / `demo_backup` figures and say which run they came from, or copy the backup in (step 6) |

@@ -1,4 +1,5 @@
 outputs/*
+brag-output
 !outputs/demo_backup/
 data/organizer/
 .env

@@ -18,7 +18,7 @@ The solver decides, the simulator measures, the validator audits, the UI display
 
 ## Results
 
-Synthetic `practice` scenario, seed 42, base realization. Source: `outputs/demo_backup/practice__ladder__s42/`.
+Synthetic `practice` scenario, seed 42, base realization. Source: `outputs/demo_backup/practice__ladder__s42/`. A fresh 30 s solve can land lower or higher depending on the machine (one measured re-run: ₹404,432, 72.0 % fulfilment); the figures here are the stored run.
 
 | Policy | Spoilage kg | Spoilage % | Demand fulfilled % | Min destination fill % | Net ₹ | Violations |
 |---|---|---|---|---|---|---|

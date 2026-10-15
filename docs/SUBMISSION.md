@@ -28,7 +28,7 @@ Run these in order, from a clean checkout of the exact commit you are submitting
 3. `make check`. It must be green: ruff, pytest, frontend build, and zero violations on the demo plan.
 4. `make demo`. Compare the headline numbers with the README results table. If they differ, find out why before doing anything else (see `10-determinism-and-reproducibility.md`).
 5. `make serve`, open `http://127.0.0.1:8000`, click "Open the live demo", click "Run the optimiser", and check that all four tabs load (1. Results, 2. Today's plan, 3. What if something breaks?, 4. Proof & audit).
-6. Confirm `outputs/demo_backup/` is committed and current. It is the offline fallback.
+6. Confirm `outputs/demo_backup/` is committed and current. It is the offline fallback, and every quoted figure comes from it. A fresh 30 s solve can land lower or higher depending on the laptop's load (we measured ₹404,432 and 72.0 % fulfilment in one `make check` run, against the stored ₹442,214 and 83.0 %); the solver stops at its time limit, so the exact plan is not repeatable. Exact figures always come from the stored run.
 7. Confirm nothing forbidden is committed: `.env`, keys, `.venv`, `node_modules/`, `frontend/dist/`, other `outputs/`, and restricted organizer data.
 8. Tag or note the commit SHA you submitted.
 
