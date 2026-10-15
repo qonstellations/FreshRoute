@@ -69,34 +69,18 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
     if (introOff || !introRef.current || !videoRef.current) return
     const video = videoRef.current
     const ctx = gsap.context(() => {
-      // Scrub the video clock with scroll: scrolling down plays enter_video.mp4
-      // across the full screen; the hero sits right below the intro section.
-      const setProgress = (progress: number) => {
-        if (video.duration && Number.isFinite(video.duration)) {
-          try {
-            video.currentTime = progress * video.duration
-          } catch {
-            /* seeking while metadata loads: ignore */
-          }
-        }
-      }
+      // Pin the fullscreen video while it plays continuously (muted autoplay loop).
+      // Scrolling holds the video on screen, then releases into the hero below.
       const trigger = ScrollTrigger.create({
         trigger: introRef.current,
         start: 'top top',
-        end: 'bottom bottom',
-        scrub: 0.5,
-        onUpdate: (self) => setProgress(self.progress),
+        end: '+=120%',
+        pin: true,
+        onEnter: () => video.play().catch(() => {}),
+        onEnterBack: () => video.play().catch(() => {}),
+        onLeave: () => video.pause(),
+        onLeaveBack: () => video.pause(),
       })
-      const onLoaded = () => {
-        try {
-          video.pause()
-        } catch {
-          /* ignore */
-        }
-        setProgress(ScrollTrigger.isInViewport(introRef.current!) ? 0 : 0)
-        ScrollTrigger.refresh()
-      }
-      video.addEventListener('loadedmetadata', onLoaded)
       // Keep the ambient marquee looping (the one section we kept as-is).
       gsap.to('.marquee-track', { xPercent: -50, duration: 25, ease: 'none', repeat: -1 })
       // Gentle hero entrance once it scrolls into view.
@@ -107,10 +91,7 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
         stagger: 0.12,
         scrollTrigger: { trigger: '.landing-hero', start: 'top 80%', once: true },
       })
-      return () => {
-        video.removeEventListener('loadedmetadata', onLoaded)
-        trigger.kill()
-      }
+      return () => trigger.kill()
     }, root)
     return () => ctx.revert()
   }, [introOff])
@@ -128,15 +109,17 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
 
   return (
     <div ref={root} className="landing-page">
-      {/* SCROLL INTRO: fullscreen enter_video.mp4, driven by scroll position */}
+      {/* SCROLL INTRO: fullscreen enter_video.mp4, pinned while it plays */}
       {!introOff && (
-        <section ref={introRef} className="landing-intro" aria-label="Introduction video: scroll to play">
+        <section ref={introRef} className="landing-intro" aria-label="Introduction video: scroll to continue">
           <div className="landing-intro-sticky">
             <video
               ref={videoRef}
               className="landing-intro-video"
               src="/enter_video.mp4"
               muted
+              loop
+              autoPlay
               playsInline
               preload="auto"
               aria-label="FreshRoute introduction video"
@@ -145,7 +128,7 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
             <div className="landing-intro-overlay">
               <Text className="sec-tag">[SCROLL TO ENTER]</Text>
               <Text size="sm" c="var(--cream)" opacity={0.85}>
-                Keep scrolling — the video plays as you scroll.
+                Keep scrolling to enter the site.
               </Text>
               <button className="atelier-ghost landing-intro-skip" onClick={skipIntro} data-cursor="SKIP">
                 SKIP INTRO ↓

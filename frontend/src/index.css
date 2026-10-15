@@ -509,8 +509,8 @@ th, td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; f
 /* ==========================================================================
    SCROLL INTRO VIDEO (enter_video.mp4) + 7-STEP GUIDE
    ========================================================================== */
-.landing-intro { height: 260vh; position: relative; background: #000; }
-.landing-intro-sticky { position: sticky; top: 0; height: 100svh; overflow: hidden; }
+.landing-intro { height: 100svh; position: relative; background: #000; }
+.landing-intro-sticky { position: relative; height: 100svh; overflow: hidden; }
 .landing-intro-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .landing-intro-overlay { position: absolute; inset: auto 0 0 0; display: flex; flex-direction: column;
   align-items: center; gap: 10px; padding: 24px 16px 40px;
