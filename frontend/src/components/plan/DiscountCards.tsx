@@ -53,7 +53,7 @@ function AdviceList({ advice, names }: { advice: NonNullable<DiscountAdvice>; na
     <Stack gap={6} py="xs">
       <Group gap="xs" c="dimmed"><IconDiscountOff size={24} stroke={1.4} />
         <Text fw={600}>{ADVICE.title}</Text></Group>
-      <Text size="sm" c="dimmed">{good.length ? `${good.length} of ${advice.length} market-days could use a cut.` : ADVICE.count(advice.length)}</Text>
+      <Text size="sm" c="dimmed">{good.length ? ADVICE.some(good.length, advice.length) : ADVICE.count(advice.length)}</Text>
       {shown.map(a => (
         <Text key={`${a.dest_id}-${a.commodity}-${a.day}`} size="sm">
           <b>{placeName(names, a.dest_id)} · {a.commodity} · day {a.day}</b>{a.best_cut_pct > 0 && ` · ${ADVICE.found(a.best_cut_pct, num(a.delta_net_inr))}`}: {a.reason}

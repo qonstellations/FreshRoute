@@ -26,6 +26,7 @@ export const ADVICE = {
   title: 'Discount check',
   count: (n: number) => `We checked ${n} market-day${n === 1 ? '' : 's'} for a worthwhile price cut and found none.`,
   found: (cut: number, delta: string) => `${cut}% off · +₹${delta}`,
+  some: (good: number, n: number) => `${good} of ${n} market-days could use a cut.`,
   more: (n: number) => `…and ${n} more checked`,
 } as const
 
@@ -63,8 +64,8 @@ export const SPOIL_PARTS = {
     note: 'A small share of every delivery is lost while loading and unloading, so this grows with the kg delivered.' },
   delivered_unsold_expired: { label: 'Delivered, never sold', color: 'red',
     note: 'Reached a market but was not sold before it went bad.' },
-  origin_expired: { label: 'Never left the farm', color: 'grape',
-    note: 'Not shipped at all and went bad where it was harvested.' },
+  origin_expired: { label: 'Expired at the depot', color: 'grape',
+    note: 'Not shipped in time and went bad at the depot before the plan ended.' },
 } as const
 
 export const TERM = {

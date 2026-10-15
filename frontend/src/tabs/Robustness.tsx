@@ -276,12 +276,16 @@ function Frontier({ load }: { load: Load<FrontierResponse> }) {
     </Paper>
   )
   const pts = load.records.map(r => ({ ...r, label: `λ=${r.lambda_spoil}` }))
+  // the trade-off line joins only the points the engine did not flag as dominated
+  const curve = pts.filter(p => !p.dominated).sort((a, b) => a.spoilage_kg - b.spoilage_kg)
+  const anyDominated = pts.some(p => p.dominated)
   return (
     <Paper withBorder radius="lg" p="lg">
       <Title order={3}>Profit versus spoilage</Title>
       <Text size="sm" c="dimmed" mb="md">
         We re-plan with a different penalty (λ) on each kg that spoils. Higher λ saves more food but gives up some profit.
-        The highlighted point (λ={SHIPPED_LAMBDA}) is the plan we ship. Each point is a time-limited solve, so a point can sit slightly off the curve.
+        The highlighted point (λ={SHIPPED_LAMBDA}) uses the weight of the plan we ship; each point is its own time-limited solve. λ prices spoilage in rupees, so kilograms do not always move the same way.
+        {anyDominated && ' Hollow grey points lose to another point on both profit and spoilage: the time-limited solver stopped early there, so they are not a real trade-off and the line skips them.'}
       </Text>
       <ResponsiveContainer width="100%" height={300}>
         <ScatterChart margin={{ top: 16, right: 32, bottom: 24, left: 16 }}>
@@ -291,8 +295,11 @@ function Frontier({ load }: { load: Load<FrontierResponse> }) {
           <YAxis type="number" dataKey="net_inr" name="Profit" width={80} domain={['auto', 'auto']}
             tickFormatter={v => `₹${fmt(v)}`} />
           <ZAxis range={[90, 90]} />
+          <Scatter data={curve} line={{ stroke: '#adb5bd', strokeDasharray: '4 4' }} shape={() => <g />} legendType="none" isAnimationActive={false} />
           <Scatter data={pts} fill="#868e96">
-            {pts.map(p => <Cell key={p.lambda_spoil} fill={p.lambda_spoil === SHIPPED_LAMBDA ? '#e8590c' : '#868e96'} />)}
+            {pts.map(p => <Cell key={p.lambda_spoil}
+              fill={p.dominated ? 'transparent' : p.lambda_spoil === SHIPPED_LAMBDA ? '#e8590c' : '#868e96'}
+              stroke={p.dominated ? '#adb5bd' : undefined} strokeWidth={p.dominated ? 2 : 0} />)}
             <LabelList dataKey="label" position="top" />
           </Scatter>
         </ScatterChart>

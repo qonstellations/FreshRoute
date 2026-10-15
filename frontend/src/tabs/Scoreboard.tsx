@@ -69,7 +69,7 @@ export function Scoreboard({ run }: { run: RunDetail }) {
         </Explain>
       </Text>
 
-      <SpoilageSplit parts={run.spoilage_breakdown_kg} />
+      <SpoilageSplit parts={run.spoilage_breakdown_kg} total={k.spoilage_kg} />
 
       <LadderCharts scenario={run.scenario} seed={run.seed} />
       <ValidatorPanel validation={run.validation} />
@@ -77,10 +77,11 @@ export function Scoreboard({ run }: { run: RunDetail }) {
   )
 }
 
-function SpoilageSplit({ parts }: { parts: RunDetail['spoilage_breakdown_kg'] }) {
+// total is the engine's kpis.spoilage_kg (the UI never sums KPIs, AGENTS.md rule 8); the parts
+// only size the bar. Older runs or the fixture may lack the breakdown: render nothing.
+function SpoilageSplit({ parts, total }: { parts?: RunDetail['spoilage_breakdown_kg']; total: number }) {
   const keys = Object.keys(SPOIL_PARTS) as (keyof typeof SPOIL_PARTS)[]
-  const total = keys.reduce((a, key) => a + parts[key], 0)
-  if (total <= 0) return null
+  if (!parts || !(total > 0)) return null
   return (
     <Paper radius="lg" p="lg" withBorder>
       <Text fw={700} mb={4}>Where the spoiled food went</Text>

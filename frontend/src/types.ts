@@ -155,6 +155,8 @@ export interface SensitivityResponse extends Example { records: SensitivityRow[]
 
 export interface FrontierRow { // §5.12 frontier.csv, one row per spoilage weight
   lambda_spoil: number; net_inr: number; spoilage_kg: number; demand_fulfillment_pct: number; min_dest_fill_pct: number
+  spoilage_cost_inr?: number // ₹ cost of what spoiled: what λ weights (absent in older runs)
+  dominated?: boolean // engine-computed: another point has more profit and less spoilage
 }
 export interface FrontierResponse { records: FrontierRow[] }
 
