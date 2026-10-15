@@ -643,4 +643,4 @@ There is no `/api/demo` endpoint: the demo scoreboard comes from the CLI (`make 
 
 ### 11.4 Frontend types
 
-`frontend/src/types.ts` mirrors §11.2 field for field (`FrontierRow` / `FrontierResponse` for `GET /api/frontier`, shown as a scatter on the Robustness tab). A number shown in the UI must be traceable to a field named in this section or in §3–§5.
+`frontend/src/types.ts` mirrors §11.2 field for field (`DiscountAdviceRow` for `GET /api/runs/{id}/discount-advice`, shown as the "Discount check" list when a plan has no price cuts) (`FrontierRow` / `FrontierResponse` for `GET /api/frontier`, shown as a scatter on the Robustness tab). A number shown in the UI must be traceable to a field named in this section or in §3–§5.

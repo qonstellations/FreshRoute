@@ -91,6 +91,12 @@ export interface ReasonCard { // §5.9, one per plan.csv shipment_id
 }
 export type ReasonCards = ReasonCard[] | null
 
+export interface DiscountAdviceRow { // §5.15 discount_advice.json, sorted by dest_id, commodity, day
+  dest_id: string; commodity: string; day: number; left_kg: number; elasticity: number; max_cut_pct: number
+  best_cut_pct: number; delta_net_inr: number; break_even_elasticity: number; reason: string
+}
+export type DiscountAdvice = DiscountAdviceRow[] | null
+
 export interface DispatchRow { // §5.10 CSV columns, served in priority_rank order
   vehicle_id: string; trip_id: string; dispatch_h: number; depart_clock: string
   dest_id: string; dest_name: string; batch_id: string; commodity: string; kg: number

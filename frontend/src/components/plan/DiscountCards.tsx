@@ -3,14 +3,14 @@ import { Badge, Card, Group, SimpleGrid, Stack, Text, Title } from '@mantine/cor
 import { IconDiscountOff } from '@tabler/icons-react'
 import { m } from 'motion/react'
 import { spring } from '../../theme'
-import type { ReasonCard } from '../../types'
+import type { DiscountAdvice, ReasonCard } from '../../types'
 import { cappedText, num } from './format'
 import { Explain } from '../Explain'
-import { placeName, type Names } from '../../lib/words'
+import { ADVICE, placeName, type Names } from '../../lib/words'
 
 export const cardLayoutId = (c: ReasonCard) => `disc-${c.shipment_id}`
 
-export function DiscountCards({ cards, onOpen, names }: { cards: ReasonCard[]; onOpen: (c: ReasonCard) => void; names?: Names }) {
+export function DiscountCards({ cards, advice, onOpen, names }: { cards: ReasonCard[]; advice: DiscountAdvice; onOpen: (c: ReasonCard) => void; names?: Names }) {
   const list = cards.filter(c => c.discount)
   return (
     <Stack gap="sm">
@@ -20,8 +20,9 @@ export function DiscountCards({ cards, onOpen, names }: { cards: ReasonCard[]; o
           ? `${list.length} shipments get a discount to help them sell before spoiling · click one for the full reason`
           : 'A discount helps old stock sell before it spoils.'}</Text>
       </div>
-      {!list.length ? <Group gap="xs" c="dimmed" py="md"><IconDiscountOff size={28} stroke={1.4} />
-        <Text c="dimmed">No price cuts were needed in this plan.</Text></Group>
+      {!list.length ? (advice?.length ? <AdviceList advice={advice} names={names} />
+        : <Group gap="xs" c="dimmed" py="md"><IconDiscountOff size={28} stroke={1.4} />
+          <Text c="dimmed">No price cuts were needed in this plan.</Text></Group>)
         : <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
           {list.map((c, i) => c.discount && (
             <m.div key={c.shipment_id} layoutId={cardLayoutId(c)} transition={spring.soft}
@@ -39,6 +40,25 @@ export function DiscountCards({ cards, onOpen, names }: { cards: ReasonCard[]; o
               </Card>
             </m.div>))}
         </SimpleGrid>}
+    </Stack>
+  )
+}
+
+const ADVICE_SHOWN = 3
+
+function AdviceList({ advice, names }: { advice: NonNullable<DiscountAdvice>; names?: Names }) {
+  const good = advice.filter(a => a.best_cut_pct > 0)
+  const shown = (good.length ? good : advice).slice(0, ADVICE_SHOWN)
+  return (
+    <Stack gap={6} py="xs">
+      <Group gap="xs" c="dimmed"><IconDiscountOff size={24} stroke={1.4} />
+        <Text fw={600}>{ADVICE.title}</Text></Group>
+      <Text size="sm" c="dimmed">{good.length ? `${good.length} of ${advice.length} market-days could use a cut.` : ADVICE.count(advice.length)}</Text>
+      {shown.map(a => (
+        <Text key={`${a.dest_id}-${a.commodity}-${a.day}`} size="sm">
+          <b>{placeName(names, a.dest_id)} · {a.commodity} · day {a.day}</b>{a.best_cut_pct > 0 && ` · ${ADVICE.found(a.best_cut_pct, num(a.delta_net_inr))}`}: {a.reason}
+        </Text>))}
+      {advice.length > shown.length && <Text size="xs" c="dimmed">{ADVICE.more(advice.length - shown.length)}</Text>}
     </Stack>
   )
 }

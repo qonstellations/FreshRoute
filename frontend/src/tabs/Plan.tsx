@@ -10,7 +10,7 @@ import { ReasonDrawer, type DrawerOpen } from '../components/plan/ReasonDrawer'
 import { ShelfLifeMap } from '../components/plan/ShelfLifeMap'
 import '../components/plan/plan.css'
 import type { Names } from '../lib/words'
-import type { DispatchRow, DispatchSheet, ReasonCard, ReasonCards, RunDetail } from '../types'
+import type { DiscountAdvice, DispatchRow, DispatchSheet, ReasonCard, ReasonCards, RunDetail } from '../types'
 
 function Empty({ icon: Icon, text }: { icon: typeof IconFileUnknown; text: string }) {
   return (
@@ -24,6 +24,7 @@ export function Plan({ run, runId }: { run: RunDetail; runId: string }) {
   const scenario = run.scenario.split(/[\\/]/).pop() ?? run.scenario
   const [sheet, setSheet] = useState<DispatchSheet | null | undefined>(undefined)
   const [cards, setCards] = useState<ReasonCards | undefined>(undefined)
+  const [advice, setAdvice] = useState<DiscountAdvice | undefined>(undefined)
   const [geoNames, setGeoNames] = useState<Names>({})
   const [open, setOpen] = useState<DrawerOpen | undefined>(undefined) // undefined = drawer closed
   const [dest, setDest] = useState<string | undefined>(undefined) // map pick → dispatch display filter
@@ -34,6 +35,7 @@ export function Plan({ run, runId }: { run: RunDetail; runId: string }) {
     setSheet(undefined); setCards(undefined); setOpen(undefined); setDest(undefined); setError('')
     const fail = (what: string) => (e: Error) => setError(`Couldn't load ${what}. Try refreshing the page. (${e.message})`)
     api.dispatchSheet(runId).then(setSheet).catch(fail('the truck loading list'))
+    setAdvice(undefined); api.discountAdvice(runId).then(setAdvice).catch(() => setAdvice(null)) // optional extra, never an error banner
     api.reasonCards(runId).then(setCards).catch(fail('the explanations for each shipment'))
   }, [runId])
   useEffect(() => { // market names for the reason cards; ids stay on screen if geo.csv is missing
@@ -63,7 +65,7 @@ export function Plan({ run, runId }: { run: RunDetail; runId: string }) {
         : <Empty icon={IconClipboardOff} text="No loading list was saved for this result." />}
       {cards === null && <Empty icon={IconFileUnknown} text="No explanations or price cuts were saved for this result." />}
       {cards === undefined && sheet !== undefined && <Skeleton h={120} />}
-      {cards && <DiscountCards cards={cards} onOpen={openCard} names={names} />}
+      {cards && <DiscountCards cards={cards} advice={advice ?? null} onOpen={openCard} names={names} />}
       <ReasonDrawer open={open} onClose={close} names={names} />
     </Stack>
   )

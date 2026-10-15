@@ -22,6 +22,13 @@ export const reasonText = named({
 export const modeName = named({ ambient: 'normal truck', reefer: 'refrigerated truck', rail: 'train' })
 
 /** Market id → display name ("KR Market mandi, Bengaluru" → "KR Market mandi"); unknown ids stay as they are. */
+export const ADVICE = {
+  title: 'Discount check',
+  count: (n: number) => `We checked ${n} market-day${n === 1 ? '' : 's'} for a worthwhile price cut and found none.`,
+  found: (cut: number, delta: string) => `${cut}% off · +₹${delta}`,
+  more: (n: number) => `…and ${n} more checked`,
+} as const
+
 export type Names = Record<string, string>
 export const placeName = (names: Names | undefined, id: string) => names?.[id] ?? id
 
