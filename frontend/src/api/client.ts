@@ -8,15 +8,25 @@ import type {
 /** Non-2xx response; `detail` is the API's {"detail"} text when it sent one. */
 export class HttpError extends Error {
   constructor(readonly status: number, readonly detail: string | undefined, statusText: string) {
-    super(detail ?? `${status} ${statusText}`)
+    const fallback = statusText ? `${status} ${statusText}` : `HTTP ${status}`
+    super(detail || fallback)
   }
 }
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const r = await fetch(`/api${path}`, init)
   if (!r.ok) {
-    const body = await r.json().catch(() => null)
-    throw new HttpError(r.status, typeof body?.detail === 'string' ? body.detail : undefined, r.statusText)
+    const text = await r.text().catch(() => '')
+    let detail: string | undefined
+    try {
+      const body = JSON.parse(text)
+      if (typeof body?.detail === 'string') detail = body.detail
+      else if (typeof body?.error === 'string') detail = body.error
+      else if (typeof body?.message === 'string') detail = body.message
+    } catch {
+      if (text && text.length < 200 && !text.startsWith('<')) detail = text
+    }
+    throw new HttpError(r.status, detail, r.statusText)
   }
   return r.json() as Promise<T>
 }

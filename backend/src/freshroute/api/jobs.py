@@ -30,11 +30,14 @@ def read_job(outputs: Path, run_id: str) -> dict | None:
 
 
 def _write(outputs: Path, job: dict) -> None:
-    p = job_path(outputs, job["run_id"])
-    p.parent.mkdir(parents=True, exist_ok=True)
-    tmp = p.with_suffix(".tmp")
-    tmp.write_text(json.dumps(job, indent=2) + "\n", encoding="utf-8")
-    os.replace(tmp, p)
+    try:
+        p = job_path(outputs, job["run_id"])
+        p.parent.mkdir(parents=True, exist_ok=True)
+        tmp = p.with_suffix(".tmp")
+        tmp.write_text(json.dumps(job, indent=2) + "\n", encoding="utf-8")
+        os.replace(tmp, p)
+    except OSError as e:
+        log.warning("cannot write job state to %s: %s", outputs, e)
 
 
 class JobQueue:

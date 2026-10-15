@@ -13,18 +13,42 @@ from freshroute.runs.naming import run_id
 ROOT = Path(__file__).resolve().parents[4]  # backend/src/freshroute/api/ -> repo root
 
 
+def _is_writable(path: Path) -> bool:
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+        test = path / ".write_test"
+        test.touch()
+        test.unlink()
+        return True
+    except OSError:
+        return False
+
+
 def _resolve_outputs() -> Path:
     env = os.getenv("FRESHROUTE_OUTPUTS")
     if env:
-        return Path(env)
-    p = ROOT / "outputs"
-    if p.is_dir() and any((d / "metrics.json").is_file() for d in p.iterdir() if d.is_dir()):
+        p = Path(env)
+        p.mkdir(parents=True, exist_ok=True)
         return p
-    backup = p / "demo_backup"
-    has_demo = backup.is_dir() and any(
-        (d / "metrics.json").is_file() for d in backup.iterdir() if d.is_dir()
-    )
-    return backup if has_demo else p
+    p = ROOT / "outputs"
+    if _is_writable(p):
+        return p
+
+    # When repo outputs/ is read-only (e.g. Vercel Serverless Function / Lambda):
+    tmp_out = Path("/tmp/freshroute/outputs")
+    tmp_out.mkdir(parents=True, exist_ok=True)
+    backup = ROOT / "outputs" / "demo_backup"
+    if backup.is_dir():
+        import shutil
+
+        for item in backup.iterdir():
+            dst = tmp_out / item.name
+            if not dst.exists():
+                if item.is_dir():
+                    shutil.copytree(item, dst)
+                elif item.is_file():
+                    shutil.copy2(item, dst)
+    return tmp_out
 
 
 OUTPUTS = _resolve_outputs()

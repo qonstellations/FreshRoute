@@ -45,7 +45,11 @@ def job_status(run_id: str) -> dict:
             raise deps.NotFound(f"no job or run {run_id!r}")
         job = {"state": "done", "started_utc": None, "finished_utc": None, "error": None}
     elif job["state"] == "running" and jobs.queue.live_job(o, run_id) is None:  # stale repair
-        job = {**job, "state": "error", "error": "stale job: the server restarted; submit again"}
+        if (o / run_id / "metrics.json").is_file():
+            job = {**job, "state": "done"}
+        else:
+            err = "stale job: the server restarted; submit again"
+            job = {**job, "state": "error", "error": err}
     return {k: job.get(k) for k in ("state", "started_utc", "finished_utc", "error", "progress")}
 
 
