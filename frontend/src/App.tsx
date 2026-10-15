@@ -15,6 +15,7 @@ const NAV_SECTIONS = [
   { id: 'workflow', n: '02', label: 'HOW IT WORKS' },
   { id: 'results', n: '03', label: 'RESULTS' },
   { id: 'audit', n: '04', label: 'TRUST' },
+  { id: 'for', n: '05', label: "WHO IT'S FOR" },
 ]
 
 export default function App() {

@@ -25,6 +25,15 @@ gsap.registerPlugin(ScrollTrigger, ScrollToPlugin)
 const DEMO = { scenario: 'practice', seed: 42 }
 const show = <T,>(v: T | null | undefined, f: (x: T) => string) => (v == null ? '—' : f(v))
 
+// Buyer segments named in the problem statement's commercial model; each line names a console feature that exists.
+const SEGMENTS: [string, string][] = [
+  ['Produce distributors', 'A daily plan for which batch goes to which market, most urgent first.'],
+  ['Wholesalers', 'Price-cut advice for stock likely to go unsold, with the reason spelled out.'],
+  ['Food logistics companies', 'A truck loading list and driver message, re-planned when a road or truck fails.'],
+  ['Cold-storage operators', 'Which batches to release first, by how many hours of shelf life are left.'],
+  ['Agri supply-chain platforms', 'Every plan checked by an independent validator and scored against simple rules.'],
+]
+
 interface LandingPageProps {
   onLaunch: () => void
 }
@@ -690,7 +699,31 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
         </div>
       </section>
 
-      {/* 6. CALL TO ACTION SECTION */}
+      {/* 6. WHO IT'S FOR (segments from the problem statement's commercial model; no invented customers) */}
+      <section id="for" className="atelier-sec" style={{ position: 'relative' }}>
+        <div data-reveal>
+          <Text className="sec-tag">[05 · WHO IT'S FOR]</Text>
+          <h2 className="dup-title">
+            <span className="ghost">BUILT FOR THE PEOPLE<br />WHO MOVE PRODUCE</span>
+            <span className="solid" data-wipe>BUILT FOR THE PEOPLE<br />WHO MOVE PRODUCE</span>
+          </h2>
+          <Text mt={12} maw={600} size="lg" c="var(--muted)">
+            Decision-support software, sold as a subscription. It plans, explains and re-plans. Your team
+            still makes the call.
+          </Text>
+        </div>
+
+        <SimpleGrid cols={{ base: 1, sm: 2, lg: 5 }} spacing="md" mt={36}>
+          {SEGMENTS.map(([who, use]) => (
+            <Card key={who} withBorder p="xl" className="landing-card" data-reveal>
+              <Title order={4} fz="1.15rem">{who}</Title>
+              <Text fz="1.02rem" c="var(--muted)" mt={8} lh={1.5}>{use}</Text>
+            </Card>
+          ))}
+        </SimpleGrid>
+      </section>
+
+      {/* 7. CALL TO ACTION SECTION */}
       <section className="atelier-sec ta-center" style={{ textAlign: 'center', padding: '10vh 16px', position: 'relative' }}>
         <LowPolyBanana
           className="floating-veggie-1 veggie-mid"
