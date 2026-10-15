@@ -26,6 +26,7 @@ Start with `00-start-here.md`. The numbered guides explain *why* the system is b
 | [DEMO](DEMO.md) | Pitch script and failure playbook |
 | [JUDGE-QA](JUDGE-QA.md) | Hard questions with honest answers |
 | [GLOSSARY](GLOSSARY.md) | Terms |
+| [ORGANIZER-SWAP](ORGANIZER-SWAP.md) | Checklist for adopting an official cost model or data format |
 
 ## Reference (source of truth for details)
 
