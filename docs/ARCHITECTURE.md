@@ -1,7 +1,7 @@
 # ARCHITECTURE.md
 
 > Single source of truth for **how the system works**.
-> Data shapes → `DATABASE.md` · Decisions → `DECISIONS.md`.
+> Data shapes → `DATABASE.md` · Decisions → `DECISIONS.md` · Plain-language explanations of the *why* → `INDEX.md` and the numbered guides.
 >
 > **Rule #1: if the organizers publish a cost model, theirs overrides everything in this file.** Every coefficient and formula below exists so that all policies and baselines are scored identically and so we can practise before the real data arrives. Map every coefficient to the organizers' columns when their material is available (`DATABASE.md` §8).
 
@@ -105,7 +105,7 @@ The UI is a **viewer**: it shows what the engine wrote to `outputs/<run_id>/` an
 ```
 freshroute/
 ├── README.md  AGENTS.md  DECISIONS.md
-├── docs/                       # ARCHITECTURE.md  DATABASE.md  RESEARCH-v1.md
+├── docs/                       # INDEX.md, numbered guides 00-10, SUBMISSION/DEMO/JUDGE-QA/GLOSSARY, ARCHITECTURE.md, DATABASE.md, PS.md. (RESEARCH-v1.md, cited below as "the research doc", is not in the repository.)
 ├── Makefile  pyproject.toml  uv.lock  .python-version  .gitignore      # uv only, no requirements.txt (D-15)
 ├── data/
 │   ├── organizer/              # raw organizer files (gitignored; never created so far)
@@ -130,7 +130,7 @@ freshroute/
 │   └── tests/                  # fixtures/tiny_3batch/  fixtures/metrics_example.json  test_*.py
 ├── frontend/                   # React SPA: Vite + TypeScript + recharts + Mantine + motion + GSAP (D-19, D-24, D-27)
 │   ├── package.json  package-lock.json  vite.config.ts  tsconfig.json  index.html
-│   └── src/  main.tsx  App.tsx  api/  components/  tabs/  lib/  types.ts  theme.ts
+│   └── src/  main.tsx  App.tsx  api/  components/  pages/  tabs/  lib/  types.ts  theme.ts
 ├── scripts/                    # empty; planned: build_prices.py (Agmarknet → prices.csv)
 └── outputs/                    # gitignored, EXCEPT outputs/demo_backup/
 ```
@@ -429,7 +429,7 @@ Reason codes for the runner-up: `SHELF_LIFE`, `WINDOW`, `CAPACITY_BOUND`, `DEMAN
 
 ## 16. Dashboard (`frontend/`, React SPA over `backend/src/freshroute/api/`)
 
-Components are Mantine 9; GSAP 3.12.5 ScrollTrigger drives scroll choreography (hero intro/parallax, section reveals, marquee, anchor nav) and motion springs animate the reason-card drawer, KPI count-ups, table rows and the Replan diff (D-24, amended by D-27). Recharts draws the charts; there is no leaflet. Every animation respects `prefers-reduced-motion` (static page fallback). The page is one Atelier-style scroll: giant display hero, then numbered sections in plain words — no sidebar, no jargon controls on screen (method/seed/flags live under "Advanced settings").
+Components are Mantine 9; GSAP 3.12.5 ScrollTrigger drives scroll choreography (hero intro/parallax, section reveals, marquee, anchor nav) and motion springs animate the reason-card drawer, KPI count-ups, table rows and the Replan diff (D-24, amended by D-27). Recharts draws the charts; there is no leaflet. Every animation respects `prefers-reduced-motion` (static page fallback). The app has two parts switched by URL hash (D-32): `pages/LandingPage.tsx` (narrative) and `pages/Dashboard.tsx` (tabs Plan, Scoreboard, Robustness, Replan, Trust in `tabs/`). The table below is the original one-scroll design (hero, then numbered sections in plain words) and is kept as the content map; section 02 to 05 correspond to the dashboard tabs — no sidebar, no jargon controls on screen (method/seed/flags live under "Advanced settings").
 
 | Section | Contents |
 |---|---|
@@ -576,7 +576,7 @@ Anything marked **confirm** must be checked against the organizers' documents on
 | A-28 | `realization` for `build_arcs` is a dict `{"rsl_h": {batch_id: h}, "travel_h": {(origin, dest, mode): h}}`; for `simulate` it is `{"demand_kg": {(dest, commodity, day): kg}}`, extended under stress by A-42 | team |
 | A-29 | Usable life is not clamped at 0; `wait_h` decays at store temperature and `handling_h` is consumed 1:1 | team |
 | A-30 | Practice data uses a static price table (no Agmarknet snapshot; `scenario.json → price_source` says so). Trips are fleet slots bounded by `max_trips_day` (A-08); generator v3 sets `max_trips_day` from lane times (A-49). Generator details: A-47, A-49 | team |
-| A-31 | The FIFO baseline is naive per §12: it respects physical limits but ignores shelf life and delivery windows, and the validator reports the resulting violations honestly (current `practice` seed 42: FIFO 19 violations, `last_day_50` 19; `fefo`, `milp`, `milp_markdown` 0). The `make check` demo-plan step therefore validates the `milp_markdown` plan on the demo scenario, not FIFO. FIFO and MILP runs carry no markdown. Reproduce with: `uv run freshroute ladder --scenario data/scenarios/practice --seed 42` | team |
+| A-31 | The FIFO baseline is naive per §12: it respects physical limits but ignores shelf life and delivery windows, and the validator reports the resulting violations honestly (on `practice` seed 42 FIFO and `last_day_50` have violations while `fefo`, `milp`, `milp_markdown` have 0; read the current counts from `outputs/demo_backup/practice__ladder__s42/ladder.json`). The `make check` demo-plan step therefore validates the `milp_markdown` plan on the demo scenario, not FIFO. FIFO and MILP runs carry no markdown. Reproduce with: `uv run freshroute ladder --scenario data/scenarios/practice --seed 42` | team |
 | A-32 | Validator recomputes `arrival_h` from dispatch and lane `travel_h_p50`; has no code for beyond-horizon arrivals; derives trips from `trip_id`; cannot import `config.py`, so `OVERSHIP_SLACK` is passed in by the caller (`overship_slack`) and `PCT` conversion for `discount_pct` is local | team |
 | A-33 | MILP: trip `dispatch_h` is the max of its lines' dispatch hours; a TimeLimit result with all-zero `x` is treated as "no incumbent" and falls to the FEFO-greedy; a missing demand row is a target of 0; origin-expiry test matches the simulator (§13 step 3): `available_from_h + rsl_h / decay(storage_temp_c) ≤ 24·H` | team |
 | A-34 | Markdown: lot stock for risk is `kg` net of handling loss, FEFO residual demand per day; the cap is `min(max_discount_frac, 1 − salvage/price)`; a monotone-forced discount may fall below the salvage floor when a later price is lower (known gap) | team |
@@ -634,4 +634,4 @@ Nothing here is a claim; measure on the machine you demo from.
 
 ## 23. Decision log
 
-Lives in the repo-root `DECISIONS.md` (D-01 … D-30; D-26 is intentionally unused). Add new decisions there.
+Lives in the repo-root `DECISIONS.md` (D-01 … D-32; D-26 is intentionally unused). Add new decisions there.

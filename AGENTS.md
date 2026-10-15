@@ -3,7 +3,7 @@
 Instructions for anyone (human or AI assistant) working on FreshRoute.
 
 ## Read first
-`docs/ARCHITECTURE.md` (behaviour) → `docs/DATABASE.md` (contracts) → `DECISIONS.md`.
+`docs/00-start-here.md` (orientation; `docs/INDEX.md` lists every guide) → `docs/ARCHITECTURE.md` (behaviour) → `docs/DATABASE.md` (contracts) → `DECISIONS.md`.
 
 ## Non-negotiables
 1. **Organizer cost model/data format overrides ours.** Coefficients live only in `domain/costmodel.py`, `config.py` or the dataset. No literals elsewhere.
