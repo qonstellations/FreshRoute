@@ -15,7 +15,7 @@ There is no `05` guide; the numbering skips it.
 | [04-the-optimizer](04-the-optimizer.md) | The MILP, soft constraints, fallback, scale model |
 | [06-simulator-and-baselines](06-simulator-and-baselines.md) | One simulator, the baselines, the ladder |
 | [07-validator](07-validator.md) | Why the checker is independent |
-| [08-robustness-and-replan](08-robustness-and-replan.md) | Stress, sensitivity, replan, and the LLM's limits |
+| [08-robustness-and-replan](08-robustness-and-replan.md) | Stress, sensitivity, robust plan, profit-vs-spoilage frontier, replan, and the LLM's limits |
 | [09-api-and-dashboard](09-api-and-dashboard.md) | The thin API and the UI |
 | [10-determinism-and-reproducibility](10-determinism-and-reproducibility.md) | Why reruns match, and where they might not |
 

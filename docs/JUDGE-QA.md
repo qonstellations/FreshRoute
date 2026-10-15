@@ -20,6 +20,9 @@ No LLM decides anything, and there is no LLM code in the repository today. The s
 **How much did you reduce spoilage?**
 Against FEFO, spoilage fell from 904 kg to 854 kg on practice, roughly 6 %. That is modest and we say so. The larger gains are in fulfilment and net ₹.
 
+**Can you cut spoilage further?**
+Yes, at a price, and we show both. `milp_robust` (planned on P10 shelf life, P90 travel) gets 726 kg against 854 kg and beats FEFO on spoilage in 100 % of 200 futures, but nets ₹396,895 against ₹442,214. The frontier run shows the same trade-off point by point. 838 of the 854 kg is handling loss, which grows with kg delivered.
+
 **Why did spoilage % not fall more?**
 The MILP ships and sells more, and handling loss scales with delivered kilograms, so percentage can look flat while kilograms fall (A-39). The scenario also has a low base spoilage rate.
 
@@ -59,7 +62,7 @@ We never return "infeasible". Shipping nothing is always legal, only the fairnes
 We do not claim they are right. The sensitivity run shows how results change with `q10`, elasticity (ε against ε/2), the overship slack, and demand ±20 %.
 
 **What happens when the world differs from the forecast?**
-The 200-future Monte Carlo test evaluates the committed plan, without re-solving, on the same futures as the baseline. The plan beats FEFO on net in all 200 futures and on spoilage kg in 84.5 %.
+The 200-future Monte Carlo test evaluates the committed plan, without re-solving, on the same futures as the baseline. The plan beats FEFO on net in all 200 futures and on spoilage kg in 84.5 %; the robust variant `milp_robust` beats it on spoilage in 100 % (at lower net).
 
 **Can it replan?**
 Yes: five event types, with already-dispatched shipments frozen. Be careful: with a 2 s cap it is mostly a repair of the old plan (A-43), and we have not reviewed replan numbers enough to quote.

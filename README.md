@@ -39,6 +39,14 @@ Waterfall, FEFO → FreshRoute: spoilage cost avoided +₹1,357 · extra sales +
 
 **Robustness** (200 sampled futures, plan evaluated without re-solving, paired against FEFO): net ₹ P10/P50/P90 is 403,414 / 416,334 / 426,584 for FreshRoute against 238,588 / 249,720 / 258,322 for FEFO. FreshRoute wins on net in 100 % of futures and on spoilage in 84.5 %. Source: `outputs/demo_backup/practice__stress__s42/`.
 
+**Robust variant** (`milp_robust`: planned on P10 shelf life and P90 travel, scored on normal data): 726 kg spoilage and ₹396,895 net on the base case (against 854 kg and ₹442,214 for `milp`), 70.8 % fulfilment, worst-served market 0 %. Under the same 200 futures it beats FEFO on spoilage in **100 %** of them (P50 759 kg) and on net in 100 % (P50 ₹374,889). It is a choice, not a free win: it ships less to be safe. Source: `outputs/demo_backup/practice__milp_robust__s42/`, `practice__stress_robust__s42/`.
+
+**Where spoilage comes from** (`milp`, base case): 838 kg handling loss, 3 kg expired unsold at markets, 13 kg expired at the depot. Handling loss scales with kg delivered, so a plan that sells more shows more of it; this is why discounts cannot cut spoilage here.
+
+**Profit vs spoilage** (`outputs/demo_backup/practice__frontier__s42/frontier.csv`): re-planning with a heavier spoilage weight trades net ₹ for kg (λ = 30: 536 kg at ₹324,700). Each point is a time-limited solve, so the curve is noisy and is shown as measured points, not a fitted line.
+
+**Discounts**: every run writes a discount check. On `practice` it recommends no cut anywhere, because every elasticity is below the break-even (a cut loses more on stock that sells anyway than it clears).
+
 Not claimed: replan performance (not yet reviewed enough to quote), and any score against the official rubric.
 
 ## Run it
@@ -61,10 +69,13 @@ uv run freshroute run --scenario data/scenarios/practice --policy milp --seed 42
 uv run freshroute ladder --scenario data/scenarios/practice --seed 42
 uv run freshroute stress --scenario data/scenarios/practice --policy milp --n 200 --seed 42
 uv run freshroute sensitivity --scenario data/scenarios/practice --seed 42
+uv run freshroute frontier --scenario data/scenarios/practice --seed 42      # profit vs spoilage
+uv run freshroute run --scenario data/scenarios/practice --policy milp_robust --seed 42
+make gauntlet  # milp on every hidden_* scenario -> outputs/gauntlet/gauntlet.csv
 uv run freshroute replan --run <run dir> --event <event.json>
 ```
 
-Each run writes `plan.csv`, `trips.csv`, `discounts.csv`, `metrics.json`, `validation.json`, `run_manifest.json`, a dispatch sheet and reason cards to `outputs/<scenario>__<policy>__s<seed>/`. Eleven other synthetic scenarios under `data/scenarios/` (hidden-style, 3× and 10× scale, event and edge cases) exercise odd inputs.
+Each run writes `plan.csv`, `trips.csv`, `discounts.csv`, `metrics.json`, `validation.json`, `run_manifest.json`, a dispatch sheet, reason cards and a discount check (`discount_advice.json`) to `outputs/<scenario>__<policy>__s<seed>/`. Eleven other synthetic scenarios under `data/scenarios/` (hidden-style, 3× and 10× scale, event and edge cases) exercise odd inputs.
 
 ## Design choices worth knowing
 
