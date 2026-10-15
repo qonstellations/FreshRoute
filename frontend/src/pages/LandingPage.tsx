@@ -49,7 +49,7 @@ const GUIDE_STEPS = [
   },
 ]
 
-// Frame-sequence intro: enter_video.mp4 pre-extracted to 205 stills
+// Frame-sequence intro: the 21.5 s brag film pre-extracted to 205 stills (1920x1080)
 // (frontend/public/frames/). Scrubbing stills on a canvas is smooth;
 // seeking video.currentTime on scroll is not.
 const FRAME_COUNT = 205
