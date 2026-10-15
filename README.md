@@ -12,7 +12,7 @@ Every morning a distributor must decide which batch of produce goes to which mar
 2. **Optimize.** A mixed-integer program (HiGHS) picks quantities, trips and vehicles for what remains. It never fails: soft constraints, a 30 s limit and a FEFO-greedy fallback. A rounded-LP start puts a first plan on screen in about a second, and better plans stream in while HiGHS keeps searching.
 3. **Measure.** One seeded simulator replays every policy's plan, so none can flatter itself.
 4. **Audit.** An independent validator, sharing no maths code with the optimizer, checks every hard constraint.
-5. **Show.** A FastAPI service and React dashboard display the stored results. They never compute a KPI.
+5. **Show.** A FastAPI service and a React app (a landing page, then a four-tab dashboard: Results, Today's plan, What if something breaks?, Proof & audit) display the stored results in plain language, with hover notes on technical terms. They never compute a KPI.
 
 The solver decides, the simulator measures, the validator audits, the UI displays. No LLM makes any decision.
 
@@ -37,7 +37,7 @@ How to read it honestly:
 
 Waterfall, FEFO → FreshRoute: spoilage cost avoided +₹1,357 · extra sales +₹321,101 · extra goods sold −₹186,364 · transport +₹45,543 · handling −₹10,450 · discounts ₹0.
 
-**Robustness** (200 sampled futures, plan evaluated without re-solving, paired against FEFO): net ₹ P10/P50/P90 is 361,681 / 375,373 / 382,259 for FreshRoute against 238,588 / 249,720 / 258,322 for FEFO. FreshRoute wins on net in 100 % of futures and on spoilage in 93.5 %.
+**Robustness** (200 sampled futures, plan evaluated without re-solving, paired against FEFO): net ₹ P10/P50/P90 is 403,414 / 416,334 / 426,584 for FreshRoute against 238,588 / 249,720 / 258,322 for FEFO. FreshRoute wins on net in 100 % of futures and on spoilage in 84.5 %. Source: `outputs/demo_backup/practice__stress__s42/`.
 
 Not claimed: replan performance (not yet reviewed enough to quote), and any score against the official rubric.
 
@@ -108,7 +108,7 @@ Start at [`docs/INDEX.md`](docs/INDEX.md).
 backend/src/freshroute/   data · domain · solvers · policies · engine · runs · generator · api · cli.py
 backend/src/validator/    independent constraint checker
 backend/tests/            pytest suite and golden hashes
-frontend/                 React dashboard
+frontend/                 React landing page and dashboard
 data/scenarios/           synthetic scenarios (CSV)
 outputs/demo_backup/      committed reference runs (offline fallback)
 docs/                     guides and reference

@@ -7,7 +7,7 @@ The pattern for a hard question: answer directly, state the limit, show where it
 ## General
 
 **What does it do in one sentence?**
-It decides which batch of produce goes to which market, when, on which truck, and at what discount, then proves the result by replaying it in a simulator and checking it with an independent validator.
+It decides which batch of produce goes to which market, when and on which truck, then proves the result by replaying it in a simulator and checking it with an independent validator.
 
 **Is the data real?**
 No. The scenarios are synthetic and labelled so. The Indian loss statistics in the README are framing context from published government sources, never model inputs. We chose synthetic data because the organizers permitted it (D-25).
@@ -31,7 +31,7 @@ No. We built a tiered markdown rule and measured it: on practice it gave results
 **How do you measure it, and can it be gamed?**
 `Σ min(sold, undiscounted demand) / Σ undiscounted demand`. Discounts raise sales but not the denominator. We also report the minimum destination fill rate so starving one market shows up.
 
-**Your minimum fill is 32 %. Is that fair?**
+**Your minimum fill is 52.8 %. Is that fair?**
 It is an honest report, up from 0 % under FEFO. A soft balance constraint (C6) pushes toward fairness without making the plan infeasible.
 
 ## Net economic outcome (20)
@@ -51,15 +51,15 @@ We compare against FEFO, a competent heuristic, not just FIFO (D-10). We also sh
 The validator is a separate package that re-implements the maths and imports no optimizer code. Tests inject one violation of each kind and require exactly that code to appear.
 
 **What if the solver cannot find a plan?**
-We never return "infeasible". Shipping nothing is always legal, only the fairness rule is soft, and after a 30 s limit we fall back to a FEFO-greedy plan and flag it.
+We never return "infeasible". Shipping nothing is always legal, only the fairness rule is soft, and if the 30 s limit passes with no plan we fall back to a FEFO-greedy plan and flag it.
 
 ## Robustness and sensitivity (10)
 
 **Why trust your elasticity and Q10?**
-We do not claim they are right. The sensitivity run shows how results change with `q10`, elasticity and ε/2, and demand ±20 %.
+We do not claim they are right. The sensitivity run shows how results change with `q10`, elasticity (ε against ε/2), the overship slack, and demand ±20 %.
 
 **What happens when the world differs from the forecast?**
-The 200-future Monte Carlo test evaluates the committed plan, without re-solving, on the same futures as the baseline. The plan beats FEFO on net in all 200 futures and on spoilage kg in 93.5 %.
+The 200-future Monte Carlo test evaluates the committed plan, without re-solving, on the same futures as the baseline. The plan beats FEFO on net in all 200 futures and on spoilage kg in 84.5 %.
 
 **Can it replan?**
 Yes: five event types, with already-dispatched shipments frozen. Be careful: with a 2 s cap it is mostly a repair of the old plan (A-43), and we have not reviewed replan numbers enough to quote.

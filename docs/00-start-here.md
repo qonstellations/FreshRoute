@@ -1,6 +1,6 @@
 # 00 · Start here
 
-This is the first document to read. It tells you what FreshRoute is for, how the pieces fit together, which rules you must never break, and which commands you will actually type. The numbered guides (`01` to `10`) then take the core parts one at a time. The older reference documents (`ARCHITECTURE.md`, `DATABASE.md`, `DECISIONS.md`) stay the source of truth for exact formulas and file formats; these guides explain the *why*.
+This is the first document to read. It tells you what FreshRoute is for, how the pieces fit together, which rules you must never break, and which commands you will actually type. The numbered guides (`01` to `10`; there is no `05`) then take the core parts one at a time. The older reference documents (`ARCHITECTURE.md`, `DATABASE.md`, `DECISIONS.md`) stay the source of truth for exact formulas and file formats; these guides explain the *why*.
 
 ## The problem in plain words
 

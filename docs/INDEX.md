@@ -4,6 +4,8 @@ Start with `00-start-here.md`. The numbered guides explain *why* the system is b
 
 ## Guides (read in order)
 
+There is no `05` guide; the numbering skips it.
+
 | Doc | Read it to understand |
 |---|---|
 | [00-start-here](00-start-here.md) | The problem, the nine rules, setup and commands |

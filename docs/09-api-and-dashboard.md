@@ -5,7 +5,7 @@ The UI exists for the 10 points on explainability and commercial relevance, and 
 ## The three layers
 
 ```
-frontend/ (React, TypeScript)  ──HTTP──►  freshroute/api/ (FastAPI)  ──►  runs.runner.run / runs.ladder.run_ladder
+frontend/ (React, TypeScript)  ──HTTP──►  freshroute/api/ (FastAPI)  ──►  runs.runner.run / runs.stress.run_stress / runs.replan.replan_run
  renders JSON verbatim                     serves outputs/ verbatim           writes outputs/<run_id>/
 ```
 
@@ -17,7 +17,7 @@ The payoff is traceability: any figure shown to a judge can be proven by opening
 
 ## Running a plan from the UI (D-21)
 
-`POST /api/runs` returns immediately with HTTP 202 and enqueues the run. One worker thread runs jobs one at a time, so two HiGHS solves never compete for the same laptop. Status is kept in `outputs/.api/jobs/<run_id>.json`. A run is "done" when `metrics.json` exists on disk, so the state survives an API restart. While the solver is still improving, the status also carries `progress` (`version`, `net_inr`, `final`, `elapsed_s`); every version is a complete run directory, so the dashboard shows the first plan after a second or two, reloads it as better plans appear (banner "Showing the best plan found so far") and shows the final result when the state turns `done`.
+`POST /api/runs` returns immediately with HTTP 202 and enqueues the run. One worker thread runs jobs one at a time, so two HiGHS solves never compete for the same laptop. Status is kept in `outputs/.api/jobs/<run_id>.json`. A run is "done" when `metrics.json` exists on disk, so the state survives an API restart. While the solver is still improving, the status also carries `progress` (`version`, `net_inr`, `final`, `elapsed_s`); every version is a complete run directory, so the dashboard shows the first plan after a second or two, reloads it as better plans appear (banner "Showing the best plan so far") and shows the final result when the state turns `done`.
 
 ## One URL for the demo (D-20)
 
@@ -25,7 +25,14 @@ In development, `make api` (port 8000) and `make web` (Vite on 5173, proxying `/
 
 ## What the user sees
 
-The frontend has two parts, switched by URL hash (D-32): a narrative **landing page**, and an **operations dashboard** with four tabs: 1. Results, 2. Today's plan, 3. What if something breaks? (the route map where a road can be closed live, plus the replan diff) and 4. Proof & audit. Results shows baseline against ours on food spoiled, orders filled, profit after all costs and rule breaks, plus the waterfall ("Where the extra profit comes from") and the ladder ("Every rule vs FreshRoute"). Proof & audit shows the validator panel, assumptions and `run_manifest.json`.
+The frontend has two parts, switched by URL hash (D-32): a narrative **landing page** (Problem, How it works, Results, Trust; the button "Open the live demo" leads on), and an **operations dashboard** with one "Run the optimiser" button and four tabs:
+
+1. **Results**: baseline against ours on profit after all costs, food spoiled, orders filled, worst-served market and rule breaks, plus the waterfall ("Where the extra profit comes from"), the ladder ("Every rule vs FreshRoute") and the validator panel ("Independent check").
+2. **Today's plan**: the route map, the truck loading list and driver message, reason cards and price cuts.
+3. **What if something breaks?**: click a road on the map (or close one from the list) to re-plan around it, or pick an event and press "Re-plan now"; then the replan diff, the stress test and the sensitivity table.
+4. **Proof & audit**: `run_manifest.json` ("Reproduce this exact result"), every `config.py` constant, and the assumptions.
+
+The landing page's numbers are not typed in: it reads them from `GET /api/ladder` and `GET /api/stress` for the demo run (`practice`, seed 42) and shows dashes if that run is not on disk. Labels are plain language; an uncommon term has a dotted underline and a hover note (`components/Explain.tsx`), and all wording lives in `lib/words.ts` (words only, no numbers).
 
 A synthetic-data banner is driven by `scenario.json → source` and is shown whenever the data is synthetic (Rule 7).
 

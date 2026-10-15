@@ -14,7 +14,7 @@ It sits beside `freshroute` in the same source root only so installed console sc
 
 Hard violations (counted as the feasibility score): unknown ids, negative quantity, stock overdraw, shipping before the batch is available, missing lane, mode mismatch, rail slot, shelf life, delivery window, vehicle capacity, trips per day, vehicle availability, receiving capacity, discount over its cap, discount below salvage, and discounts that rise and fall.
 
-Warnings, reported but not counted: demand cap exceeded, soft-constraint slack used, and fallback plan used.
+That is 16 hard codes (`backend/src/validator/rules.py`). One warning is reported but not counted: `DEMAND_CAP_EXCEEDED` (kilograms over p50 demand plus the overship slack). In a replan, a violation caused only by already-dispatched (frozen) shipments is reported as a `FROZEN_<code>` warning, since it cannot be replanned away. Soft-constraint slack usage and whether the fallback ran are recorded in `run_manifest.json`, not in the validator.
 
 The output is `validation.json` in the run directory.
 

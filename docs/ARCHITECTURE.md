@@ -95,7 +95,7 @@ Total = 20+15+20+15+10+10+10 = **100**. The first four rows (70 pts) are determi
                  frontend/ (React SPA) ──► renders the JSON it is given, never recomputes a KPI
 ```
 
-The UI is a **viewer**: it shows what the engine wrote to `outputs/<run_id>/` and triggers engine functions for "Plan" and "Replan" through the API (D-18, D-21). It never computes a KPI itself, which keeps every number traceable to `run_manifest.json`.
+The UI is a **viewer**: it shows what the engine wrote to `outputs/<run_id>/` and triggers engine functions for "Run the optimiser", "Re-plan now" and the stress test through the API (D-18, D-21). It never computes a KPI itself, which keeps every number traceable to `run_manifest.json`.
 
 ---
 
@@ -104,7 +104,7 @@ The UI is a **viewer**: it shows what the engine wrote to `outputs/<run_id>/` an
 ```
 freshroute/
 ├── README.md  AGENTS.md  DECISIONS.md
-├── docs/                       # INDEX.md, numbered guides 00-10, SUBMISSION/DEMO/JUDGE-QA/GLOSSARY, ARCHITECTURE.md, DATABASE.md, PS.md. (RESEARCH-v1.md, cited below as "the research doc", is not in the repository.)
+├── docs/                       # INDEX.md, numbered guides 00-10, SUBMISSION/DEMO/JUDGE-QA/GLOSSARY/ORGANIZER-SWAP, ARCHITECTURE.md, DATABASE.md, PS.md. (RESEARCH-v1.md, cited below as "the research doc", is not in the repository.)
 ├── Makefile  pyproject.toml  uv.lock  .python-version  .gitignore      # uv only, no requirements.txt (D-15)
 ├── data/
 │   ├── organizer/              # raw organizer files (gitignored; never created so far)
@@ -119,7 +119,7 @@ freshroute/
 │   │   ├── policies/           # __init__.py (REGISTRY, get_policy)  base.py  fifo.py  fefo.py  last_day_50.py  milp.py
 │   │   │                       # planned: organizer_baseline.py
 │   │   ├── solvers/            # milp_model.py  greedy.py  aggregate.py
-│   │   ├── runs/               # runner.py  naming.py  ladder.py  stress.py  sensitivity.py  replan.py  perf.py
+│   │   ├── runs/               # runner.py  naming.py  progress.py  ladder.py  stress.py  sensitivity.py  replan.py  perf.py
 │   │   ├── generator/          # constants.py  geography.py  build.py  (python -m freshroute.generator)
 │   │   ├── api/                # FastAPI: serves outputs/ verbatim, may enqueue a run (§16, D-18)
 │   │   │   └── app.py  deps.py  data_access.py  schemas.py  jobs.py  routers/  services/
@@ -130,7 +130,7 @@ freshroute/
 ├── frontend/                   # React SPA: Vite + TypeScript + recharts + Mantine + motion + GSAP (D-19, D-24, D-27)
 │   ├── package.json  package-lock.json  vite.config.ts  tsconfig.json  index.html
 │   └── src/  main.tsx  App.tsx  api/  components/  pages/  tabs/  lib/  types.ts  theme.ts
-├── scripts/                    # empty; planned: build_prices.py (Agmarknet → prices.csv)
+├── (scripts/)                  # planned, not created: build_prices.py (Agmarknet → prices.csv)
 └── outputs/                    # gitignored, EXCEPT outputs/demo_backup/
 ```
 
@@ -156,11 +156,11 @@ freshroute/
 | `runs/stress.py`, `runs/sensitivity.py`, `engine/newsvendor.py` | Monte Carlo and sensitivity; quantile demand targets |
 | `data/events.py`, `runs/replan.py` | Event schema (pydantic); apply, freeze, re-solve, diff |
 | `generator/` (`constants.py`, `geography.py`, `build.py`) | Synthetic scenario generator (v3, A-47, A-49) |
-| `runs/` (`runner.py`, `naming.py`, `ladder.py`, `stress.py`, `sensitivity.py`, `replan.py`, `perf.py`) | Orchestration layer: single run, run-id naming, ladder, MC, sensitivity, replan, perf harness (`python -m freshroute.runs.perf`); dependencies run one way, cli -> runs -> engine/domain/data (D-31) |
+| `runs/` (`runner.py`, `naming.py`, `progress.py`, `ladder.py`, `stress.py`, `sensitivity.py`, `replan.py`, `perf.py`) | Orchestration layer: single run, run-id naming, show-while-solving publisher (§16.2), ladder, MC, sensitivity, replan, perf harness (`python -m freshroute.runs.perf`); dependencies run one way, cli -> runs -> engine/domain/data (D-31) |
 | `adapters/` | Empty package; the organizer-format adapter (`adapters/organizer.py`) is planned |
 | `engine/dispatch_sheet.py`, `engine/narrator.py` | Dispatch sheet, narration (template first, LLM optional) |
 | `api/` (FastAPI) | HTTP surface over `outputs/` and the run queue; never a KPI (§16, D-18, D-21) |
-| `frontend/` (React) | Dashboard: score, trucks, what-if, trust (§16, D-19, D-27) |
+| `frontend/` (React) | Landing page plus dashboard tabs Results, Today's plan, What if something breaks?, Proof & audit (§16, D-19, D-32) |
 
 Key function contracts (names are the contract; internals are free):
 
@@ -170,7 +170,7 @@ domain.shelflife.decay(temp_c, ref_temp_c, q10) -> float
 domain.shelflife.usable_life_at_arrival(rsl_h, wait_h, travel_h, handling_h, store_temp_c, transit_temp_c, ref_temp_c, q10) -> float
 domain.feasibility.build_arcs(scenario, realization=None) -> DataFrame            # DATABASE.md §4.1
 policies.base.Policy.plan(scenario, ctx) -> Plan                           # plan.csv + trips.csv
-engine.simulator.simulate(scenario, plan, discounts, realization) -> SimResult    # sim_ledger.csv
+engine.simulator.simulate(scenario, plan, discounts, realization=None) -> dict    # sim_ledger.csv
 engine.metrics.compute(scenario, plan, discounts, sim) -> dict                    # metrics.json
 validator.validate.validate(scenario, plan, discounts, overship_slack) -> ValidationReport   # validation.json
 runs.stress.run_stress(scenario, policy, n, seed, out, named) -> Path           # stress.csv, stress_summary.json
@@ -328,7 +328,7 @@ Inputs: scenario tables, `plan.csv`, `discounts.csv`. Output: `validation.json` 
 **Hard violations** (the feasibility score counts these; confirm against the organizers' definition once published):
 `UNKNOWN_ID` · `NEGATIVE_QTY` · `STOCK_OVERDRAW` (Σ shipped > qty) · `NOT_AVAILABLE` (dispatch before `available_from_h`) · `NO_LANE` · `MODE_MISMATCH` · `RAIL_SLOT` · `SHELF_LIFE` · `DELIVERY_WINDOW` · `VEHICLE_CAPACITY` · `VEHICLE_TRIPS_PER_DAY` · `VEHICLE_AVAILABILITY` · `RECEIVING_CAPACITY` · `DISCOUNT_CAP` · `DISCOUNT_BELOW_SALVAGE` · `DISCOUNT_NOT_MONOTONE`.
 
-**Warnings** (reported, not counted): `DEMAND_CAP_EXCEEDED` (over `target·(1+overship_slack)`), `SLACK_USED`, `FALLBACK_PLAN_USED`.
+That is 16 hard codes (`rules.py`). **Warning** (reported, not counted): `DEMAND_CAP_EXCEEDED` (kg per destination × commodity × arrival day over `p50·(1+overship_slack)`). In a replan, a violation the frozen rows cause on their own is moved to `warnings` as `FROZEN_<code>` (A-43). Slack usage and `fallback_used` are recorded in `run_manifest.json`, not by the validator.
 
 Independence rules: re-implement `decay`/usable-life from §7 (do not import `domain/shelflife.py`); allowed imports are stdlib, pandas, numpy, `freshroute.data.schema`, `freshroute.data.io`, `validator` itself. Tests: (a) an AST test fails if the `validator` package imports any other `freshroute` module; (b) for each hard-violation code, inject one known violation into a clean fixture plan and assert exactly that code appears; (c) a randomized test asserts `validator` and `domain/shelflife.py` agree on usable life. The package lives beside `freshroute` in the same src root only so it is importable from an installed console script (D-17); sharing a directory does not weaken the rule.
 
@@ -388,7 +388,7 @@ The simulator executes the plan; it does **not** enforce windows/capacities (tha
 - The event still affects frozen shipments in transit (e.g. a delay moves their arrival and may break shelf life) — the simulator shows that; they simply cannot be reassigned.
 - Diff (`diff.json`): moved batches (batch → old dest/day → new dest/day), changed discounts, ΔKPIs. **ΔKPIs compare "old plan executed in the changed world" vs "replanned"** — the honest do-nothing comparison.
 - Invariants (tests): frozen shipments appear unchanged in the new plan; validator reports 0 hard violations; replan wall time is bounded by `REPLAN_TIME_LIMIT_S` plus setup (A-43). Demo narration may only claim a time measured on the day.
-- As built: the residual model is the §9 MILP with frozen use passed in through `ctx["residual_use"]` — trips per `(vehicle, day)` off C3, kg per `(dest, arrival_day)` off C4, frozen kg per destination counted in the C6 fill — and C5 via `demand_cap_override = p50 − frozen / (1 + overship_slack)`, so frozen + new never exceeds the original cap. Dispatch `≥ at_h` = vehicles' `available_from_h` raised to `at_h` (a new trip may leave at `at_h` itself). The solve is capped at `REPLAN_TIME_LIMIT_S` and warm-started from the old plan's undispatched rows (infeasible arcs dropped) while that start satisfies every constraint, else from the FEFO-greedy. Markdown is rebuilt over the whole plan when the run had it. Both sides of the ΔKPIs go through `simulate` + `metrics.compute`; the old side keeps the old `discounts.csv`. Details and limits: A-43.
+- As built: the residual model is the §9 MILP with frozen use passed in through `ctx["residual_use"]` — trips per `(vehicle, day)` off C3, kg per `(dest, arrival_day)` off C4, frozen kg per destination counted in the C6 fill — and C5 via `demand_cap_override = p50 − frozen / (1 + overship_slack)`, so frozen + new never exceeds the original cap. Dispatch `≥ at_h` = vehicles' `available_from_h` raised to `at_h` (a new trip may leave at `at_h` itself). The solve is capped at `REPLAN_TIME_LIMIT_S` and warm-started from the old plan's undispatched rows (infeasible arcs dropped) while that start satisfies every constraint, else from the FEFO-greedy. The replanned plan is a plain `milp` plan with an empty `discounts.csv`. Both sides of the ΔKPIs go through `simulate` + `metrics.compute`; the old side keeps the old `discounts.csv`. Details and limits: A-43.
 - No round-trip or return-time modeling: vehicles are limited only by `max_trips_day` (A-08).
 
 ### 14.3 Newsvendor demand target (`engine/newsvendor.py`)
@@ -417,21 +417,21 @@ Reason codes for the runner-up: `SHELF_LIFE`, `WINDOW`, `CAPACITY_BOUND`, `DEMAN
 
 ## 16. Dashboard (`frontend/`, React SPA over `backend/src/freshroute/api/`)
 
-Components are Mantine 9; GSAP 3.12.5 ScrollTrigger drives scroll choreography (hero intro/parallax, section reveals, marquee, anchor nav) and motion springs animate the reason-card drawer, KPI count-ups, table rows and the Replan diff (D-24, amended by D-27). Recharts draws the charts; there is no leaflet. Every animation respects `prefers-reduced-motion` (static page fallback). The app has two parts switched by URL hash (D-32): `pages/LandingPage.tsx` (narrative) and `pages/Dashboard.tsx` (tabs Plan, Scoreboard, Robustness, Replan, Trust in `tabs/`). The table below is the original one-scroll design (hero, then numbered sections in plain words) and is kept as the content map; section 02 to 05 correspond to the dashboard tabs — no sidebar, no jargon controls on screen (method/seed/flags live under "Advanced settings").
+Components are Mantine 9; GSAP 3.12.5 ScrollTrigger drives the landing page's scroll choreography (hero intro/parallax, section reveals, marquee, anchor nav) and motion springs animate the reason-card drawer, KPI count-ups, table rows and the replan diff (D-24, amended by D-27). Recharts draws the charts; the route map is an offline SVG. Every animation respects `prefers-reduced-motion` (static page fallback). The app has two parts switched by URL hash (D-32): `pages/LandingPage.tsx` (narrative) and `pages/Dashboard.tsx` (four tabs, content in `tabs/`). Labels are plain language; uncommon terms carry a hover note (`components/Explain.tsx`), and all display wording (policy names, rule names, term notes) lives in `lib/words.ts`, which holds words only, never numbers. Method, seed, newsvendor and saved runs live under "Advanced settings".
 
-| Section | Contents |
+| Part | Contents |
 |---|---|
-| Hero + nav | giant FRESH/ROUTE type, vision line, anchor nav 01–05, demo-data badge, dark toggle |
-| 01 · Plan | place cards, one big **Plan** button (auto-scrolls to Score when done), older plans under an accordion |
-| 02 · Score | scoreboard (spoilage kg and %, fulfillment %, net ₹, violations: baseline n vs ours; min fill rate, waterfall, attribution ladder, validator panel) |
-| 03 · Trucks | dispatch table, reason card drawer, discount cards, shelf-life map (offline SVG route network over `geo.csv`, D-24; colour table is the fallback) |
-| 04 · What if | 5 canned events, apply, diff view, ΔKPIs, narration + MC fan chart / bands, % scenarios beating baseline, sensitivity table |
-| 05 · Trust | assumptions, cost-model coefficients, `run_manifest.json` (seed, git SHA, scenario hash, solver status) |
+| Landing page | hero, anchor nav (Problem / How it works / Results / Trust), dark toggle, CTA "Open the live demo". Its result numbers are read from `GET /api/ladder` and `GET /api/stress` for the demo run (`practice`, seed 42), never literals; with no run on disk they show as dashes |
+| Dashboard header | scenario name, synthetic-data badge, one **Run the optimiser** button (`RunButton.tsx`), "best plan so far" banner while solving (§16.2) |
+| 1. Results (`Scoreboard.tsx`) | baseline vs ours on profit after all costs (net ₹), food spoiled (kg, %), orders filled, worst-served market, rule breaks; waterfall ("Where the extra profit comes from"), ladder ("Every rule vs FreshRoute"), validator panel ("Independent check") |
+| 2. Today's plan (`Plan.tsx`) | route map (offline SVG network over `geo.csv`; colour table is the fallback), truck loading list and driver message (dispatch sheet), reason-card drawer, price-cut (discount) cards |
+| 3. What if something breaks? (`Replan.tsx`, `Robustness.tsx`) | click a road on the map (or "close a road" from the list) or a market for a demand spike, or pick any of the 5 event types and press "Re-plan now"; diff view, ΔKPIs, narration; Monte Carlo stress bands and share of futures beating the baseline; sensitivity ("What if our assumptions are wrong?") |
+| 4. Proof & audit (`Trust.tsx`) | `run_manifest.json` ("Reproduce this exact result": seed, git SHA, scenario hash, solver status), every `config.py` constant from `GET /api/config`, assumptions |
 
 ### 16.1 Layers and the rules between them
 
 ```
-frontend/ (React, TS)  ──HTTP──►  freshroute/api/ (FastAPI)  ──in-process──►  runs.runner.run / runs.ladder.run_ladder
+frontend/ (React, TS)  ──HTTP──►  freshroute/api/ (FastAPI)  ──in-process──►  runs.runner.run / runs.stress.run_stress / runs.replan.replan_run
        renders JSON verbatim            serves outputs/ verbatim                    writes outputs/<run_id>/
 ```
 
@@ -444,7 +444,7 @@ frontend/ (React, TS)  ──HTTP──►  freshroute/api/ (FastAPI)  ──in-
 
 ### 16.2 Show while solving
 
-The Plan button does not wait for the 30 s limit (D-34). `runs.runner.run(..., on_progress=)` starts a worker (`runs/progress.py`) next to the solver: the solver offers the start plan and every improving incumbent; the worker turns the newest offer into a plan, scores it with the normal pipeline (validator, simulator, metrics) and **publishes it only if its simulated net ₹ beats the last published version**. Publishing writes the whole run directory file by file (temp file + rename, `metrics.json` last) and reports `{version, net_inr, final, elapsed_s}`, which the API stores as `progress` in the job file (DATABASE.md §11.3). The dashboard polls the status once a second, reloads the run whenever `version` increases and shows a "best plan so far" banner until the state is `done`; the last version is the solver's own final plan. Scoring one incumbent costs about 0.4 s on `practice`, so it never starves the search. The CLI `run` has no `on_progress` and writes once, as before. Policies other than `milp` publish only the final plan.
+The "Run the optimiser" button does not wait for the 30 s limit (D-34). `runs.runner.run(..., on_progress=)` starts a worker (`runs/progress.py`) next to the solver: the solver offers the start plan and every improving incumbent; the worker turns the newest offer into a plan, scores it with the normal pipeline (validator, simulator, metrics) and **publishes it only if its simulated net ₹ beats the last published version**. Publishing writes the whole run directory file by file (temp file + rename, `metrics.json` last) and reports `{version, net_inr, final, elapsed_s}`, which the API stores as `progress` in the job file (DATABASE.md §11.3). The dashboard polls the status once a second, reloads the run whenever `version` increases and shows a "best plan so far" banner until the state is `done`; the last version is the solver's own final plan. Scoring one incumbent costs about 0.4 s on `practice`, so it never starves the search. The CLI `run` has no `on_progress` and writes once, as before. Policies other than `milp` publish only the final plan.
 
 ---
 
@@ -521,6 +521,7 @@ Toolchain (D-15): uv owns Python. `uv sync` installs the project plus the dev gr
 | `SENS_Q10` / `SENS_ELASTICITY_MULT` / `SENS_OVERSHIP_SLACK` / `SENS_DEMAND_MULT` | 1.5, 2, 3 / 1, 0.5 / 0, 0.05, 0.10 / 0.8, 1, 1.2 | team assumption (sensitivity values) |
 | `DEFAULT_SEED` | 42 | research doc (CLI example) |
 | `DEMO_SCENARIO` / `DEMO_SEED` | `data/scenarios/practice` / 42 | team assumption — what `freshroute demo` and `make demo` run |
+| `BASELINE` / `PLAN` | `fefo` / `milp` | ladder and waterfall endpoints; `fefo` stands in for the planned `organizer_baseline` |
 | `FLOAT_TOL` | 1e-6 | team assumption (kg and h comparisons) |
 | `HOURS_PER_DAY` | 24 | constant (moved here from `domain/feasibility.py`) |
 | `SCHEMA_VERSION` | 2 | data format version (`DATABASE.md` §1); 2 = `cost_of_goods_sold` in net (D-28); also checked by the validator |
@@ -600,7 +601,7 @@ Anything marked **confirm** must be checked against the organizers' documents on
 | Organizer cost model differs | Everything in `domain/costmodel.py`/`config.py`; coefficients read from the dataset |
 | Organizer data format differs | planned `adapters/organizer.py` (not built) + mapping table (`DATABASE.md` §8) |
 | Units bug (₹/quintal vs ₹/kg, % vs fraction) | Single conversion in `data/io.py`; unit tests |
-| Replan breaks constraints mid-demo | Validator runs inside `replan`; failing replan falls back to precomputed scenario loaded instantly |
+| Replan breaks constraints mid-demo | Validator runs inside `replan` (`freshroute replan` exits 1 on violations; the dashboard shows the error). No precomputed replan is shipped; fall back to the stress results on the same tab |
 | MC too slow | 200 → 50 → 3 named scenarios |
 | LLM hallucination | Schema validation, number guard, template narration, dropdown fallback |
 | Solver install fails on demo laptop | `outputs/demo_backup/` + recorded video; `make serve` from a previously built `frontend/dist` |
@@ -616,7 +617,7 @@ Nothing here is a claim; measure on the machine you demo from.
 
 | Item | How to measure |
 |---|---|
-| `milp` plan on the demo scenario | hard cap `MILP_TIME_LIMIT_S = 30`, incumbent returned. The first plan is published after about 1 to 2 s and better ones follow while HiGHS searches (§16.2): `uv run freshroute run --scenario data/scenarios/practice --policy milp --seed 42` (`solve_seconds` in `run_manifest.json`; the Plan button's status `progress.elapsed_s` for each version) |
+| `milp` plan on the demo scenario | hard cap `MILP_TIME_LIMIT_S = 30`, incumbent returned. The first plan is published after about 1 to 2 s and better ones follow while HiGHS searches (§16.2): `uv run freshroute run --scenario data/scenarios/practice --policy milp --seed 42` (`solve_seconds` in `run_manifest.json`; the Run button's status `progress.elapsed_s` for each version) |
 | Scale | `uv run python -m freshroute.runs.perf --scale 10` (A-40) |
 | Replan | residual solve capped at `REPLAN_TIME_LIMIT_S = 2` (A-43): `uv run freshroute replan --run … --event …` |
 | MC 200 scenarios (evaluate only) | `uv run freshroute stress --scenario … --n 200`; if too slow, `--n 50` or `--named` |

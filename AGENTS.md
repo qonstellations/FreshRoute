@@ -13,7 +13,7 @@ Instructions for anyone (human or AI assistant) working on FreshRoute.
 5. **The LLM never decides.** HiGHS decides; an LLM may only parse a sentence into a pydantic-validated event or narrate JSON it was given.
 6. **Never crash on a scenario.** Soft constraints, solve time limit, FEFO-greedy fallback.
 7. **Measured numbers only**; synthetic data labelled synthetic. Do not present projected rubric scores as results.
-8. **The UI shows, the engine decides.** `freshroute/api` (FastAPI) serves `outputs/` files verbatim and may enqueue `runs.runner.run`/`runs.ladder.run_ladder`; `frontend/` (React) renders the JSON it is given. Neither computes a KPI — a display delta between two stored numbers is the only exception and lives in one helper.
+8. **The UI shows, the engine decides.** `freshroute/api` (FastAPI) serves `outputs/` files verbatim and may enqueue `runs.runner.run`, `runs.stress.run_stress` or `runs.replan.replan_run`; `frontend/` (React) renders the JSON it is given. Neither computes a KPI — a display delta between two stored numbers is the only exception and lives in one helper.
 9. **Add-ons are flags**, removable without breaking the spine.
 
 ## Conventions

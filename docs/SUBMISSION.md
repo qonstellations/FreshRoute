@@ -15,9 +15,9 @@ Our default submission format (D-25) is the run directory of the final plan:
 | `validation.json` | Independent validator report |
 | `run_manifest.json` | Seed, git SHA, scenario hash, solver status |
 | `dispatch_sheet.csv` / `.txt` | Per-vehicle, priority-ordered instructions |
-| `reason_cards.json` | Why each shipment and discount was chosen |
+| `reason_cards.json` | Why each shipment went where it did (and the runner-up it beat) |
 
-Also in the repository: the ladder and waterfall (`outputs/demo_backup/practice__ladder__s42/`), the README, and these docs. File formats are in `DATABASE.md` §5.
+Also in the repository, under `outputs/demo_backup/`: the four practice runs at seed 42 (`practice__fifo__s42`, `practice__fefo__s42`, `practice__last_day_50__s42`, `practice__milp__s42`), the ladder and waterfall (`practice__ladder__s42/`), the stress test (`practice__stress__s42/`) and the sensitivity table (`practice__sensitivity__s42/`). Plus the README and these docs. File formats are in `DATABASE.md` §5.
 
 ## Pre-submit checklist
 
@@ -27,7 +27,7 @@ Run these in order, from a clean checkout of the exact commit you are submitting
 2. `make setup`
 3. `make check`. It must be green: ruff, pytest, frontend build, and zero violations on the demo plan.
 4. `make demo`. Compare the headline numbers with the README results table. If they differ, find out why before doing anything else (see `10-determinism-and-reproducibility.md`).
-5. `make serve`, open `http://127.0.0.1:8000`, run a plan from the UI, and check the scoreboard and trust tab load.
+5. `make serve`, open `http://127.0.0.1:8000`, click "Open the live demo", click "Run the optimiser", and check that all four tabs load (1. Results, 2. Today's plan, 3. What if something breaks?, 4. Proof & audit).
 6. Confirm `outputs/demo_backup/` is committed and current. It is the offline fallback.
 7. Confirm nothing forbidden is committed: `.env`, keys, `.venv`, `node_modules/`, `frontend/dist/`, other `outputs/`, and restricted organizer data.
 8. Tag or note the commit SHA you submitted.
@@ -57,7 +57,7 @@ We built our own hidden-style suite for practice: `hidden_small`, `hidden_practi
 
 ## Offline fallbacks (the venue Wi-Fi will fail)
 
-- Everything runs locally; no live API is used (invariant 10).
-- If the live run is slow: show `outputs/demo_backup/`.
+- Everything runs locally; no live API is used (`ARCHITECTURE.md` §3, invariant 10).
+- If the live run is slow: show `outputs/demo_backup/` (copy its `practice__*` directories into `outputs/` and the dashboard and landing page read them).
 - If the frontend breaks: the CLI `make demo` output is a complete scoreboard.
 - If the solver misbehaves: the fallback plan is built in, and the banner says so.

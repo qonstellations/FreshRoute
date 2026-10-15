@@ -221,7 +221,7 @@ Rejected rows are kept: reason cards read them.
   "scenario": "data/scenarios/practice",
   "scenario_sha256": "…",
   "policy": "milp",
-  "flags": {"markdown": true, "newsvendor": false},
+  "flags": {"markdown": false, "newsvendor": false},
   "seed": 42,
   "realization": "base",
   "package_versions": {"python": "…", "scipy": "…", "pulp": "…", "highspy": "…", "pandas": "…"},
@@ -449,10 +449,13 @@ outputs/<run_id>/             run_manifest.json plan.csv trips.csv discounts.csv
                               sim_ledger.csv sim_lots.csv metrics.json validation.json
                               reason_cards.json dispatch_sheet.csv dispatch_sheet.txt
                               [demand_target.csv — --newsvendor runs only]
-                              [ladder.json waterfall.json stress.csv stress_summary.json sensitivity.csv]
                               [replan/<event_id>/…]
+outputs/<scenario>__ladder__s<seed>/       ladder.json waterfall.json (§5.11)
+outputs/<scenario>__stress__s<seed>/       stress.csv stress_summary.json (§5.12)
+outputs/<scenario>__sensitivity__s<seed>/  sensitivity.csv (§5.12)
 outputs/.api/jobs/              API run-queue state only (§11); gitignored with the rest of outputs/
-outputs/demo_backup/            committed copy of the demo run (fallback if the solver fails on demo day)
+outputs/demo_backup/            committed copy of the demo outputs (practice, seed 42): the fifo, fefo, last_day_50 and
+                                milp runs, plus the ladder, stress and sensitivity directories (fallback if the solver fails on demo day)
 ```
 
 The HTTP layer has its own `api_version` (§11).
@@ -622,7 +625,7 @@ There is no `/api/demo` endpoint: the demo scoreboard comes from the CLI (`make 
 
 `progress` (MILP policies only) appears with the first published plan. Each `version` is a complete run directory on disk (every file of §5, `run_manifest.json → solver.final = false`, then `metrics.json` last); the directory is replaced file by file, so a reader may briefly see a mix of two versions. `net_inr` is the simulator's number for that version and is copied from `metrics.json`, never computed by the API. Versions only appear when the plan's simulated net improves; the last one has `final = true` and carries the solver's own plan. Additive field: `api_version` is unchanged.
 
-`state` is `running` while the worker thread holds the job, `done` when `outputs/<run_id>/metrics.json` exists, `error` with `error` set otherwise; the job file of a failed run also carries a `traceback` field (the status endpoint's `error` message is unchanged). A job is submitted atomically: the duplicate check and the enqueue happen under one lock. It is deleted when `outputs/<run_id>/` is deleted. One worker thread (`JOB_WORKERS = 1`), so two solves never run at once on the demo laptop.
+`state` is `running` while the worker thread holds the job, `done` when `outputs/<run_id>/metrics.json` exists, `error` with `error` set otherwise (a job file still `running` that no live worker holds, e.g. after an API restart, is reported as `error` with "stale job: the server restarted; submit again"); the job file of a failed run also carries a `traceback` field (the status endpoint's `error` message is unchanged). A job is submitted atomically: the duplicate check and the enqueue happen under one lock. It is deleted when `outputs/<run_id>/` is deleted. One worker thread (`JOB_WORKERS = 1`), so two solves never run at once on the demo laptop.
 
 ### 11.4 Frontend types
 

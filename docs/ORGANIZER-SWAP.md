@@ -51,7 +51,8 @@ Every coefficient or formula in `docs/ARCHITECTURE.md` §7 that must change if t
 | Handling `kg_delivered * handling_cost_inr_kg`; origin handling = 0 (A-07) | `domain/costmodel.py` | confirm when published |
 | Spoilage cost `spoiled_kg * (unit_cost + disposal_cost - salvage_value)` | `domain/costmodel.py` | confirm when published |
 | Discount cost reported separately, never subtracted twice | `domain/costmodel.py` | confirm when published |
-| Net `Revenue - Transport - Handling - Spoilage cost` | `domain/costmodel.py` | confirm when published |
+| Cost of goods sold `sum sold * unit_cost` (D-28, A-48) | `domain/costmodel.py` | confirm when published |
+| Net `Revenue - COGS - Transport - Handling - Spoilage cost` | `domain/costmodel.py` | confirm when published |
 | Demand fulfillment `sum min(sold, base_demand) / sum base_demand`; minimum destination fill rate | `domain/costmodel.py` | confirm when published |
 | Spoilage % `spoiled_kg / sum batches.qty_kg * 100` | `domain/costmodel.py` | confirm when published |
 | Feasibility score = hard violations from `validator/` | `validator/` (independent re-implementation) | confirm when published |

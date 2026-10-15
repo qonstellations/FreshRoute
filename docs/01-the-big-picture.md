@@ -43,11 +43,11 @@ The simulator executes a plan but deliberately does not enforce capacities or wi
 | Solvers | `.../solvers/` | `milp_model.py`, `greedy.py` (FEFO fallback), `aggregate.py` (scale model) |
 | Policies | `.../policies/` | `fifo`, `fefo`, `last_day_50`, `milp` |
 | Engine | `.../engine/` | `simulator`, `metrics`, `reasons`, `dispatch_sheet`, `newsvendor`, `narrator` |
-| Runs | `.../runs/` | `runner`, `ladder`, `stress`, `sensitivity`, `replan`, `naming` |
+| Runs | `.../runs/` | `runner`, `ladder`, `stress`, `sensitivity`, `replan`, `naming`, `progress` (show-while-solving), `perf` (timing harness) |
 | Generator | `.../generator/` | synthetic scenario builder |
 | API | `.../api/` | FastAPI app, job queue |
 | Validator | `backend/src/validator/` | independent checker |
-| Frontend | `frontend/` | React + Vite SPA |
+| Frontend | `frontend/` | React + Vite SPA: landing page and four-tab dashboard |
 | Docs | `docs/` | this folder |
 
 Column names always come from the constants in `data/schema.py`, and units are suffixed on names: `_kg`, `_h`, `_inr`, `_inr_kg`, `_c`, `_pct` (0 to 100 in files) and `_frac` (0 to 1 in memory). The percent-to-fraction conversion happens in exactly one place, `data/io.py` (D-06), because mixing the two is the classic way to be wrong by a factor of 100.

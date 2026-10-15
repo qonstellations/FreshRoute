@@ -24,7 +24,7 @@ Policies never report their own net ₹. They cannot flatter themselves.
 |---|---|---|
 | `fifo` | Send in arrival order to the nearest market with demand. Ignores shelf life and windows. | What a naive dispatcher does. Its violations are reported honestly. |
 | `fefo` | Earliest-expiry batch first, to the best-margin **feasible** arc, same demand caps as the MILP. | The real baseline. Beating FIFO alone would be a strawman (D-10). |
-| `last_day_50` | FIFO plus a 50 % markdown on the last day. | A fair "just discount it" comparison. A likely judge question. |
+| `last_day_50` | FIFO plus a 50 % markdown once a lot has 24 h of life or less left (capped at the salvage floor). | A fair "just discount it" comparison. A likely judge question. |
 | `milp` | HiGHS allocation, no markdown. | This is "FreshRoute" (D-33). |
 | `organizer_baseline` | Recognised but refuses to run. | No organizer material exists yet (D-25). |
 
@@ -36,7 +36,7 @@ Policies never report their own net ₹. They cannot flatter themselves.
 
 ## The waterfall
 
-From the FEFO net to the FreshRoute net, in six steps: spoilage cost avoided, extra sales, cost of the extra goods sold, extra transport, extra handling, discounts given. A unit test asserts that `baseline net + Σ steps = plan net` to within ₹0.01. If the bars do not add up, something is being counted twice. (An earlier research draft omitted the handling step, so its bars did not sum.)
+From the FEFO net to the FreshRoute net, in six steps: spoilage cost avoided, extra sales, cost of the extra goods sold, extra transport, extra handling, discounts given. A unit test asserts that `baseline net + Σ steps = plan net` to within ₹0.01. If the bars do not add up, something is being counted twice.
 
 ## How to read the practice results
 

@@ -10,7 +10,7 @@ Everything the system optimizes, simulates and reports is measured in rupees thr
 - Every parameter value lives in `config.py` or in the dataset itself.
 - No cost literal may appear anywhere else, including tests of other modules and the frontend.
 
-The README has a "cost-model comparison" table listing each formula that would have to change if the organizers' model differs. It is the checklist for the day their material appears.
+`docs/ORGANIZER-SWAP.md` has a "cost-model comparison" table listing each formula that would have to change if the organizers' model differs. It is the checklist for the day their material appears.
 
 ## The definition
 

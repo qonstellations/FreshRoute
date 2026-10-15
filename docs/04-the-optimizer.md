@@ -33,17 +33,17 @@ C4 and C5 are indexed by arrival day, not dispatch day (D-05). Demand and capaci
 
 ## Why soft constraints and a fallback (Rule 6)
 
-Shipping nothing is always a legal plan, so the hard constraints can never make the model infeasible. Only the fairness rule C6 (and any organizer must-serve rule) gets a penalised slack variable. If HiGHS has no incumbent when the 30-second limit ends, the system returns the **FEFO-greedy plan**, flags `fallback_used` in the manifest and shows a banner in the UI. A degraded plan is always better than a crash in front of judges.
+Shipping nothing is always a legal plan, so the hard constraints can never make the model infeasible. Only the fairness rule C6 gets a penalised slack variable. If HiGHS has no incumbent when the 30-second limit ends, the system returns the **FEFO-greedy plan**, flags `fallback_used` in the manifest and shows a banner in the UI. A degraded plan is always better than a crash in front of judges.
 
 ## Solver choice (D-02, D-14)
 
-We use PuLP as the modelling layer on top of HiGHS because the constraints read like the maths. `scipy.optimize.milp` (also HiGHS) is the fallback if PuLP will not install. A smoke test (`tests/test_solver_smoke.py`) proves both APIs give the same optimum and that time-limit and gap options really take effect, because PuLP 4.0 differs from 3.x.
+We use PuLP as the modelling layer on top of HiGHS because the constraints read like the maths. `scipy.optimize.milp` (also HiGHS) is the documented fallback if PuLP will not install; no code path uses it today. A smoke test (`tests/test_solver_smoke.py`) proves both APIs give the same optimum and that time-limit and gap options really take effect, because PuLP 4.0 differs from 3.x.
 
 Key settings, all in `config.py`: a 30-second time limit, a 1 % relative gap, and the spoilage weight `LAMBDA_SPOIL = 1`.
 
 ## Starting plan and progress
 
-HiGHS spends its first seconds on cutting planes before it finds any plan, and FEFO-greedy is a poor start for this objective (it ignores the fill-balance penalty). So before the search the solver relaxes the trip integers, solves the LP (about 0.1 s) and rounds the trip counts up by diving. That plan goes in as the start and is the first thing the dashboard shows. HiGHS then reports every better plan it finds, and the run publishes each one that scores better in the simulator (see `09`). The fill-balance row is written with one variable per destination instead of a dense row over all arcs; it is the same model, but HiGHS finishes its cut work much sooner (A-51).
+HiGHS spends its first seconds on cutting planes before it finds any plan, and FEFO-greedy is a poor start for this objective (it ignores the fill-balance penalty). So before the search the solver also relaxes the trip integers, solves the LP (about 0.1 s) and rounds the trip counts up by diving; whichever of the two plans scores higher on the objective goes in as the start (usually the rounded LP). That plan and is the first thing the dashboard shows. HiGHS then reports every better plan it finds, and the run publishes each one that scores better in the simulator (see `09`). The fill-balance row is written with one variable per destination instead of a dense row over all arcs; it is the same model, but HiGHS finishes its cut work much sooner (A-51).
 
 ## The scale model
 
@@ -62,6 +62,7 @@ FIFO is a strawman, so beating it proves little. The comparison that matters is 
 
 ## Gotchas
 
+- If the time limit stops HiGHS with an incumbent worse than the FEFO-greedy plan, the FEFO-greedy plan is kept instead.
 - The 30 s limit is **wall-clock**. On the demo scenario the solver hits that limit, so a different machine, or a busy one, returns a different incumbent. Determinism is exact only for solves that finish early (A-40; see `10`). Intermediate plans shown while it searches differ from run to run for the same reason.
 - If you change any objective coefficient, rerun the consistency test between the objective and the simulator (see `02`).
 - Replan reuses this same model with frozen shipments subtracted from capacities (see `08`).
