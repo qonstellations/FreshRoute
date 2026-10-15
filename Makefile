@@ -16,7 +16,7 @@ check:
 	# demo plan (config.DEMO_SCENARIO/DEMO_SEED): MILP hits its 30 s time limit
 	uv run freshroute run --scenario data/scenarios/practice --policy milp --seed 42 --out outputs/check_demo --fail-on-violations
 
-# every pitch number: ladder + waterfall on config.DEMO_SCENARIO/DEMO_SEED; add --with-sensitivity (+~275 s)
+# every pitch number: ladder + waterfall on config.DEMO_SCENARIO/DEMO_SEED; add --with-sensitivity (adds a few minutes)
 demo:
 	uv run freshroute demo
 

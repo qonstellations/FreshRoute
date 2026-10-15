@@ -191,7 +191,7 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
             </ThemeIcon>
             <Title order={3}>NO PLAN YET</Title>
             <Text size="sm" c="dimmed" maw={460} mx="auto" mt={8} mb="xl">
-              Click Run the optimiser to make one. FreshRoute decides where each of the 200 batches goes across the 8 markets. A first plan appears in about 1 second.
+              Click Run the optimiser to make one. FreshRoute decides where each of the 200 batches goes across the 8 markets. A first plan appears in about 1 to 2 seconds.
             </Text>
             <RunButton
               request={{

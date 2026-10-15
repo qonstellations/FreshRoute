@@ -15,7 +15,7 @@ Output: P10/P50/P90 bands for each KPI plus the share of futures where we win on
 
 ## Sensitivity (`runs/sensitivity.py`)
 
-Varies `q10`, elasticity (`ε` against `ε/2`), the overship slack and demand ±20 %, and writes `sensitivity.csv`. It exists to answer the judge question "why should we trust your elasticity?": we do not claim it is right, we show how much the answer depends on it. It takes roughly 275 seconds, which is why `make demo` leaves it behind `--with-sensitivity`.
+Varies `q10`, elasticity (`ε` against `ε/2`), the overship slack and demand ±20 %, and writes `sensitivity.csv`. It exists to answer the judge question "why should we trust your elasticity?": we do not claim it is right, we show how much the answer depends on it. It takes a few minutes, which is why `make demo` leaves it behind `--with-sensitivity`.
 
 ## Event replan (`runs/replan.py`)
 

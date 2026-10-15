@@ -615,7 +615,7 @@ There is no `/api/demo` endpoint: the demo scoreboard comes from the CLI (`make 
 
 ### 11.3 Run-queue state file
 
-`outputs/.api/jobs/<run_id>.json`, written by the API only:
+`outputs/.api/jobs/<run_id>.json`, written by the API only (illustrative values):
 
 ```json
 {"api_version": 1, "run_id": "…", "state": "running", "scenario": "…", "policy": "milp",

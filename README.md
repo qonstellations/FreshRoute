@@ -9,7 +9,7 @@ Every morning a distributor must decide which batch of produce goes to which mar
 ## How it works
 
 1. **Filter.** Drop every shipment whose produce would not have enough shelf life left on arrival, would miss the delivery window, or has no lane.
-2. **Optimize.** A mixed-integer program (HiGHS) picks quantities, trips and vehicles for what remains. It never fails: soft constraints, a 30 s limit and a FEFO-greedy fallback. A rounded-LP start puts a first plan on screen in about a second, and better plans stream in while HiGHS keeps searching.
+2. **Optimize.** A mixed-integer program (HiGHS) picks quantities, trips and vehicles for what remains. It never fails: soft constraints, a 30 s limit and a FEFO-greedy fallback. A rounded-LP start puts a first plan on screen in about 1 to 2 seconds, and better plans stream in while HiGHS keeps searching.
 3. **Measure.** One seeded simulator replays every policy's plan, so none can flatter itself.
 4. **Audit.** An independent validator, sharing no maths code with the optimizer, checks every hard constraint.
 5. **Show.** A FastAPI service and a React app (a landing page, then a four-tab dashboard: Results, Today's plan, What if something breaks?, Proof & audit) display the stored results in plain language, with hover notes on technical terms. They never compute a KPI.
