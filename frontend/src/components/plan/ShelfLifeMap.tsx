@@ -9,7 +9,11 @@ import { band, BANDS, HUB, num } from './format'
 import './plan.css'
 
 // Fixed viewBox; points are fitted inside it with equal x/y scale (lon squeezed by cos(lat) so shapes stay true).
-const W = 1000, H = 460, PAD = 70
+const W = 1000, H = 520, PAD = 50, PAD_X = 240 // side padding leaves room for labels
+const LOG_KM_DEG = 0.35 // log-compression knee in degrees (~40 km): closer than this stays near-linear
+const FAR_CAP = 1.25 // outliers sit at most this many times the median distance out, in their true direction
+const MIN_GAP = 34 // px: spacing pass, in a metric that shrinks x by LABEL_X so wide labels on one row also part
+const LABEL_X = 5
 
 const draw: Variants = { hidden: {}, show: { transition: { staggerChildren: 0.09, delayChildren: 0.15 } } }
 const stroke: Variants = {
@@ -75,18 +79,39 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
   )
   const pts = (geo ?? []).filter(g => typeof g.lat === 'number' && typeof g.lon === 'number')
 
-  // Linear projection into the viewBox (display geometry only).
-  const lats = pts.map(g => g.lat as number), lons = pts.map(g => g.lon as number)
-  const midLat = (Math.min(...lats) + Math.max(...lats)) / 2
-  const sx = Math.cos((midLat * Math.PI) / 180)
-  const spanX = Math.max((Math.max(...lons) - Math.min(...lons)) * sx, 1e-6)
-  const spanY = Math.max(Math.max(...lats) - Math.min(...lats), 1e-6)
-  const s = Math.min((W - 2 * PAD) / spanX, (H - 2 * PAD) / spanY)
+  // Schematic projection (display geometry only): true bearing from the hubs' centre, distance compressed with log1p,
+  // so a city cluster spreads out while far markets (hundreds of km) still fit on the page.
+  const centre = pts.some(g => g.node_type === 'hub') ? pts.filter(g => g.node_type === 'hub') : pts
+  const cLat = centre.reduce((a, g) => a + (g.lat as number), 0) / centre.length
+  const cLon = centre.reduce((a, g) => a + (g.lon as number), 0) / centre.length
+  const kx = Math.cos((cLat * Math.PI) / 180)
+  const raw = pts.map(g => {
+    const dx = ((g.lon as number) - cLon) * kx, dy = (g.lat as number) - cLat
+    return [String(g.node_id), dx, dy, Math.log1p(Math.hypot(dx, dy) / LOG_KM_DEG)] as const
+  })
+  const radii = raw.map(p => p[3]).sort((a, b) => a - b), cap = FAR_CAP * radii[Math.floor(radii.length / 2)]
+  const polar = raw.map(([id, dx, dy, rr]) => {
+    const d = Math.hypot(dx, dy), k = d > 1e-9 ? Math.min(rr, cap) / d : 0
+    return [id, dx * k, dy * k] as const
+  })
+  const xs = polar.map(p => p[1]), ys = polar.map(p => p[2])
+  const spanX = Math.max(Math.max(...xs) - Math.min(...xs), 1e-6), spanY = Math.max(Math.max(...ys) - Math.min(...ys), 1e-6)
+  const s = Math.min((W - 2 * PAD_X) / spanX, (H - 2 * PAD) / spanY)
   const ox = (W - spanX * s) / 2, oy = (H - spanY * s) / 2
-  const at = new Map(pts.map(g => [String(g.node_id), [
-    ox + ((g.lon as number) - Math.min(...lons)) * sx * s,
-    oy + (Math.max(...lats) - (g.lat as number)) * s,
-  ]]))
+  const xy = polar.map(([, x, y]) => [ox + (x - Math.min(...xs)) * s, oy + (Math.max(...ys) - y) * s])
+  // ponytail: O(n²) spacing pass, fine for tens of nodes; a real layout library if maps grow to hundreds
+  for (let it = 0; it < 80; it++) for (let i = 0; i < xy.length; i++) for (let j = i + 1; j < xy.length; j++) {
+    const dx = (xy[j][0] - xy[i][0]) / LABEL_X, dy = xy[j][1] - xy[i][1], d = Math.hypot(dx, dy)
+    if (d >= MIN_GAP) continue
+    const push = (MIN_GAP - d) / 2, ux = d > 1e-3 ? dx / d : 0, uy = d > 1e-3 ? dy / d : 1
+    xy[i][0] -= ux * push * LABEL_X; xy[i][1] -= uy * push; xy[j][0] += ux * push * LABEL_X; xy[j][1] += uy * push
+  }
+  for (const p of xy) { p[0] = Math.min(W - PAD_X / 2, Math.max(PAD_X / 2, p[0])); p[1] = Math.min(H - PAD / 2, Math.max(PAD / 2, p[1])) }
+  const at = new Map(polar.map(([id], i) => [id, xy[i]]))
+  const midX = W / 2
+  // Short labels: "KR Market mandi, Bengaluru" -> "KR Market mandi"; hubs -> "Kolar hub". Full names stay in tooltips.
+  const short = (g: GeoRecord) => g.node_type === 'hub' ? `${String(g.name).split(' ')[0]} hub` : String(g.name).split(',')[0]
+  const nameOf = (id: string) => { const g = pts.find(p => String(p.node_id) === id); return g ? short(g) : id }
   const key = ([o, d]: [string, string]) => `${o}|${d}`
   const all = new Set(routes.map(key)), next = after && new Set(after.routes.map(key))
   const was = new Set(late.filter(t => after && t.h > after.at_h).map(t => t.key))
@@ -101,7 +126,7 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
       <Stack gap="sm">
         <div>
           <Title order={3}>Shelf-life countdown</Title>
-          <Text size="sm" c="dimmed">{pts.length ? 'Offline route network · routes from served trips' : 'No geo.csv for this scenario, table view'}</Text>
+          <Text size="sm" c="dimmed">{pts.length ? 'Schematic route network (true directions, distances compressed) · routes from served trips' : 'No geo.csv for this scenario, table view'}</Text>
         </div>
         {legend}
         {!pts.length ? (
@@ -121,7 +146,7 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
             aria-label="Route network: hubs, destinations coloured by tightest slack, served routes">
             <defs>
               <filter id={`glow-${uid}`} x="-100%" y="-100%" width="300%" height="300%">
-                <feGaussianBlur stdDeviation="9" />
+                <feGaussianBlur stdDeviation="5" />
               </filter>
             </defs>
 
@@ -145,7 +170,7 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
             {/* ponytail: decorative only — dots glide along each route on a loop; they are not vehicle positions. */}
             <g className="trucks">
               {lines.filter(r => fate(r) !== ' cut').map(([o, d], i) => (
-                <circle key={`t-${o}-${d}`} r={4.5} className="truck">
+                <circle key={`t-${o}-${d}`} r={3} className="truck">
                   <animateMotion dur={`${3.2 + (i % 4) * 0.5}s`} begin={`${1.4 + i * 0.35}s`} repeatCount="indefinite"
                     path={curve(at.get(o)!, at.get(d)!)} />
                 </circle>
@@ -157,13 +182,13 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
               const [x, y] = at.get(id)!
               if (g.node_type === 'hub') return (
                 <g key={id} className="node hub">
-                  <rect x={x - 12} y={y - 12} width={24} height={24} rx={6} fill={HUB} className="node-mark" />
-                  <text x={x} y={y - 20} textAnchor="middle" className="node-label">{String(g.name)} <tspan className="dim-label">hub</tspan></text>
+                  <rect x={x - 8} y={y - 8} width={16} height={16} rx={4} fill={HUB} className="node-mark" />
+                  <text x={x} y={y - 14} textAnchor="middle" className="node-label hub-label">{short(g)}</text>
                 </g>
               )
               const u = urgent.get(id)
               const colour = u ? band(u.slack_h)[0] : undefined
-              const r = 9 + 13 * Math.sqrt((kg.get(id) ?? 0) / maxKg)
+              const r = 5 + 7 * Math.sqrt((kg.get(id) ?? 0) / maxKg)
               const node = (
                 <g className={`node dest${u ? '' : ' idle'}${active === id ? ' on' : active ? ' dim' : ''}`}
                   onMouseEnter={() => setHover(id)} onMouseLeave={() => setHover(undefined)}
@@ -171,11 +196,11 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
                   onKeyDown={e => u && (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onPick(filter === id ? undefined : id))}
                   tabIndex={u ? 0 : undefined} role={u ? 'button' : undefined}
                   aria-label={u ? `${g.name}: tightest slack ${num(u.slack_h)} h. Filter dispatch sheet` : `${g.name}: no load`}>
-                  {u && <circle cx={x} cy={y} r={r + 6} fill={colour} filter={`url(#glow-${uid})`} className="glow" />}
+                  {u && <circle cx={x} cy={y} r={r + 3} fill={colour} filter={`url(#glow-${uid})`} className="glow" />}
                   {u && <circle cx={x} cy={y} r={r} fill="none" stroke={colour} className={`halo halo-${pulse(u.slack_h)}`} />}
                   <circle cx={x} cy={y} r={r} fill={colour} className="node-mark" />
-                  <text x={x + r + 7} y={y + 5} className="node-label">
-                    {String(g.name)}{u && <tspan className="slack" fill={colour}> {num(u.slack_h)} h</tspan>}
+                  <text x={x < midX ? x - r - 6 : x + r + 6} y={y + 4} textAnchor={x < midX ? 'end' : 'start'} className="node-label">
+                    {short(g)}{u && <tspan className="slack" fill={colour}> {num(u.slack_h)} h</tspan>}
                   </text>
                 </g>
               )
@@ -199,7 +224,7 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
             {lines.map(([o, d]) => (
               <Button key={`b-${o}-${d}`} size="compact-xs" radius="xl" color={fate([o, d]) === ' cut' ? 'red' : 'gray'}
                 variant={fate([o, d]) === ' cut' ? 'filled' : 'default'} onClick={() => onRoute(o, d)}>
-                {o} → {String(pts.find(g => String(g.node_id) === d)?.name ?? d)}</Button>
+                {nameOf(o)} → {nameOf(d)}</Button>
             ))}
           </Group>
         )}
