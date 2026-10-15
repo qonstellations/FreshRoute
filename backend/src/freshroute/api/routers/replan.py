@@ -35,4 +35,6 @@ def replan_result(run_id: str, event_id: str) -> dict:
     diff, metrics = da.read_json(d / "diff.json"), da.read_json(d / "metrics.json")
     if diff is None or metrics is None:
         raise deps.NotFound(f"no replan {event_id!r} for run {run_id!r}")
-    return {"diff": diff, "narration": narrator.template_narration(diff, metrics)}
+    trips = out.records(d / "trips.csv")["records"] if (d / "trips.csv").is_file() else []
+    return {"diff": diff, "narration": narrator.template_narration(diff, metrics),
+            "trips": trips}

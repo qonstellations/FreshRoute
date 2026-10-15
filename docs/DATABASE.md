@@ -606,7 +606,7 @@ Robustness and replan endpoints:
 | `POST /api/stress` | 202 / 400 | Request `{"scenario", "policy": "milp", "seed": 42, "n": 200}`; response `{"run_id": "<scenario>__stress__s<seed>", "status"}`; poll `GET /api/runs/{run_id}/status` with that id |
 | `GET /api/sensitivity?scenario=&seed=` | 200 / 404 | `{"records": [...sensitivity.csv rows...]}` (§5.12), or 404 when not on disk |
 | `POST /api/replan` | 202 / 400 / 404 | Request `{"run_id", "event": {…§6…}}`; invalid event 400, unknown run 404; response `{"run_id", "event_id", "status"}`; poll `GET /api/runs/{run_id}__replan__{event_id}/status` |
-| `GET /api/runs/{run_id}/replan/{event_id}` | 200 / 404 | `{"diff": diff.json (§5.13), "narration": narrator.template_narration(diff, metrics)}`; 404 until the replan has been written |
+| `GET /api/runs/{run_id}/replan/{event_id}` | 200 / 404 | `{"diff": diff.json (§5.13), "narration": narrator.template_narration(diff, metrics), "trips": trips.csv records}` (the replanned trips; additive in `api_version` 1); 404 until the replan has been written |
 
 There is no `/api/demo` endpoint: the demo scoreboard comes from the CLI (`make demo`), never HTTP.
 

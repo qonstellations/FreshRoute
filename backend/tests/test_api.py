@@ -185,6 +185,7 @@ def test_replan_post_poll_get(client, tmp_path):
     assert _wait(client, f"{RUN}__replan__E-T1")["state"] == "done"
     got = client.get(f"/api/runs/{RUN}/replan/E-T1").json()
     assert got["diff"]["event_id"] == "E-T1" and isinstance(got["narration"], str)
+    assert got["trips"] and {"origin", "dest_id", "trip_id"} <= set(got["trips"][0])
 
 
 def test_replan_bad_event_and_run(client, tmp_path):
