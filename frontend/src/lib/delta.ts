@@ -18,24 +18,6 @@ export function dotsWon(share: number, n: number): number {
   return Math.round(Math.min(1, Math.max(0, share)) * n)
 }
 
-/** DISPLAY-ONLY: [low, high] bar extents for waterfall.json steps (running total for placement).
- * Steps and their values are the engine's; this only decides where each floating bar is drawn. */
-export function waterfallBars<T extends { value: number; type: 'total' | 'delta' }>(steps: T[]) {
-  let run = 0
-  const ends: number[] = []
-  const bars = steps.map(s => {
-    const from = s.type === 'total' ? 0 : run
-    run = s.type === 'total' ? s.value : run + s.value
-    ends.push(run)
-    if (s.type === 'delta') ends.push(from)
-    return { ...s, range: [Math.min(from, run), Math.max(from, run)] as [number, number] }
-  })
-  // axis floor so small deltas stay visible next to large totals (totals are clipped at it)
-  const lo = Math.min(...ends), hi = Math.max(...ends)
-  const floor = lo <= 0 ? lo : Math.max(0, lo - 0.25 * (hi - lo || Math.abs(hi)))
-  return { bars, floor }
-}
-
 const nf =(digits: number) =>
   new Intl.NumberFormat('en-IN', { minimumFractionDigits: digits, maximumFractionDigits: digits })
 
