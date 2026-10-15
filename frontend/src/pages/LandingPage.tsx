@@ -70,12 +70,18 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
     const video = videoRef.current
     const ctx = gsap.context(() => {
       // Pin the fullscreen video while it plays continuously (muted autoplay loop).
-      // Scrolling holds the video on screen, then releases into the hero below.
+      // Long hold: even a hard trackpad fling spends time on the video instead
+      // of jumping past it. Progress bar shows how much intro is left.
+      const bar = root.current?.querySelector<HTMLElement>('.landing-intro-progress-fill')
       const trigger = ScrollTrigger.create({
         trigger: introRef.current,
         start: 'top top',
-        end: '+=120%',
+        end: '+=300%',
         pin: true,
+        anticipatePin: 1,
+        onUpdate: (self) => {
+          if (bar) bar.style.transform = `scaleX(${self.progress})`
+        },
         onEnter: () => video.play().catch(() => {}),
         onEnterBack: () => video.play().catch(() => {}),
         onLeave: () => video.pause(),
@@ -127,6 +133,9 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
             />
             <div className="landing-intro-overlay">
               <Text className="sec-tag">[SCROLL TO ENTER]</Text>
+              <div className="landing-intro-progress" aria-hidden>
+                <div className="landing-intro-progress-fill" />
+              </div>
               <Text size="sm" c="var(--cream)" opacity={0.85}>
                 Keep scrolling to enter the site.
               </Text>
