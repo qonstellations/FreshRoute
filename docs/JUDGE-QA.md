@@ -55,6 +55,7 @@ The validator is a separate package that re-implements the maths and imports no 
 
 **What if the solver cannot find a plan?**
 We never return "infeasible". Shipping nothing is always legal, only the fairness rule is soft, and if the 30 s limit passes with no plan we fall back to a FEFO-greedy plan and flag it.
+Measured: Hidden-style scenarios (synthetic, seed 42, `milp`): 10/10 run with 0 violations, fallback used in 0, slowest 62.9 s (`hidden_10x`; the others took 34 s or less). Source: `outputs/demo_backup/gauntlet/gauntlet.csv`.
 
 ## Robustness and sensitivity (10)
 
