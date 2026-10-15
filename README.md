@@ -45,7 +45,7 @@ Waterfall, FEFO → FreshRoute: spoilage cost avoided +₹1,357 · extra sales +
 
 **Gauntlet** — Hidden-style scenarios (synthetic, seed 42, `milp`): 10/10 run with 0 violations, fallback used in 0, slowest 62.9 s (`hidden_10x`), then 42.4 s (`hidden_3x`); the rest 34.7 s or less. Source: `outputs/demo_backup/gauntlet/gauntlet.csv`.
 
-**Profit vs spoilage** (`outputs/demo_backup/practice__frontier__s42/frontier.csv`): re-planning with a heavier spoilage weight trades net ₹ for kg (λ = 30: 536 kg at ₹324,700). Each point is a time-limited solve, so the curve is noisy and is shown as measured points, not a fitted line.
+**Profit vs spoilage** (`outputs/demo_backup/practice__frontier__s42/frontier.csv`): re-planning with a heavier spoilage weight trades net ₹ for kg: 829 kg at ₹427,123 (λ ≤ 10), 536 kg at ₹324,700 (λ = 30), 169 kg at ₹82,487 (λ = 100). Cutting spoilage further than the shipped plan is possible but costs most of the profit. Each point is a separate time-limited solve, so the λ = 1 point is not the stored `milp` run.
 
 **Discounts**: every run writes a discount check. On `practice` it recommends no cut anywhere, because every elasticity is below the break-even (a cut loses more on stock that sells anyway than it clears).
 
