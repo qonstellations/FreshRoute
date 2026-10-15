@@ -18,6 +18,8 @@ import { Trust } from '../tabs/Trust'
 import { policyName, scenarioName } from '../lib/words'
 import type { Progress, RunDetail, RunsList, ScenarioInfo } from '../types'
 
+const DEMO_RUN = 'practice__milp__s42'
+
 interface DashboardProps {
   onBackToOverview: () => void
 }
@@ -41,8 +43,9 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
     try {
       const r = await api.runs()
       setRuns(r)
-      // blank slate until the user runs the optimiser (or picks a saved run)
+      // open on the saved demo run (practice, MILP, seed 42) until the user runs or picks another
       if (select) setRunId(select)
+      else setRunId((v) => v ?? r.runs.find((x) => x.run_id === DEMO_RUN)?.run_id ?? null)
     } catch (e) {
       setError(`Could not load the saved results: ${e instanceof Error ? e.message : e}`)
     }
