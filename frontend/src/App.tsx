@@ -1,5 +1,5 @@
 import {
-  ActionIcon, AppShell, Group, Text, Tooltip, useComputedColorScheme, useMantineColorScheme
+  ActionIcon, AppShell, Group, Text, Tooltip, useMantineColorScheme
 } from '@mantine/core'
 import {
   IconArrowLeft, IconArrowRight, IconLeaf, IconMoon, IconSun
@@ -11,11 +11,7 @@ import { Dashboard } from './pages/Dashboard'
 import { LandingPage } from './pages/LandingPage'
 
 const NAV_SECTIONS = [
-  { id: 'crisis', n: '01', label: 'PROBLEM' },
-  { id: 'workflow', n: '02', label: 'HOW IT WORKS' },
-  { id: 'results', n: '03', label: 'RESULTS' },
-  { id: 'audit', n: '04', label: 'TRUST' },
-  { id: 'for', n: '05', label: "WHO IT'S FOR" },
+  { id: 'guide', n: '01', label: 'HOW TO USE' },
 ]
 
 export default function App() {
@@ -23,9 +19,24 @@ export default function App() {
     return window.location.hash.includes('dashboard') ? 'dashboard' : 'landing'
   })
 
+  const [dark, setDark] = useState(() => {
+    try {
+      return localStorage.getItem('fr-theme') === 'dark'
+    } catch {
+      return false
+    }
+  })
+
   const { setColorScheme } = useMantineColorScheme()
-  const computedColorScheme = useComputedColorScheme('light', { getInitialValueInEffect: true })
-  const dark = computedColorScheme === 'dark'
+
+  useEffect(() => {
+    setColorScheme(dark ? 'dark' : 'light')
+    try {
+      localStorage.setItem('fr-theme', dark ? 'dark' : 'light')
+    } catch {
+      /* private browsing */
+    }
+  }, [dark, setColorScheme])
 
   useEffect(() => {
     const onHashChange = () => {
@@ -123,7 +134,7 @@ export default function App() {
                   variant="subtle"
                   size="lg"
                   aria-label="Toggle theme"
-                  onClick={() => setColorScheme(dark ? 'light' : 'dark')}
+                  onClick={() => setDark((v) => !v)}
                   data-cursor="THEME"
                 >
                   {dark ? <IconSun size={20} /> : <IconMoon size={20} />}
