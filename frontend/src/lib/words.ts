@@ -50,6 +50,16 @@ export const scenarioName = (s: string) =>
   ?? s.split(/[\\/]/).pop() ?? s
 
 /** Short explanations shown in <Explain> hover notes. Adapted from docs/GLOSSARY.md. */
+/** Where the spoiled food went (Metrics.spoilage_breakdown_kg keys): label, plain explanation, bar colour. */
+export const SPOIL_PARTS = {
+  handling_loss: { label: 'Lost in handling', color: 'orange',
+    note: 'A small share of every delivery is lost while loading and unloading, so this grows with the kg delivered.' },
+  delivered_unsold_expired: { label: 'Delivered, never sold', color: 'red',
+    note: 'Reached a market but was not sold before it went bad.' },
+  origin_expired: { label: 'Never left the farm', color: 'grape',
+    note: 'Not shipped at all and went bad where it was harvested.' },
+} as const
+
 export const TERM = {
   net: 'Profit after every cost: sales minus the cost of the produce, transport, handling and spoiled stock.',
   spoilage: 'Kilograms that went bad before they could be sold.',

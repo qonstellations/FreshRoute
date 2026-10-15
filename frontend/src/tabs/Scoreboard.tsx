@@ -1,5 +1,5 @@
 // Scoreboard tab (ARCHITECTURE §16; port of C-12). Shows stored KPIs; deltas via lib/delta.ts only.
-import { Group, Paper, SimpleGrid, Stack, Text, ThemeIcon } from '@mantine/core'
+import { Group, Paper, Progress, Tooltip, SimpleGrid, Stack, Text, ThemeIcon } from '@mantine/core'
 import { IconTrendingDown, IconTrendingUp } from '@tabler/icons-react'
 import { m } from 'motion/react'
 import { Explain } from '../components/Explain'
@@ -8,7 +8,7 @@ import { LadderCharts } from '../components/Ladder'
 import { SpoilageMelt } from '../components/score/SpoilageMelt'
 import { ValidatorPanel } from '../components/ValidatorPanel'
 import { delta, fmt, fmtSigned } from '../lib/delta'
-import { policyName } from '../lib/words'
+import { policyName, SPOIL_PARTS } from '../lib/words'
 import { spring } from '../theme'
 import type { Kpis, RunDetail } from '../types'
 
@@ -69,8 +69,34 @@ export function Scoreboard({ run }: { run: RunDetail }) {
         </Explain>
       </Text>
 
+      <SpoilageSplit parts={run.spoilage_breakdown_kg} />
+
       <LadderCharts scenario={run.scenario} seed={run.seed} />
       <ValidatorPanel validation={run.validation} />
     </Stack>
+  )
+}
+
+function SpoilageSplit({ parts }: { parts: RunDetail['spoilage_breakdown_kg'] }) {
+  const keys = Object.keys(SPOIL_PARTS) as (keyof typeof SPOIL_PARTS)[]
+  const total = keys.reduce((a, key) => a + parts[key], 0)
+  if (total <= 0) return null
+  return (
+    <Paper radius="lg" p="lg" withBorder>
+      <Text fw={700} mb={4}>Where the spoiled food went</Text>
+      <Text size="sm" c="dimmed" mb="sm">{fmt(total)} kg in total, split by cause. Hover a part to see what it means.</Text>
+      <Progress.Root size={28} radius="md">
+        {keys.map(key => (
+          <Tooltip key={key} label={SPOIL_PARTS[key].note} multiline w={260} withArrow>
+            <Progress.Section value={(parts[key] / total) * 100} color={SPOIL_PARTS[key].color} />
+          </Tooltip>
+        ))}
+      </Progress.Root>
+      <Group gap="lg" mt="sm">
+        {keys.map(key => (
+          <Text key={key} size="sm"><Explain note={SPOIL_PARTS[key].note}>{SPOIL_PARTS[key].label}</Explain>: {fmt(parts[key])} kg</Text>
+        ))}
+      </Group>
+    </Paper>
   )
 }
