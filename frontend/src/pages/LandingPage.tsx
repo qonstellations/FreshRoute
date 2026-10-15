@@ -36,7 +36,10 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
   const zoomTextRef = useRef<HTMLHeadingElement>(null)
   const [ladder, setLadder] = useState<Ladder | null>(null)
   const [stress, setStress] = useState<StressResponse | null>(null)
+  const [replanCap, setReplanCap] = useState<number | null>(null) // config.REPLAN_TIME_LIMIT_S
   useEffect(() => {
+    api.config().then(c => setReplanCap(typeof c.REPLAN_TIME_LIMIT_S === 'number' ? c.REPLAN_TIME_LIMIT_S : null))
+      .catch(() => setReplanCap(null))
     api.ladder(DEMO.scenario, DEMO.seed).then(setLadder).catch(() => setLadder(null)) // no run on disk → dashes
     api.stress(DEMO.scenario, DEMO.seed).then(setStress).catch(() => setStress(null))
   }, [])
@@ -273,15 +276,16 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
               </Text>
             </div>
             <div className="landing-stat-cell" data-cursor="RE-PLAN">
-              <Text className="landing-stat-num">~3 SEC</Text>
+              {/* a configured cap, not a measured time (rule 7): replan timings are not quoted */}
+              <Text className="landing-stat-num">{show(replanCap, c => `${c} SEC`)}</Text>
               <Text size="xs" c="var(--muted)" fw={600}>
-                TO RE-PLAN THE REST OF THE DAY (2 SEC SOLVER CAP)
+                SOLVER CAP TO RE-PLAN THE REST OF THE DAY
               </Text>
             </div>
           </SimpleGrid>
           <Text size="xs" c="var(--muted)" mt={10} className="landing-hero-fade">
             Measured on our <Explain term="synthetic">synthetic</Explain> practice scenario (200 batches, 8 markets,
-            3 days, seed 42), loaded from the latest saved run.
+            3 days, seed 42), loaded from the latest saved run. The re-plan figure is the configured solver limit.
           </Text>
         </div>
       </section>

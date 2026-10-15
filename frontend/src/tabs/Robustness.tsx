@@ -275,7 +275,17 @@ function Frontier({ load }: { load: Load<FrontierResponse> }) {
       <Text size="sm" c="dimmed">{load === undefined ? 'Loading…' : '— (not run for this plan yet)'}</Text>
     </Paper>
   )
-  const pts = load.records.map(r => ({ ...r, label: `λ=${r.lambda_spoil}` }))
+  // weights that landed on the same plan share one marker and one label ("λ=0/1/10"),
+  // so labels never overprint and the shipped weight's colour is not hidden underneath
+  const groups = new Map<string, FrontierResponse['records']>()
+  for (const r of load.records) {
+    const key = `${r.net_inr}|${r.spoilage_kg}`
+    groups.set(key, [...(groups.get(key) ?? []), r])
+  }
+  const pts = [...groups.values()].map(g => ({
+    ...g[0], label: `λ=${g.map(r => r.lambda_spoil).join('/')}`, // no spaces: recharts wraps labels on spaces
+    lambda_spoil: g.some(r => r.lambda_spoil === SHIPPED_LAMBDA) ? SHIPPED_LAMBDA : g[0].lambda_spoil,
+  }))
   // the trade-off line joins only the points the engine did not flag as dominated
   const curve = pts.filter(p => !p.dominated).sort((a, b) => a.spoilage_kg - b.spoilage_kg)
   const anyDominated = pts.some(p => p.dominated)
@@ -288,7 +298,7 @@ function Frontier({ load }: { load: Load<FrontierResponse> }) {
         {anyDominated && ' Hollow grey points lose to another point on both profit and spoilage: the time-limited solver stopped early there, so they are not a real trade-off and the line skips them.'}
       </Text>
       <ResponsiveContainer width="100%" height={300}>
-        <ScatterChart margin={{ top: 16, right: 32, bottom: 24, left: 16 }}>
+        <ScatterChart margin={{ top: 28, right: 32, bottom: 24, left: 16 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis type="number" dataKey="spoilage_kg" name="Food spoiled" unit=" kg" domain={['auto', 'auto']}
             label={{ value: 'Food spoiled (kg)', position: 'insideBottom', offset: -12 }} />
