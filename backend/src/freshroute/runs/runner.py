@@ -17,7 +17,7 @@ import pandas as pd
 from freshroute.config import OVERSHIP_SLACK, SCHEMA_VERSION
 from freshroute.data.io import load_scenario
 from freshroute.domain.discount import COLUMNS as DISCOUNT_COLUMNS
-from freshroute.engine import dispatch_sheet, reasons
+from freshroute.engine import discount_advice, dispatch_sheet, reasons
 from freshroute.engine import metrics as M
 from freshroute.engine.simulator import simulate
 from freshroute.policies import REGISTRY, get_policy
@@ -117,6 +117,8 @@ def _write(out_dir: Path, sc, scored: _Scored, manifest: dict) -> None:
                 reasons.build_cards(sc, r.plan, d), indent=2) + "\n")),
             ("discounts.csv", csv(d)), ("sim_ledger.csv", csv(scored.sim["ledger"])),
             ("sim_lots.csv", csv(scored.sim["lots"])),
+            ("discount_advice.json", text(json.dumps(
+                discount_advice.advise(sc, scored.sim), indent=2) + "\n")),
             ("validation.json", scored.report.write),
             ("run_manifest.json", text(json.dumps(manifest, indent=2) + "\n")),
             ("metrics.json", text(json.dumps(scored.metrics, indent=2) + "\n"))):

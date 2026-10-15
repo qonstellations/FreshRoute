@@ -464,6 +464,16 @@ The HTTP layer has its own `api_version` (§11).
 
 ---
 
+### 5.15 `discount_advice.json` — list, one row per `(dest_id, commodity, day)` that ends the day with stock left
+
+Written by every `freshroute run` (ARCHITECTURE.md §10, A-54). Advice only: it never changes `discounts.csv` or the reported net (Rule 3).
+```json
+[{"dest_id": "D1", "commodity": "banana", "day": 1, "left_kg": 9.1, "elasticity": 0.8,
+  "max_cut_pct": 30.0, "best_cut_pct": 0.0, "delta_net_inr": 0.0,
+  "break_even_elasticity": 1.053, "reason": "elasticity 0.8 is below the break-even 1.05: ..."}]
+```
+`left_kg` = `unsold_expired_kg + on_hand_end_kg` of that `sim_ledger.csv` row. `max_cut_pct` = min(`max_discount_pct`, salvage floor). The grid is every `ADVICE_STEP_PCT` up to `max_cut_pct`; `best_cut_pct` is the cut with the largest estimated `delta_net_inr` (0 when none is positive). `break_even_elasticity` = `1 / (1 − step)`: below it the smallest cut loses revenue on kg that sell anyway, before any stock is cleared. Sorted by `dest_id, commodity, day`.
+
 ## 6. Event schema (replan and the optional LLM parser)
 
 ```json
@@ -598,6 +608,7 @@ The dashboard's only door to the engine. The API **serves run artifacts verbatim
 | `GET /api/runs/{run_id}` | 200 / 404 | `metrics.json` verbatim, plus `baseline` (see `data_access.load_baseline` ordering: ladder `official_baseline` → ladder `fefo` → sibling `fefo` run), `validation` (`validation.json` or `null`), `manifest` (`run_manifest.json` or `null`), `fixture` (`false`; `true` with the three wrappers `null` when this is the fixture run served because nothing is on disk) |
 | `GET /api/runs/{run_id}/tables/{table}` | 200 / 404 | `table ∈ {plan, trips, discounts, sim_ledger, sim_lots}` (§5.2–§5.6) as `{"columns": [...], "records": [...]}`; `?format=csv` returns the file as `text/csv` for download |
 | `GET /api/runs/{run_id}/reason-cards` | 200 | `reason_cards.json` (§5.9), or `null` when the run has none (older runs) |
+| `GET /api/runs/{run_id}/discount-advice` | 200 | `discount_advice.json` (§5.15), or `null` when the run has none (older runs; additive, `api_version` unchanged) |
 | `GET /api/runs/{run_id}/dispatch-sheet` | 200 | `{"csv": [...records...], "text": "..."}` (§5.10), or `null` when absent |
 | `GET /api/ladder?scenario=&seed=` | 200 / 404 | `{"ladder": …, "waterfall": …}` from §5.11, or 404 when not on disk |
 | `POST /api/runs` | 202 | Request `{"scenario": "data/scenarios/practice", "policy": "milp", "seed": 42, "flags": {"markdown": false, "newsvendor": false}}` → `{"run_id": "…__milp__s42", "status": "running"}`. `policy ∈ ` the CLI's `POLICIES`; an unknown policy or scenario is `400`. `organizer_baseline` is a *recognised* name that cannot run yet (planned, no organizer material): the API accepts it in the request shape and answers `400` with the same explanation the CLI prints, rather than a bare "unknown policy". `scenario` is a scenario directory path (`data/scenarios/<name>`), resolved like the CLI's `--scenario`, i.e. against the API's working directory (the repo root). `flags.newsvendor = true` is accepted for the MILP policies (`milp`; the run id gets `__nv`) and is `400` for any other policy; `flags.markdown` is implied by the policy. A malformed body is FastAPI's `422`. Re-posting a run that is still `running` returns it without enqueueing again. |

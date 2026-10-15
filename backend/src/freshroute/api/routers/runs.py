@@ -41,6 +41,11 @@ def reason_cards(run_id: str):
     return da.read_json(out.run_dir(run_id) / "reason_cards.json")
 
 
+@router.get("/runs/{run_id}/discount-advice")
+def discount_advice(run_id: str):
+    return da.read_json(out.run_dir(run_id) / "discount_advice.json")  # null for older runs
+
+
 @router.get("/runs/{run_id}/dispatch-sheet")
 def dispatch_sheet(run_id: str):
     d = out.run_dir(run_id)

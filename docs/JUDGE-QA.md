@@ -24,7 +24,7 @@ Against FEFO, spoilage fell from 904 kg to 854 kg on practice, roughly 6 %. That
 The MILP ships and sells more, and handling loss scales with delivered kilograms, so percentage can look flat while kilograms fall (A-39). The scenario also has a low base spoilage rate.
 
 **Does FreshRoute use discounts?**
-No. We built a tiered markdown rule and measured it: on practice it gave results identical to the plain MILP, because the plan ships at most the median demand and leaves no surplus to clear (A-37), so we removed it (D-33). The `last_day_50` baseline is the discount comparison.
+No. We built a tiered markdown rule and measured it: on practice it gave results identical to the plain MILP, because the plan ships at most the median demand and leaves no surplus to clear (A-37), so we removed it (D-33). The `last_day_50` baseline is the discount comparison. Every run also writes a discount check (`discount_advice.json`, shown on the Plan tab): for each market and day with stock left it tests every cut and recommends one only where it pays, otherwise it states why (on practice: elasticity below the break-even, so a cut loses more on stock that sells anyway than it clears).
 
 ## Demand fulfilment (15)
 

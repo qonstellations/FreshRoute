@@ -37,7 +37,7 @@ Expected rubric result for A+ is ~82–84/100. That is a judgement-based project
 | Demand fulfillment (15) | Objective rewards sell-through; balance constraint stops one destination being starved | `policies/milp.py` (C5, C6), `engine/metrics.py` |
 | Net economic outcome (20) | Objective is the organizers' cost terms; one cost model for all policies | `domain/costmodel.py`, `engine/simulator.py` |
 | Allocation feasibility (15) | Infeasible arcs have no variable; independent validator reports 0 violations | `domain/feasibility.py`, `validator` |
-| Robustness & sensitivity (10) | MC bands, q10/ε sensitivity, replan | `runs/stress.py`, `runs/replan.py`, `runs/sensitivity.py` |
+| Robustness & sensitivity (10) | MC bands, q10/ε sensitivity, replan | `runs/stress.py`, `runs/replan.py`, `runs/sensitivity.py`, `runs/frontier.py`, `policies/milp_robust.py` |
 | Engineering & reproducibility (10) | One seeded command, tests, run manifest, fresh-clone check | `cli.py`, `runs/runner.py`, `tests/`, `run_manifest.json` |
 | Explainability & commercial (10) | Reason cards, dispatch sheet, dashboard | `engine/reasons.py`, `engine/dispatch_sheet.py`, `frontend/` |
 
@@ -315,7 +315,7 @@ Indexing note (D-05): the research doc writes the demand cap with dispatch day `
 
 ## 10. Discount ledger (`domain/discount.py`)
 
-FreshRoute's own policy (`milp`) ships **no markdown** (D-33, A-37). `discounts.csv` (DATABASE.md §5.4) still exists as the ledger the simulator, the validator and the reason cards read; only the `last_day_50` baseline (§12) writes non-empty rows. `domain/discount.py` holds the ledger columns and `lots` (lot construction: `lot_id = batch_id@dest_id@arrival_day`, stock net of handling loss), which the simulator and `last_day_50` share.
+FreshRoute's own policy (`milp`) ships **no markdown** (D-33, A-37). Every run also writes `discount_advice.json` (`engine/discount_advice.py`, A-54): for each destination × commodity × day that ends with stock left it tests every cut up to the cap and salvage floor with the simulator's uplift rule and recommends the best one, or says why none pays (elasticity below break-even). `discounts.csv` (DATABASE.md §5.4) still exists as the ledger the simulator, the validator and the reason cards read; only the `last_day_50` baseline (§12) writes non-empty rows. `domain/discount.py` holds the ledger columns and `lots` (lot construction: `lot_id = batch_id@dest_id@arrival_day`, stock net of handling loss), which the simulator and `last_day_50` share.
 
 Shelf price (D-08): the simulator uses **one shelf price per destination × commodity × day** = the discount of the FEFO-head lot at the start of that day. Lot-level risk is still shown on reason cards.
 
@@ -434,7 +434,7 @@ Components are Mantine 9; GSAP 3.12.5 ScrollTrigger drives the landing page's sc
 | Dashboard header | scenario name, synthetic-data badge, one **Run the optimiser** button (`RunButton.tsx`), "best plan so far" banner while solving (§16.2) |
 | 1. Results (`Scoreboard.tsx`) | baseline vs ours on profit after all costs (net ₹), food spoiled (kg, %), orders filled, worst-served market, rule breaks; "Where the spoiled food went" stacked bar from `spoilage_breakdown_kg`; waterfall ("Where the extra profit comes from"), ladder ("Every rule vs FreshRoute"), validator panel ("Independent check") |
 | 2. Today's plan (`Plan.tsx`) | route map (offline SVG network over `geo.csv`; colour table is the fallback), truck loading list and driver message (dispatch sheet), reason-card drawer, price-cut (discount) cards |
-| 3. What if something breaks? (`Replan.tsx`, `Robustness.tsx`) | click a road on the map (or "close a road" from the list) or a market for a demand spike, or pick any of the 5 event types and press "Re-plan now"; diff view, ΔKPIs, narration; Monte Carlo stress bands and share of futures beating the baseline; sensitivity ("What if our assumptions are wrong?") |
+| 3. What if something breaks? (`Replan.tsx`, `Robustness.tsx`) | click a road on the map (or "close a road" from the list) or a market for a demand spike, or pick any of the 5 event types and press "Re-plan now"; diff view, ΔKPIs, narration; Monte Carlo stress bands and share of futures beating the baseline; sensitivity ("What if our assumptions are wrong?"); profit-vs-spoilage frontier scatter from `GET /api/frontier` (§14.6) |
 | 4. Proof & audit (`Trust.tsx`) | `run_manifest.json` ("Reproduce this exact result": seed, git SHA, scenario hash, solver status), every `config.py` constant from `GET /api/config`, assumptions |
 
 ### 16.1 Layers and the rules between them
@@ -527,7 +527,7 @@ Toolchain (D-15): uv owns Python. `uv sync` installs the project plus the dev gr
 | `MC_NAMED` | optimistic (0.9, 0.5, 0.9) · base (0.5, 0.5, 0.5) · stress (0.1, 0.9, 0.1) as quantile `u` for (demand, travel, RSL) | team assumption (A-42) |
 | `NEWSVENDOR_CLAMP` | [0.05, 0.95] | team assumption |
 | `NEWSVENDOR_MARKDOWN_REF` | 0.20 | team assumption |
-| `FRONTIER_LAMBDAS` / `FRONTIER_TIME_LIMIT_S` | 0, 1, 2, 4, 8 / 30 s | team assumption (A-53) |
+| `FRONTIER_LAMBDAS` / `FRONTIER_TIME_LIMIT_S` | 0, 1, 10, 30, 100 / 30 s | team assumption (A-53) |
 | `SENS_Q10` / `SENS_ELASTICITY_MULT` / `SENS_OVERSHIP_SLACK` / `SENS_DEMAND_MULT` | 1.5, 2, 3 / 1, 0.5 / 0, 0.05, 0.10 / 0.8, 1, 1.2 | team assumption (sensitivity values) |
 | `DEFAULT_SEED` | 42 | research doc (CLI example) |
 | `DEMO_SCENARIO` / `DEMO_SEED` | `data/scenarios/practice` / 42 | team assumption — what `freshroute demo` and `make demo` run |
@@ -600,7 +600,8 @@ Anything marked **confirm** must be checked against the organizers' documents on
 | A-50 | The MILP uses the fleet-pooled scale model by default above `AGG_ARC_THRESHOLD = 20,000` candidate arcs (A-46), which includes `practice`. Solution quality versus the unpooled model cannot be compared there: the unpooled model finds no incumbent in 30 s on practice v3 data | team |
 | A-51 | MILP start and shape. On `practice` HiGHS finds no usable plan for about 12 s (root cuts), and a FEFO-greedy start scores far below the MILP objective because it ignores C6. So: (a) the trip integers are relaxed, the LP solved and rounded up by diving (best of two dives) to give a feasible start in about 0.1 s; (b) the C6 average-fill row is built from per-destination totals `f_d` instead of one dense row, the same model with much cheaper cuts. Measured on the 200-batch `practice` scenario, seed 42, one machine: first plan after about 1.5 s, a plan above the previous 30 s result after about 7 s, 30 s final net ₹442,214 against ₹395,344 before. Timing varies by machine and load | team |
 | A-52 | `milp_robust` plans on `rsl_p10_h` and `travel_h_p90` (§14.5) and is measured on p50 like every policy. Measured on synthetic `practice`, seed 42, one machine: base spoilage 726 kg against `milp` 854 kg, net ₹396,895 against ₹442,214, minimum destination fill 0 % against 52.8 %; under the 200-future stress test it beats FEFO on spoilage kg in 100 % of futures (`milp`: 84.5 %) and on net in 100 %. It is a trade-off, not a replacement: it ships less to protect against bad futures. Reproduce: `uv run freshroute run --scenario data/scenarios/practice --policy milp_robust --seed 42` and the stress command in §14.5 | team |
-| A-53 | Frontier weights `FRONTIER_LAMBDAS = (0, 1, 2, 4, 8)` scale the spoilage term of the §9.2 objective only; the reported KPIs come from the simulator. Each point is a time-limited solve (`FRONTIER_TIME_LIMIT_S = 30`); a 10 s cap gave incumbents too noisy to read as a curve, and even at 30 s a point can sit off the curve because the incumbent, not the optimum, is reported (A-40). Reproduce: `uv run freshroute frontier --scenario data/scenarios/practice --seed 42` | team |
+| A-53 | Frontier weights `FRONTIER_LAMBDAS = (0, 1, 10, 30, 100)` scale the spoilage term of the §9.2 objective only (it is about ₹0.5–1 per kg shipped against margins of ₹10 or more, so λ up to 8 barely moved the plan, measured); the reported KPIs come from the simulator. Each point is a time-limited solve (`FRONTIER_TIME_LIMIT_S = 30`); a 10 s cap gave incumbents too noisy to read as a curve, and even at 30 s a point can sit off the curve because the incumbent, not the optimum, is reported (A-40). Reproduce: `uv run freshroute frontier --scenario data/scenarios/practice --seed 42` | team |
+| A-54 | Discount advisor estimate (§10): for a cut `L` on a ledger row, extra kg = `base_demand × (uplift(ε, L) − 1)` capped at the stock left; INR effect = revenue change on all sold kg + (disposal − salvage) on extra kg that would have expired − unit cost on extra kg that would have been carried over (A-06, A-48). It ignores knock-on effects on later days; the simulator remains the only reported number. On `practice` every elasticity is ≤ 1.2, so the advice is 0 % with the break-even reason; a cut pays only where elasticity is high and stock is left | team |
 
 ---
 
