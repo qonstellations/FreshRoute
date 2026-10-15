@@ -194,16 +194,26 @@ def solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None,
         return None, info  # limit hit before any real incumbent: all-zero is not a plan
     if stats.status != pulp.LpSolveStatus.Optimal:
         # A time-limited incumbent can be worse than the FEFO-greedy plan (HiGHS may drop the
-        # warm start for a trivial point): keep whichever earns more at lambda = 1.
+        # warm start for a trivial point): keep whichever scores higher at the solve's own
+        # spoilage weight `lam` (lam = 1 for milp; the frontier sweeps it, A-53).
         gx, gn = fefo_greedy(sc, arcs, batches, override, overship, used, fleet)
         by = pd.Series(gx).groupby(arcs.batch_id.values).sum()
-        g_obj = float(
-            sum(float(c) * xi for c, xi in zip(econ, gx, strict=True))
-            - sum(fixed[k] * q for k, q in gn.items())
-            - sum(unship[b] * max(0.0, float(batches.qty_kg[b]) - float(by.get(b, 0.0)))
-                  for b in u))
-        if g_obj > info["objective_inr"] + FLOAT_TOL:
-            info.update(objective_inr=g_obj, incumbent="greedy")
+        lam_econ = arcs.margin_inr_kg - lam * arcs.spoil_inr_kg
+
+        def at_lam(px, pn, unshipped) -> float:
+            return float(sum(float(c) * q for c, q in zip(lam_econ, px, strict=True))
+                         - sum(fixed[k] * q for k, q in pn.items())
+                         - sum(lam * unship[b] * unshipped(b) for b in u))
+
+        g_obj = at_lam(gx, gn, lambda b: max(0.0, float(batches.qty_kg[b])
+                                              - float(by.get(b, 0.0))))
+        if g_obj > at_lam(xv, nv, lambda b: u[b].value()) + FLOAT_TOL:
+            g_inr = float(
+                sum(float(c) * q for c, q in zip(econ, gx, strict=True))
+                - sum(fixed[k] * q for k, q in gn.items())
+                - sum(unship[b] * max(0.0, float(batches.qty_kg[b]) - float(by.get(b, 0.0)))
+                      for b in u))
+            info.update(objective_inr=g_inr, incumbent="greedy")
             return (gx, gn), info
     return (xv, nv), info
 
