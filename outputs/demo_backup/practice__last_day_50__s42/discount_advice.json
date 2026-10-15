@@ -1,0 +1,14 @@
+[
+  {
+    "dest_id": "D2",
+    "commodity": "spinach",
+    "day": 1,
+    "left_kg": 24.009599999999992,
+    "elasticity": 1.2,
+    "max_cut_pct": 40.0,
+    "best_cut_pct": 10.0,
+    "delta_net_inr": 2951.752408800002,
+    "break_even_elasticity": 1.0526315789473684,
+    "reason": "10% off sells more of the 24 kg left; estimated +INR 2,952"
+  }
+]

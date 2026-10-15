@@ -1,0 +1,104 @@
+Vehicle VR2 | Trip T-VR2-D5-1-1 | Depart 18:00 (day 1)
+To: Koyambedu market, Chennai
+Load: B0053 mango 479.5 kg (15.9 h to spare) | B0092 tomato 252.1 kg (24.3 h to spare) | B0082 mango 52.1 kg (17.9 h to spare) | B0113 potato 604.7 kg (538 h to spare) | B0190 onion 264.7 kg (692.9 h to spare) | B0125 potato 195.3 kg (402.3 h to spare) | B0013 onion 278.4 kg (1028.4 h to spare) | B0136 potato 312.7 kg (874.2 h to spare) | B0033 onion 209.2 kg (1148.2 h to spare) | B0195 potato 147.8 kg (729.1 h to spare) | B0105 onion 99.8 kg (812.5 h to spare) | B0032 onion 87.1 kg (875 h to spare) | B0041 potato 111.8 kg (857.3 h to spare) | B0191 onion 92.4 kg (1040.2 h to spare)
+Arrive by: day 2 07:11
+
+Vehicle VR1 | Trip T-VR1-D5-0-1 | Depart 18:00 (day 0)
+To: Koyambedu market, Chennai
+Load: B0187 mango 464.2 kg (41.6 h to spare) | B0019 banana 209 kg (26.7 h to spare) | B0011 tomato 120.3 kg (30.7 h to spare) | B0173 onion 506.1 kg (845.7 h to spare) | B0108 onion 266.8 kg (823.5 h to spare) | B0171 potato 207.3 kg (837.1 h to spare) | B0103 potato 137 kg (751.2 h to spare) | B0122 potato 41.9 kg (1187.8 h to spare) | B0196 potato 36.3 kg (1185.7 h to spare)
+Arrive by: day 1 05:58
+
+Vehicle V6 | Trip T-V6-D2-2-1 | Depart 05:00 (day 2)
+To: Hoskote retail DC
+Load: B0067 spinach 193.2 kg (5.2 h to spare) | B0082 mango 134.3 kg (16.3 h to spare) | B0150 mango 174.5 kg (40.3 h to spare) | B0049 banana 260.6 kg (42.1 h to spare) | B0076 mango 64 kg (45.7 h to spare) | B0133 banana 191 kg (71.2 h to spare) | B0040 tomato 158 kg (75.5 h to spare) | B0116 tomato 101 kg (62.8 h to spare) | B0182 potato 292.2 kg (249.9 h to spare) | B0007 onion 380.9 kg (664.7 h to spare) | B0149 tomato 33.5 kg (80.5 h to spare) | B0023 potato 456.3 kg (1082.7 h to spare) | B0001 potato 114.4 kg (722.4 h to spare) | B0034 tomato 7.2 kg (79.7 h to spare) | B0048 potato 103.1 kg (911.8 h to spare) | B0020 potato 12.7 kg (993.6 h to spare)
+Arrive by: day 2 06:50
+
+Vehicle V3 | Trip T-V3-D2-1-1 | Depart 05:00 (day 1)
+To: Hoskote retail DC
+Load: B0018 spinach 185.2 kg (5.8 h to spare) | B0151 mango 331.9 kg (97.7 h to spare) | B0080 banana 81.9 kg (8 h to spare) | B0101 banana 206.9 kg (70 h to spare) | B0065 tomato 169.4 kg (57.6 h to spare) | B0184 banana 131 kg (47.5 h to spare) | B0068 tomato 115.1 kg (106.2 h to spare) | B0193 potato 444.9 kg (772.4 h to spare) | B0126 onion 311.4 kg (1149.2 h to spare) | B0073 potato 97.8 kg (821.9 h to spare) | B0063 potato 131.4 kg (1467.1 h to spare) | B0060 potato 134.6 kg (1438.9 h to spare) | B0122 potato 82.5 kg (1187.8 h to spare) | B0077 onion 56.4 kg (1203.4 h to spare) | B0196 potato 71.4 kg (1185.7 h to spare) | B0142 onion 40 kg (1063.5 h to spare)
+Arrive by: day 1 06:41
+
+Vehicle V3 | Trip T-V3-D6-1-1 | Depart 05:00 (day 1)
+To: Mysuru retail DC
+Load: B0062 mango 280.2 kg (30.4 h to spare) | B0065 tomato 367.6 kg (45.4 h to spare) | B0117 banana 278.6 kg (44.8 h to spare) | B0019 banana 66.1 kg (20.9 h to spare) | B0151 mango 38.9 kg (90 h to spare) | B0073 potato 946.4 kg (815.3 h to spare) | B0055 onion 330.5 kg (812.1 h to spare) | B0184 banana 11.2 kg (36.7 h to spare) | B0106 onion 187.1 kg (909.8 h to spare) | B0142 onion 41 kg (1057 h to spare)
+Arrive by: day 1 11:34
+
+Vehicle V1 | Trip T-V1-D6-2-1 | Depart 05:00 (day 2)
+To: Mysuru retail DC
+Load: B0147 tomato 349 kg (21.9 h to spare) | B0158 banana 192.8 kg (17.3 h to spare) | B0042 mango 153.1 kg (51.4 h to spare) | B0083 banana 232.5 kg (35.3 h to spare) | B0069 mango 102 kg (54.5 h to spare) | B0162 mango 78.3 kg (47.5 h to spare) | B0006 spinach 79.3 kg (21.6 h to spare) | B0143 spinach 35.2 kg (6.9 h to spare) | B0015 onion 320.6 kg (632 h to spare) | B0016 potato 227.3 kg (783 h to spare) | B0107 potato 270.4 kg (965.9 h to spare) | B0004 potato 233.5 kg (923.3 h to spare) | B0002 onion 149.3 kg (870.2 h to spare) | B0102 onion 83.7 kg (847.2 h to spare) | B0118 potato 116 kg (1061.1 h to spare) | B0045 tomato 1.7 kg (16.5 h to spare) | B0137 potato 74.7 kg (946.2 h to spare)
+Arrive by: day 2 11:34
+
+Vehicle V1 | Trip T-V1-D1-2-1 | Depart 05:00 (day 2)
+To: KR Market mandi, Bengaluru
+Load: B0025 spinach 150.9 kg (4 h to spare) | B0083 banana 332.5 kg (38.4 h to spare) | B0042 mango 176.2 kg (53.7 h to spare) | B0151 mango 197.3 kg (74.3 h to spare) | B0089 tomato 254.7 kg (45.5 h to spare) | B0169 mango 94.5 kg (61.4 h to spare) | B0079 banana 223.4 kg (69 h to spare) | B0139 tomato 71.6 kg (32.5 h to spare) | B0163 tomato 69.4 kg (40.4 h to spare) | B0045 tomato 34.6 kg (19.4 h to spare) | B0061 banana 74.2 kg (90.8 h to spare) | B0038 banana 70.5 kg (92.3 h to spare) | B0146 tomato 50.4 kg (72.1 h to spare) | B0088 banana 21.8 kg (90.2 h to spare) | B0005 onion 285.1 kg (1021.7 h to spare) | B0123 potato 430.6 kg (1356.9 h to spare) | B0008 onion 246.8 kg (1045.1 h to spare) | B0014 banana 18.9 kg (99.7 h to spare) | B0012 tomato 15.9 kg (75.2 h to spare) | B0052 potato 354.2 kg (1207.6 h to spare) | B0131 potato 320.9 kg (1183.9 h to spare) | B0056 mango 5.5 kg (89.4 h to spare) | B0161 onion 72.4 kg (1072 h to spare) | B0178 onion 25.6 kg (1147.4 h to spare)
+Arrive by: day 2 07:32
+
+Vehicle V4 | Trip T-V4-D4-2-1 | Depart 05:00 (day 2)
+To: Tumakuru food processor
+Load: B0082 mango 203.4 kg (11.5 h to spare) | B0031 tomato 209.8 kg (41.7 h to spare) | B0040 tomato 260 kg (68.5 h to spare) | B0116 tomato 166.1 kg (55.8 h to spare)
+Arrive by: day 2 07:44
+
+Vehicle V1 | Trip T-V1-D1-0-1 | Depart 05:00 (day 0)
+To: KR Market mandi, Bengaluru
+Load: B0177 spinach 129.2 kg (3.5 h to spare) | B0054 mango 532.3 kg (95.9 h to spare) | B0091 tomato 311.3 kg (71.9 h to spare) | B0070 banana 275.9 kg (124.6 h to spare) | B0186 banana 157.1 kg (128.5 h to spare) | B0093 tomato 91.8 kg (60.2 h to spare) | B0197 banana 127.8 kg (124.4 h to spare) | B0011 tomato 81.5 kg (81.5 h to spare) | B0101 banana 76.9 kg (101.5 h to spare) | B0111 onion 263.3 kg (1057.7 h to spare) | B0200 potato 387.4 kg (1364 h to spare) | B0170 onion 191.1 kg (973.4 h to spare) | B0084 potato 238.3 kg (1493.4 h to spare) | B0168 potato 254.4 kg (1508.1 h to spare) | B0075 potato 156.3 kg (1580.4 h to spare) | B0122 potato 101.5 kg (1213.9 h to spare) | B0196 potato 87.9 kg (1211.8 h to spare)
+Arrive by: day 0 07:32
+
+Vehicle V4 | Trip T-V4-D8-1-1 | Depart 05:00 (day 1)
+To: Electronic City HoReCa cluster
+Load: B0164 spinach 92.2 kg (9.1 h to spare) | B0046 tomato 111.4 kg (26.2 h to spare) | B0188 banana 95.5 kg (56.7 h to spare) | B0132 banana 71.4 kg (44.7 h to spare) | B0033 onion 274.7 kg (1180 h to spare) | B0003 potato 193.3 kg (836.2 h to spare) | B0181 potato 71.4 kg (1108.4 h to spare)
+Arrive by: day 1 07:39
+
+Vehicle V3 | Trip T-V3-D2-0-1 | Depart 05:00 (day 0)
+To: Hoskote retail DC
+Load: B0194 mango 213.8 kg (43.6 h to spare) | B0143 spinach 135.3 kg (17.4 h to spare) | B0099 tomato 206.6 kg (18.6 h to spare) | B0057 banana 291.9 kg (76.8 h to spare) | B0018 spinach 42.3 kg (12.2 h to spare) | B0094 mango 80.3 kg (60.2 h to spare) | B0159 banana 143.9 kg (94.1 h to spare) | B0128 tomato 76.8 kg (40.4 h to spare) | B0054 mango 34.4 kg (93 h to spare) | B0187 mango 19.2 kg (74.2 h to spare) | B0122 potato 357.6 kg (1211.8 h to spare) | B0160 onion 178 kg (894.1 h to spare) | B0196 potato 309.5 kg (1209.7 h to spare) | B0097 potato 228.8 kg (1159.7 h to spare) | B0108 onion 126.7 kg (854.1 h to spare) | B0111 onion 52.6 kg (1055.6 h to spare) | B0170 onion 38.2 kg (971.4 h to spare)
+Arrive by: day 0 06:41
+
+Vehicle V1 | Trip T-V1-D1-1-1 | Depart 05:00 (day 1)
+To: KR Market mandi, Bengaluru
+Load: B0119 spinach 140 kg (9.2 h to spare) | B0068 tomato 499.3 kg (110.2 h to spare) | B0077 onion 75 kg (1205.5 h to spare)
+Arrive by: day 1 07:32
+
+Vehicle V6 | Trip T-V6-D6-0-1 | Depart 05:00 (day 0)
+To: Mysuru retail DC
+Load: B0039 mango 222.3 kg (63.6 h to spare) | B0051 mango 136.4 kg (68.5 h to spare) | B0035 tomato 172.8 kg (51.3 h to spare) | B0120 banana 250.5 kg (109.4 h to spare) | B0046 tomato 154.9 kg (78.9 h to spare) | B0010 banana 154 kg (98.7 h to spare) | B0152 onion 278.7 kg (882.2 h to spare) | B0176 potato 260.4 kg (1280.7 h to spare) | B0140 potato 265.1 kg (1390.7 h to spare) | B0124 onion 106.8 kg (700.4 h to spare) | B0155 onion 130.6 kg (1032.7 h to spare) | B0090 potato 205.6 kg (1207.6 h to spare) | B0029 potato 162.2 kg (1193.3 h to spare)
+Arrive by: day 0 11:08
+
+Vehicle V3 | Trip T-V3-D8-2-1 | Depart 05:00 (day 2)
+To: Electronic City HoReCa cluster
+Load: B0158 banana 157.8 kg (16.4 h to spare) | B0006 spinach 91.1 kg (18 h to spare) | B0045 tomato 121.2 kg (14.5 h to spare) | B0180 onion 181.4 kg (958.3 h to spare) | B0118 potato 242 kg (1061.9 h to spare) | B0102 onion 40.8 kg (847.9 h to spare) | B0008 onion 25.5 kg (1043 h to spare) | B0131 potato 21.5 kg (1181.8 h to spare)
+Arrive by: day 2 07:28
+
+Vehicle V4 | Trip T-V4-D3-1-1 | Depart 05:00 (day 1)
+To: Whitefield HoReCa cluster
+Load: B0164 spinach 50.9 kg (10.5 h to spare) | B0046 tomato 138.6 kg (27.4 h to spare) | B0096 banana 108 kg (73.7 h to spare) | B0188 banana 37.5 kg (57.8 h to spare) | B0181 potato 212.1 kg (1109 h to spare) | B0179 onion 101.6 kg (1220.4 h to spare) | B0148 onion 78.1 kg (1288.6 h to spare) | B0033 onion 61.5 kg (1180.7 h to spare)
+Arrive by: day 1 07:11
+
+Vehicle V6 | Trip T-V6-D3-2-1 | Depart 05:00 (day 2)
+To: Whitefield HoReCa cluster
+Load: B0067 spinach 48.7 kg (6.1 h to spare) | B0133 banana 168.3 kg (72 h to spare) | B0149 tomato 121.7 kg (81.3 h to spare) | B0034 tomato 26.2 kg (80.5 h to spare) | B0071 onion 231.6 kg (747.1 h to spare) | B0020 potato 107.2 kg (994.4 h to spare) | B0037 potato 98.3 kg (1200.1 h to spare) | B0007 onion 2.2 kg (665.5 h to spare)
+Arrive by: day 2 07:11
+
+Vehicle V6 | Trip T-V6-D1-1-1 | Depart 05:00 (day 1)
+To: KR Market mandi, Bengaluru
+Load: B0150 mango 204.8 kg (79.1 h to spare) | B0017 mango 185.3 kg (75.7 h to spare) | B0192 banana 244.1 kg (102.8 h to spare) | B0039 mango 45.7 kg (39.4 h to spare) | B0076 mango 75.2 kg (72.9 h to spare) | B0028 banana 213.1 kg (120.2 h to spare) | B0096 banana 147.9 kg (77.2 h to spare) | B0051 mango 28 kg (44.3 h to spare) | B0198 mango 56.1 kg (94.4 h to spare) | B0181 potato 755.7 kg (1110.9 h to spare) | B0148 onion 450.8 kg (1290.5 h to spare) | B0156 potato 149.8 kg (1206.8 h to spare) | B0121 potato 146.2 kg (1415.6 h to spare) | B0176 potato 84.5 kg (1259.5 h to spare) | B0064 potato 92.8 kg (1320.6 h to spare) | B0059 potato 14.3 kg (1172.3 h to spare)
+Arrive by: day 1 07:17
+
+Vehicle VR2 | Trip T-VR2-D5-0-1 | Depart 18:00 (day 0)
+To: Koyambedu market, Chennai
+Load: B0141 tomato 158.4 kg (41.9 h to spare) | B0039 mango 64.5 kg (34.8 h to spare) | B0051 mango 39.6 kg (39.7 h to spare) | B0026 tomato 87.1 kg (60.7 h to spare) | B0041 potato 436.7 kg (881.3 h to spare) | B0043 potato 224.5 kg (1138 h to spare) | B0095 potato 123.8 kg (919.6 h to spare) | B0059 potato 122.2 kg (1168.6 h to spare)
+Arrive by: day 1 07:11
+
+Vehicle V3 | Trip T-V3-D3-0-1 | Depart 05:00 (day 0)
+To: Whitefield HoReCa cluster
+Load: B0143 spinach 49.4 kg (17.6 h to spare) | B0101 banana 136.4 kg (98.5 h to spare) | B0128 tomato 66.6 kg (40.7 h to spare) | B0093 tomato 73.1 kg (56.5 h to spare) | B0159 banana 28.9 kg (94.5 h to spare) | B0111 onion 135.9 kg (1056.2 h to spare) | B0170 onion 98.7 kg (972 h to spare) | B0122 potato 117.7 kg (1212.4 h to spare) | B0196 potato 101.8 kg (1210.3 h to spare)
+Arrive by: day 0 06:58
+
+Vehicle V4 | Trip T-V4-D4-0-1 | Depart 05:00 (day 0)
+To: Tumakuru food processor
+Load: B0039 mango 123 kg (60.1 h to spare) | B0051 mango 75.4 kg (65 h to spare) | B0035 tomato 96.8 kg (46.4 h to spare)
+Arrive by: day 0 07:44
+
+Vehicle V4 | Trip T-V4-D8-0-1 | Depart 05:00 (day 0)
+To: Electronic City HoReCa cluster
+Load: B0035 tomato 118 kg (48.6 h to spare) | B0132 banana 84 kg (65.2 h to spare) | B0010 banana 84.3 kg (97.1 h to spare) | B0183 onion 176.1 kg (1240.6 h to spare) | B0155 onion 104.1 kg (1033 h to spare) | B0140 potato 140.1 kg (1391 h to spare) | B0153 potato 75.4 kg (1451.7 h to spare)
+Arrive by: day 0 07:39

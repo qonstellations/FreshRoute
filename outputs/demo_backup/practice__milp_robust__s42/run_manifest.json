@@ -1,0 +1,48 @@
+{
+  "schema_version": 2,
+  "run_id": "practice__milp_robust__s42",
+  "git_sha": "0c9d2027e93bf3c3b2f64b11f9c8188cb9099c2a",
+  "scenario": "data/scenarios/practice",
+  "scenario_sha256": "213c6b296c0614a0bcf9d49e7fa86bfc8c5a98e7001a724ca738a6325e96d09b",
+  "policy": "milp_robust",
+  "flags": {
+    "markdown": false,
+    "newsvendor": false
+  },
+  "seed": 42,
+  "realization": "base",
+  "package_versions": {
+    "python": "3.13.7",
+    "scipy": "1.18.1",
+    "pulp": "4.0.0",
+    "highspy": "1.15.1",
+    "pandas": "2.3.3"
+  },
+  "solver": {
+    "status": "-4",
+    "solve_seconds": 30.12709619999805,
+    "size": {
+      "vars": 4217,
+      "constraints": 431
+    },
+    "mip_gap": 0.03471942892916285,
+    "slack_usage": {},
+    "objective_inr": 411311.84174990014,
+    "fallback_used": false,
+    "aggregation": {
+      "batches": 200,
+      "groups": 180,
+      "vehicle_classes": 8,
+      "agg_arcs": 3910,
+      "dropped_lines": 0,
+      "unassigned_kg": 0.0,
+      "validator_violations": 0
+    },
+    "robust": {
+      "rsl": "rsl_p10_h",
+      "travel": "travel_h_p90",
+      "dropped_lines": 0
+    }
+  },
+  "timestamp_utc": "2026-10-15T12:13:36+00:00"
+}
