@@ -5,7 +5,7 @@ Terms you will meet in the code, docs and questions from judges.
 | Term | Meaning |
 |---|---|
 | **Arc** | One candidate shipment: (batch, destination, vehicle, dispatch day). `build_arcs` keeps feasible ones and records the reason for each rejection. |
-| **Attribution ladder** | The sequence FIFO → FEFO → MILP → MILP+markdown, run on one simulator to show where each improvement comes from. |
+| **Attribution ladder** | The sequence FIFO → FEFO → MILP, run on one simulator to show where each improvement comes from. |
 | **Base realization** | The deterministic world with median (p50) demand, travel time and shelf life. Headline numbers use it. |
 | **Carry-over** | Stock still alive when the horizon ends. Not spoiled, not valued, but reported. |
 | **COGS** | Cost of goods sold: sold kg × unit procurement cost. |

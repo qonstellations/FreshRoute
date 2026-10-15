@@ -41,6 +41,10 @@ We use PuLP as the modelling layer on top of HiGHS because the constraints read 
 
 Key settings, all in `config.py`: a 30-second time limit, a 1 % relative gap, and the spoilage weight `LAMBDA_SPOIL = 1`.
 
+## Starting plan and progress
+
+HiGHS spends its first seconds on cutting planes before it finds any plan, and FEFO-greedy is a poor start for this objective (it ignores the fill-balance penalty). So before the search the solver relaxes the trip integers, solves the LP (about 0.1 s) and rounds the trip counts up by diving. That plan goes in as the start and is the first thing the dashboard shows. HiGHS then reports every better plan it finds, and the run publishes each one that scores better in the simulator (see `09`). The fill-balance row is written with one variable per destination instead of a dense row over all arcs; it is the same model, but HiGHS finishes its cut work much sooner (A-51).
+
 ## The scale model
 
 On the `practice` scenario and anything larger, the batch-level model has so many variables that HiGHS finds **no** incumbent in 30 seconds (A-50). Above 20,000 candidate arcs (`AGG_ARC_THRESHOLD`) we therefore solve a **pooled** model:
@@ -58,6 +62,6 @@ FIFO is a strawman, so beating it proves little. The comparison that matters is 
 
 ## Gotchas
 
-- The 30 s limit is **wall-clock**. On the demo scenario the solver hits that limit, so a much slower machine could return a different incumbent. Determinism is exact only for solves that finish early (A-40; see `10`).
+- The 30 s limit is **wall-clock**. On the demo scenario the solver hits that limit, so a different machine, or a busy one, returns a different incumbent. Determinism is exact only for solves that finish early (A-40; see `10`). Intermediate plans shown while it searches differ from run to run for the same reason.
 - If you change any objective coefficient, rerun the consistency test between the objective and the simulator (see `02`).
 - Replan reuses this same model with frozen shipments subtracted from capacities (see `08`).

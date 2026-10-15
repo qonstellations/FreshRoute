@@ -6,7 +6,7 @@ This guide follows one run from input files to dashboard, and explains why the p
 
 1. **Generate or load a scenario.** A scenario is a folder under `data/scenarios/<name>/` with eight CSV tables (batches, commodities, demand, destinations, lanes, prices, vehicles, events), a `geo.csv`, and a `scenario.json`. `freshroute generate` creates our synthetic ones. `data/io.py::load_scenario` reads them, converts units, and runs integrity checks.
 2. **Build feasible arcs.** `domain/feasibility.py::build_arcs` lists every possible *(batch, destination, vehicle, dispatch day)* and keeps only the ones where the produce still has enough shelf life on arrival, arrives inside the delivery window, and has a lane. See `03-shelf-life-and-feasibility.md`.
-3. **Run a policy.** A policy turns a scenario into a plan: `plan.csv` (what ships where), `trips.csv`, and `discounts.csv`. The policies are FIFO, FEFO, last-day-50, MILP, and MILP plus markdown. See `04` and `06`.
+3. **Run a policy.** A policy turns a scenario into a plan: `plan.csv` (what ships where), `trips.csv`, and `discounts.csv`. The policies are FIFO, FEFO, last-day-50 and MILP. See `04` and `06`.
 4. **Validate.** The independent `validator` package re-checks the plan from scratch and writes `validation.json`. See `07-validator.md`.
 5. **Simulate.** `engine/simulator.py` replays the plan day by day, selling stock and spoiling what expires, and `engine/metrics.py` turns the ledger into `metrics.json`. See `06`.
 6. **Explain.** `engine/reasons.py` and `engine/dispatch_sheet.py` produce reason cards and a per-truck dispatch sheet.
@@ -41,7 +41,7 @@ The simulator executes a plan but deliberately does not enforce capacities or wi
 | Data | `backend/src/freshroute/data/` | `schema.py` (column-name constants), `io.py` (load, units, checks), `events.py` (event schema) |
 | Domain | `.../domain/` | `costmodel.py`, `shelflife.py`, `feasibility.py`, `discount.py` |
 | Solvers | `.../solvers/` | `milp_model.py`, `greedy.py` (FEFO fallback), `aggregate.py` (scale model) |
-| Policies | `.../policies/` | `fifo`, `fefo`, `last_day_50`, `milp` (also `milp_markdown`) |
+| Policies | `.../policies/` | `fifo`, `fefo`, `last_day_50`, `milp` |
 | Engine | `.../engine/` | `simulator`, `metrics`, `reasons`, `dispatch_sheet`, `newsvendor`, `narrator` |
 | Runs | `.../runs/` | `runner`, `ladder`, `stress`, `sensitivity`, `replan`, `naming` |
 | Generator | `.../generator/` | synthetic scenario builder |

@@ -17,14 +17,14 @@ A bad answer means produce rots on a truck, or a market goes short while another
 
 ## What FreshRoute does
 
-FreshRoute reads a scenario (a folder of CSV tables), builds only the shipments that can physically work, asks a mixed-integer solver (HiGHS) for the most profitable plan, adds a disclosed markdown rule, and then **replays the plan through one shared simulator** to measure it. A separate, independent validator checks the plan for rule violations. A small API and a React dashboard show the stored results.
+FreshRoute reads a scenario (a folder of CSV tables), builds only the shipments that can physically work, asks a mixed-integer solver (HiGHS) for the most profitable plan, and then **replays the plan through one shared simulator** to measure it. A separate, independent validator checks the plan for rule violations. A small API and a React dashboard show the stored results.
 
 The one-line summary of the design is: **the solver decides, the simulator measures, the validator audits, the UI only displays.** Most of the rules below follow from that sentence.
 
 ## The system on one page
 
 ```
-scenario CSVs ─► load + integrity checks ─► feasibility arcs ─► policy (FIFO / FEFO / MILP / MILP+markdown)
+scenario CSVs ─► load + integrity checks ─► feasibility arcs ─► policy (FIFO / FEFO / MILP)
                                                                       │
                                     plan.csv + trips.csv + discounts.csv
                                                                       │
@@ -69,9 +69,9 @@ There is no `make` on Windows by default. Either install it (for example ezwinpo
 Commands you will use most:
 
 ```bash
-uv run freshroute run --scenario data/scenarios/practice --policy milp_markdown --seed 42
+uv run freshroute run --scenario data/scenarios/practice --policy milp --seed 42
 uv run freshroute ladder --scenario data/scenarios/practice --seed 42
-uv run freshroute stress --scenario data/scenarios/practice --policy milp_markdown --n 200 --seed 42
+uv run freshroute stress --scenario data/scenarios/practice --policy milp --n 200 --seed 42
 uv run freshroute replan --run <run dir> --event <event.json>
 uv run pytest -q
 ```
@@ -85,7 +85,6 @@ Everything is run through `uv run`. Do not use `pip` or add a `requirements.txt`
 | understand the data flow | `01-the-big-picture.md` |
 | understand what "net ₹" means | `02-cost-model-and-money.md` |
 | change the optimizer | `03` then `04` |
-| understand discounts | `05-markdown-rule.md` |
 | understand how we are compared to baselines | `06-simulator-and-baselines.md` |
 | submit | `SUBMISSION.md` |
 | prepare for judges | `JUDGE-QA.md` and `DEMO.md` |

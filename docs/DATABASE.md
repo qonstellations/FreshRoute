@@ -203,7 +203,7 @@ Rejected rows are kept: reason cards read them.
 
 ### 4.2 `demand_target` — one row per `(dest_id, commodity, day)` (newsvendor)
 
-`dest_id, commodity, day, target_kg, quantile_used, c_u, c_o`. When the newsvendor flag is off, `target_kg = demand_kg_p50` (`quantile_used = 0.5`). Built by `newsvendor.demand_target` (ARCHITECTURE §14.3); written as `outputs/<run_id>/demand_target.csv` only for `--newsvendor` runs, sorted by key. `c_u ≤ 0` ⇒ `target_kg = 0`, `quantile_used = 0`. A row with no priced lane from an origin holding the commodity keeps `target_kg = demand_kg_p50`, `quantile_used = 0.5`, `c_u = c_o = NaN` (no arc can use it). `--newsvendor` is accepted only for `milp`/`milp_markdown`.
+`dest_id, commodity, day, target_kg, quantile_used, c_u, c_o`. When the newsvendor flag is off, `target_kg = demand_kg_p50` (`quantile_used = 0.5`). Built by `newsvendor.demand_target` (ARCHITECTURE §14.3); written as `outputs/<run_id>/demand_target.csv` only for `--newsvendor` runs, sorted by key. `c_u ≤ 0` ⇒ `target_kg = 0`, `quantile_used = 0`. A row with no priced lane from an origin holding the commodity keeps `target_kg = demand_kg_p50`, `quantile_used = 0.5`, `c_u = c_o = NaN` (no arc can use it). `--newsvendor` is accepted only for `milp`.
 
 ---
 
@@ -216,11 +216,11 @@ Rejected rows are kept: reason cards read them.
 ```json
 {
   "schema_version": 2,
-  "run_id": "practice__milp_markdown__s42",
+  "run_id": "practice__milp__s42",
   "git_sha": "…",
   "scenario": "data/scenarios/practice",
   "scenario_sha256": "…",
-  "policy": "milp_markdown",
+  "policy": "milp",
   "flags": {"markdown": true, "newsvendor": false},
   "seed": 42,
   "realization": "base",
@@ -229,7 +229,7 @@ Rejected rows are kept: reason cards read them.
   "timestamp_utc": "…"
 }
 ```
-`flags.newsvendor` is `true` only for `--newsvendor` runs (then `run_id` ends in `__nv`). `solver` is `null` for non-MILP policies. MILP runs also carry `size` (`{"vars", "constraints"}` of the model solved) and, only when the scale model ran (ARCHITECTURE §9.5), `aggregation` (`{"batches", "groups", "vehicle_classes", "agg_arcs", "dropped_lines", "unassigned_kg", "validator_violations"}`). Timestamp and `solve_seconds` are the only fields allowed to differ between identical runs.
+`flags.newsvendor` is `true` only for `--newsvendor` runs (then `run_id` ends in `__nv`). `flags.markdown` is `true` only when the run wrote discount rows (the `last_day_50` baseline). `solver` is `null` for non-MILP policies. While a show-while-solving run is still improving (ARCHITECTURE §16.2), the manifest holds `solver: {"status": "incumbent", "final": false}`; the finished run carries the full block above. MILP runs also carry `size` (`{"vars", "constraints"}` of the model solved) and, only when the scale model ran (ARCHITECTURE §9.5), `aggregation` (`{"batches", "groups", "vehicle_classes", "agg_arcs", "dropped_lines", "unassigned_kg", "validator_violations"}`). Timestamp and `solve_seconds` are the only fields allowed to differ between identical runs.
 
 ### 5.2 `plan.csv` — PK `shipment_id` (one row per batch × destination × trip line)
 
@@ -373,10 +373,10 @@ Arrive by: day 0 17:00
 {"scenario": "…", "seed": 42, "realization": "base",
  "official_baseline": null,
  "ladder": [{"policy": "fifo", "kpis": {}}, {"policy": "fefo", "kpis": {}},
-            {"policy": "milp", "kpis": {}}, {"policy": "milp_markdown", "kpis": {}}],
+            {"policy": "milp", "kpis": {}}],
  "extras": [{"policy": "last_day_50", "kpis": {}}],
- "ablation": [{"policy": "milp_markdown", "flags": {"newsvendor": true},
-               "run_id": "…__milp_markdown__s42__nv", "vs": "milp_markdown", "kpis": {},
+ "ablation": [{"policy": "milp", "flags": {"newsvendor": true},
+               "run_id": "…__milp__s42__nv", "vs": "milp", "kpis": {},
                "delta": {"net_inr": 0.0, "spoilage_kg": 0.0, "spoilage_pct": 0.0,
                          "demand_fulfillment_pct": 0.0}}]}
 ```
@@ -384,7 +384,7 @@ Arrive by: day 0 17:00
 
 `waterfall.json`:
 ```json
-{"baseline": "fefo", "plan": "milp_markdown", "tolerance_inr": 0.01,
+{"baseline": "fefo", "plan": "milp", "tolerance_inr": 0.01,
  "steps": [
   {"label": "Baseline net", "value": 0.0, "type": "total"},
   {"label": "Spoilage cost avoided", "value": 0.0, "type": "delta"},
@@ -404,14 +404,14 @@ Step formulas: `ARCHITECTURE.md` §12. Signs: cost steps are negative when the p
 - `stress.csv` — one row per scenario `i` per policy: `scenario_i, policy, spoilage_kg, spoilage_pct, demand_fulfillment_pct, min_dest_fill_pct, net_inr`.
 - `stress_summary.json`:
 ```json
-{"n": 200, "base_seed": 42, "plan": "milp_markdown", "baseline": "fefo",
+{"n": 200, "base_seed": 42, "plan": "milp", "baseline": "fefo",
  "bands": {"net_inr": {"plan": {"p10": 0, "p50": 0, "p90": 0}, "baseline": {"p10": 0, "p50": 0, "p90": 0}},
            "spoilage_kg": {"plan": {}, "baseline": {}},
            "demand_fulfillment_pct": {"plan": {}, "baseline": {}}},
  "share_plan_beats_baseline": {"net_inr": 0.0, "spoilage_kg": 0.0}}
 ```
 `share_plan_beats_baseline` is in 0–1 over **paired** scenarios. Bands are `numpy.percentile` (linear) over the `n` scenarios; `baseline` is `fefo` while there is no organizer baseline. With `--named`, `n = 3` and `scenario_i` 0/1/2 = optimistic/base/stress (`MC_NAMED`, A-42). Written by `freshroute stress` to `outputs/<scenario>__stress__s<seed>/`.
-- `sensitivity.csv` — `parameter, value, policy, net_inr, spoilage_kg, demand_fulfillment_pct`. Parameters: `q10` (1.5, 2.0, 3.0; overrides every commodity's `q10`), `elasticity_multiplier` (1, 0.5; scales `price_elasticity`), `overship_slack` (0, 0.05, 0.10), `demand_multiplier` (0.8, 1.0, 1.2; scales p10/p50/p90). One row per (parameter, value), one parameter moved at a time, `policy` = `milp_markdown`; rows at the base value (`elasticity_multiplier` 1, `overship_slack` = `OVERSHIP_SLACK`, `demand_multiplier` 1.0) are the plain run. Values from `config.py` `SENS_*`. Written by `freshroute sensitivity` to `outputs/<scenario>__sensitivity__s<seed>/`.
+- `sensitivity.csv` — `parameter, value, policy, net_inr, spoilage_kg, demand_fulfillment_pct`. Parameters: `q10` (1.5, 2.0, 3.0; overrides every commodity's `q10`), `elasticity_multiplier` (1, 0.5; scales `price_elasticity`), `overship_slack` (0, 0.05, 0.10), `demand_multiplier` (0.8, 1.0, 1.2; scales p10/p50/p90). One row per (parameter, value), one parameter moved at a time, `policy` = `milp`; rows at the base value (`elasticity_multiplier` 1, `overship_slack` = `OVERSHIP_SLACK`, `demand_multiplier` 1.0) are the plain run. Values from `config.py` `SENS_*`. Written by `freshroute sensitivity` to `outputs/<scenario>__sensitivity__s<seed>/`.
 
 ### 5.13 Replan outputs — `replan/<event_id>/`
 
@@ -595,15 +595,15 @@ The dashboard's only door to the engine. The API **serves run artifacts verbatim
 | `GET /api/runs/{run_id}/reason-cards` | 200 | `reason_cards.json` (§5.9), or `null` when the run has none (older runs) |
 | `GET /api/runs/{run_id}/dispatch-sheet` | 200 | `{"csv": [...records...], "text": "..."}` (§5.10), or `null` when absent |
 | `GET /api/ladder?scenario=&seed=` | 200 / 404 | `{"ladder": …, "waterfall": …}` from §5.11, or 404 when not on disk |
-| `POST /api/runs` | 202 | Request `{"scenario": "data/scenarios/practice", "policy": "milp_markdown", "seed": 42, "flags": {"markdown": true, "newsvendor": false}}` → `{"run_id": "…__milp_markdown__s42", "status": "running"}`. `policy ∈ ` the CLI's `POLICIES`; an unknown policy or scenario is `400`. `organizer_baseline` is a *recognised* name that cannot run yet (planned, no organizer material): the API accepts it in the request shape and answers `400` with the same explanation the CLI prints, rather than a bare "unknown policy". `scenario` is a scenario directory path (`data/scenarios/<name>`), resolved like the CLI's `--scenario`, i.e. against the API's working directory (the repo root). `flags.newsvendor = true` is accepted for the MILP policies (`milp`, `milp_markdown`; the run id gets `__nv`) and is `400` for any other policy; `flags.markdown` is implied by the policy. A malformed body is FastAPI's `422`. Re-posting a run that is still `running` returns it without enqueueing again. |
-| `GET /api/runs/{run_id}/status` | 200 / 404 | `{"state": "running" \| "done" \| "error", "started_utc", "finished_utc", "error"}`; a run on disk with no job file (CLI-made, or `.api/` cleared) is `done` with the other three `null` |
+| `POST /api/runs` | 202 | Request `{"scenario": "data/scenarios/practice", "policy": "milp", "seed": 42, "flags": {"markdown": false, "newsvendor": false}}` → `{"run_id": "…__milp__s42", "status": "running"}`. `policy ∈ ` the CLI's `POLICIES`; an unknown policy or scenario is `400`. `organizer_baseline` is a *recognised* name that cannot run yet (planned, no organizer material): the API accepts it in the request shape and answers `400` with the same explanation the CLI prints, rather than a bare "unknown policy". `scenario` is a scenario directory path (`data/scenarios/<name>`), resolved like the CLI's `--scenario`, i.e. against the API's working directory (the repo root). `flags.newsvendor = true` is accepted for the MILP policies (`milp`; the run id gets `__nv`) and is `400` for any other policy; `flags.markdown` is implied by the policy. A malformed body is FastAPI's `422`. Re-posting a run that is still `running` returns it without enqueueing again. |
+| `GET /api/runs/{run_id}/status` | 200 / 404 | `{"state": "running" \| "done" \| "error", "started_utc", "finished_utc", "error", "progress"}`; `progress` is `null` until the first plan is published, then `{"version", "net_inr", "final", "elapsed_s"}` (§11.3); a run on disk with no job file (CLI-made, or `.api/` cleared) is `done` with `progress` and the other three `null` |
 
 Robustness and replan endpoints:
 
 | Method + path | Success | Body |
 |---|---|---|
 | `GET /api/stress?scenario=&seed=` | 200 / 404 | `{"summary": stress_summary.json, "rows": stress.csv records or null}` (§5.12); `scenario` is the scenario name; 404 with a detail when not on disk |
-| `POST /api/stress` | 202 / 400 | Request `{"scenario", "policy": "milp_markdown", "seed": 42, "n": 200}`; response `{"run_id": "<scenario>__stress__s<seed>", "status"}`; poll `GET /api/runs/{run_id}/status` with that id |
+| `POST /api/stress` | 202 / 400 | Request `{"scenario", "policy": "milp", "seed": 42, "n": 200}`; response `{"run_id": "<scenario>__stress__s<seed>", "status"}`; poll `GET /api/runs/{run_id}/status` with that id |
 | `GET /api/sensitivity?scenario=&seed=` | 200 / 404 | `{"records": [...sensitivity.csv rows...]}` (§5.12), or 404 when not on disk |
 | `POST /api/replan` | 202 / 400 / 404 | Request `{"run_id", "event": {…§6…}}`; invalid event 400, unknown run 404; response `{"run_id", "event_id", "status"}`; poll `GET /api/runs/{run_id}__replan__{event_id}/status` |
 | `GET /api/runs/{run_id}/replan/{event_id}` | 200 / 404 | `{"diff": diff.json (§5.13), "narration": narrator.template_narration(diff, metrics)}`; 404 until the replan has been written |
@@ -615,9 +615,12 @@ There is no `/api/demo` endpoint: the demo scoreboard comes from the CLI (`make 
 `outputs/.api/jobs/<run_id>.json`, written by the API only:
 
 ```json
-{"api_version": 1, "run_id": "…", "state": "running", "scenario": "…", "policy": "milp_markdown",
- "seed": 42, "started_utc": "…", "finished_utc": null, "error": null}
+{"api_version": 1, "run_id": "…", "state": "running", "scenario": "…", "policy": "milp",
+ "seed": 42, "started_utc": "…", "finished_utc": null, "error": null,
+ "progress": {"version": 3, "net_inr": 420276.74, "final": false, "elapsed_s": 17.4}}
 ```
+
+`progress` (MILP policies only) appears with the first published plan. Each `version` is a complete run directory on disk (every file of §5, `run_manifest.json → solver.final = false`, then `metrics.json` last); the directory is replaced file by file, so a reader may briefly see a mix of two versions. `net_inr` is the simulator's number for that version and is copied from `metrics.json`, never computed by the API. Versions only appear when the plan's simulated net improves; the last one has `final = true` and carries the solver's own plan. Additive field: `api_version` is unchanged.
 
 `state` is `running` while the worker thread holds the job, `done` when `outputs/<run_id>/metrics.json` exists, `error` with `error` set otherwise; the job file of a failed run also carries a `traceback` field (the status endpoint's `error` message is unchanged). A job is submitted atomically: the duplicate check and the enqueue happen under one lock. It is deleted when `outputs/<run_id>/` is deleted. One worker thread (`JOB_WORKERS = 1`), so two solves never run at once on the demo laptop.
 

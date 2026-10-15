@@ -17,7 +17,7 @@ The payoff is traceability: any figure shown to a judge can be proven by opening
 
 ## Running a plan from the UI (D-21)
 
-`POST /api/runs` returns immediately with HTTP 202 and enqueues the run. One worker thread runs jobs one at a time, so two HiGHS solves never compete for the same laptop. Status is kept in `outputs/.api/jobs/<run_id>.json`. A run is "done" when `metrics.json` exists on disk, so the state survives an API restart.
+`POST /api/runs` returns immediately with HTTP 202 and enqueues the run. One worker thread runs jobs one at a time, so two HiGHS solves never compete for the same laptop. Status is kept in `outputs/.api/jobs/<run_id>.json`. A run is "done" when `metrics.json` exists on disk, so the state survives an API restart. While the solver is still improving, the status also carries `progress` (`version`, `net_inr`, `final`, `elapsed_s`); every version is a complete run directory, so the dashboard shows the first plan after a second or two, reloads it as better plans appear (banner "Showing the best plan found so far") and shows the final result when the state turns `done`.
 
 ## One URL for the demo (D-20)
 

@@ -10,7 +10,7 @@ Our default submission format (D-25) is the run directory of the final plan:
 |---|---|
 | `plan.csv` | The recommendation: which batch goes where, when, on which vehicle |
 | `trips.csv` | Vehicle trips |
-| `discounts.csv` | Markdown schedule |
+| `discounts.csv` | Markdown schedule (empty for FreshRoute's own plan; filled by the `last_day_50` baseline) |
 | `metrics.json` | Spoilage, fulfilment, net ₹, violations, economics |
 | `validation.json` | Independent validator report |
 | `run_manifest.json` | Seed, git SHA, scenario hash, solver status |
@@ -37,7 +37,7 @@ Run these in order, from a clean checkout of the exact commit you are submitting
 If the organizers give a scenario in our format, drop it in `data/scenarios/<name>/` and run:
 
 ```bash
-uv run freshroute run --scenario data/scenarios/<name> --policy milp_markdown --seed 42 --fail-on-violations
+uv run freshroute run --scenario data/scenarios/<name> --policy milp --seed 42 --fail-on-violations
 ```
 
 The `--fail-on-violations` flag exits non-zero if the validator finds any hard violation. The run never crashes on odd data; if the solver has no incumbent it falls back to FEFO-greedy and says so in the manifest (check `fallback_used`).

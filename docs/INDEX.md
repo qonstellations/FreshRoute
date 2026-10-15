@@ -11,7 +11,6 @@ Start with `00-start-here.md`. The numbered guides explain *why* the system is b
 | [02-cost-model-and-money](02-cost-model-and-money.md) | What net ₹ means and why |
 | [03-shelf-life-and-feasibility](03-shelf-life-and-feasibility.md) | Decay, usable life, and the arc pre-filter |
 | [04-the-optimizer](04-the-optimizer.md) | The MILP, soft constraints, fallback, scale model |
-| [05-markdown-rule](05-markdown-rule.md) | The disclosed discount rule and where it matters |
 | [06-simulator-and-baselines](06-simulator-and-baselines.md) | One simulator, the baselines, the ladder |
 | [07-validator](07-validator.md) | Why the checker is independent |
 | [08-robustness-and-replan](08-robustness-and-replan.md) | Stress, sensitivity, replan, and the LLM's limits |

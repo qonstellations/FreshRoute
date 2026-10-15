@@ -18,13 +18,13 @@ No LLM decides anything, and there is no LLM code in the repository today. The s
 ## Spoilage reduction (20)
 
 **How much did you reduce spoilage?**
-Against FEFO, spoilage fell from 904 kg to 835 kg on practice, roughly 8 %. That is modest and we say so. The larger gains are in fulfilment and net ₹.
+Against FEFO, spoilage fell from 904 kg to 854 kg on practice, roughly 6 %. That is modest and we say so. The larger gains are in fulfilment and net ₹.
 
 **Why did spoilage % not fall more?**
 The MILP ships and sells more, and handling loss scales with delivered kilograms, so percentage can look flat while kilograms fall (A-39). The scenario also has a low base spoilage rate.
 
-**Where does the discount rule contribute?**
-Nowhere on practice, because the plan ships at most the median demand and leaves no surplus to clear (A-37). It matters when demand falls short, which the stress test samples.
+**Does FreshRoute use discounts?**
+No. We built a tiered markdown rule and measured it: on practice it gave results identical to the plain MILP, because the plan ships at most the median demand and leaves no surplus to clear (A-37), so we removed it (D-33). The `last_day_50` baseline is the discount comparison.
 
 ## Demand fulfilment (15)
 
@@ -78,7 +78,7 @@ The full model finds no incumbent in 30 s on practice-size data. The pooled mode
 ## Explainability and commercial relevance (10)
 
 **How is each decision explained?**
-Reason cards say why a market was chosen and why the runner-up was not (shelf life, window, capacity, demand cap, lower margin), using rejected-arc data. Discount cards show risk, tier and the salvage floor.
+Reason cards say why a market was chosen and why the runner-up was not (shelf life, window, capacity, demand cap, lower margin), using rejected-arc data. Discount cards (shown for the `last_day_50` baseline) show risk, tier and the salvage floor.
 
 **Who would pay for this?**
 Produce distributors, wholesalers, food-logistics firms, cold-storage operators and agri supply-chain platforms (from `docs/PS.md`). The workflow is a morning dispatch sheet per vehicle plus a replan when something breaks.

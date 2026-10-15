@@ -4,11 +4,11 @@ Ten rubric points reward repeatable runs and correct calculations, and every oth
 
 ## The promise
 
-Same scenario, same seed, same flags ⇒ byte-identical `metrics.json`. The fields excluded from that promise are the timestamp and `solve_seconds`, which are about the run, not the result.
+Same scenario, same seed, same flags ⇒ byte-identical `metrics.json`. The fields excluded from that promise are the timestamp and `solve_seconds`, which are about the run, not the result. The exact promise holds when the solver finishes before its 30 s limit; on the demo scenario it does not, so the MILP's incumbent (and every intermediate plan of a show-while-solving run) can differ between machines.
 
 ## How we keep it
 
-- **Seeded randomness only.** Use `numpy.random.default_rng(seed)`. Never the global `random` or `np.random.*`. The seed is part of the run id, for example `practice__milp_markdown__s42`.
+- **Seeded randomness only.** Use `numpy.random.default_rng(seed)`. Never the global `random` or `np.random.*`. The seed is part of the run id, for example `practice__milp__s42`.
 - **Sort before you iterate.** Dataframe and dict order changes results through tie-breaking. Batches and arcs are sorted with stable keys, and indexes are reset.
 - **Fixed solver settings.** Time limit, gap and tie-break term are constants in `config.py`.
 - **Pinned dependencies.** `uv.lock` and `package-lock.json` are committed and never edited by hand. Python is pinned to 3.13 (D-22), partly because `pulp 4.0.0` needs 3.12 or newer.

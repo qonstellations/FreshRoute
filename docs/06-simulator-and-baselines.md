@@ -25,15 +25,14 @@ Policies never report their own net ₹. They cannot flatter themselves.
 | `fifo` | Send in arrival order to the nearest market with demand. Ignores shelf life and windows. | What a naive dispatcher does. Its violations are reported honestly. |
 | `fefo` | Earliest-expiry batch first, to the best-margin **feasible** arc, same demand caps as the MILP. | The real baseline. Beating FIFO alone would be a strawman (D-10). |
 | `last_day_50` | FIFO plus a 50 % markdown on the last day. | A fair "just discount it" comparison. A likely judge question. |
-| `milp` | HiGHS allocation, no markdown. | Isolates the value of optimization. |
-| `milp_markdown` | MILP plus the disclosed markdown rule. | This is "FreshRoute". |
+| `milp` | HiGHS allocation, no markdown. | This is "FreshRoute" (D-33). |
 | `organizer_baseline` | Recognised but refuses to run. | No organizer material exists yet (D-25). |
 
 `FEFO` is the comparison baseline in `config.py` (`BASELINE`). If the organizers publish a baseline, implement it exactly from their document and switch `BASELINE`.
 
 ## The attribution ladder
 
-`freshroute ladder` runs `fifo → fefo → milp → milp_markdown` (plus `last_day_50` as an extra) on the same scenario, seed and simulator. It answers "where did each rupee of improvement come from?" step by step, instead of one before/after number. Headline results use the deterministic base realization (median demand, median travel, median shelf life).
+`freshroute ladder` runs `fifo → fefo → milp` (plus `last_day_50` as an extra) on the same scenario, seed and simulator. It answers "where did each rupee of improvement come from?" step by step, instead of one before/after number. Headline results use the deterministic base realization (median demand, median travel, median shelf life).
 
 ## The waterfall
 
@@ -44,7 +43,7 @@ From the FEFO net to the FreshRoute net, in six steps: spoilage cost avoided, ex
 Measured on the synthetic `practice` scenario, seed 42, from `outputs/demo_backup/`:
 
 - FIFO and `last_day_50` show 19 violations each; their higher fill rate comes from an infeasible plan.
-- Against FEFO, the MILP adds about ₹124k net. The gain comes mainly from **fulfilling more demand with fewer trips**, not from a large drop in spoilage (904 kg to 835 kg).
+- Against FEFO, the MILP adds about ₹171k net. The gain comes mainly from **fulfilling more demand** at a lower transport bill, not from a large drop in spoilage (904 kg to 854 kg).
 - Spoilage % can rise for a plan that ships more, because handling loss scales with delivered kilograms (A-39).
 
 Always quote numbers with their scenario and seed, and always say synthetic. The README holds the current table; copy from there, never from memory.

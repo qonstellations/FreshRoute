@@ -26,7 +26,7 @@ To confirm when organizer data is published. Template from `docs/DATABASE.md` §
 | `vehicles.*` (capacity, trips/day, availability) | our own field | none | own schema; confirm against organizer data |
 | `events.*` | our own field (`docs/DATABASE.md` §6) | none | own schema; confirm against organizer data |
 | Origin handling cost | our own field: 0 (A-07) | none | own schema; confirm against organizer data |
-| Discount / markdown rules (tiers, caps, elasticity) | our own rule (`docs/ARCHITECTURE.md` §10) | none | own schema; confirm against organizer data |
+| Discount / markdown rules (caps, elasticity) | only the `last_day_50` baseline discounts (`docs/ARCHITECTURE.md` §10, §12) | none | own schema; confirm against organizer data |
 | Spoilage definition and cost | our own definition (`docs/ARCHITECTURE.md` §7) | none | own schema; confirm against organizer data |
 | Fulfillment definition | our own definition (`docs/ARCHITECTURE.md` §7) | none | own schema; confirm against organizer data |
 | Hard-constraint list (what counts as a violation) | codes in `validator/` as built | none | own schema; confirm against organizer data |
@@ -56,4 +56,4 @@ Every coefficient or formula in `docs/ARCHITECTURE.md` §7 that must change if t
 | Spoilage % `spoiled_kg / sum batches.qty_kg * 100` | `domain/costmodel.py` | confirm when published |
 | Feasibility score = hard violations from `validator/` | `validator/` (independent re-implementation) | confirm when published |
 | Carry-over at horizon end (valued 0, A-06) | `domain/costmodel.py` | confirm when published |
-| Markdown tiers and thresholds: `DISCOUNT_RISK_BREAKS` (0.10, 0.30, 0.50), `DISCOUNT_TIERS` (0, 10, 20, 35 %), `DISCOUNT_TIME_TRIGGER_H` (24) | `config.py` | confirm when published |
+| `last_day_50` baseline: `DISCOUNT_TIME_TRIGGER_H` (24), `LAST_DAY_DISCOUNT_PCT` (50) | `config.py` | confirm when published |

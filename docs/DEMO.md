@@ -26,7 +26,7 @@ A script and a safety net for the pitch. The length (assumed 3:00) and format (l
 
 Say: "synthetic", "measured on the practice scenario with seed 42", "the solver decides, the simulator measures".
 
-Do not say: projected rubric scores; "a year" about the ₹5,921 crore tomato loss; any replan time you did not measure that day; that markdown drove the practice result.
+Do not say: projected rubric scores; "a year" about the ₹5,921 crore tomato loss; any replan time you did not measure that day; that discounts drove the practice result (FreshRoute ships no markdown).
 
 ## When things go wrong
 

@@ -9,11 +9,10 @@ Every morning a distributor must decide which batch of produce goes to which mar
 ## How it works
 
 1. **Filter.** Drop every shipment whose produce would not have enough shelf life left on arrival, would miss the delivery window, or has no lane.
-2. **Optimize.** A mixed-integer program (HiGHS) picks quantities, trips and vehicles for what remains. It never fails: soft constraints, a 30 s limit and a FEFO-greedy fallback.
-3. **Discount.** A disclosed tiered rule marks down lots at risk of going unsold.
-4. **Measure.** One seeded simulator replays every policy's plan, so none can flatter itself.
-5. **Audit.** An independent validator, sharing no maths code with the optimizer, checks every hard constraint.
-6. **Show.** A FastAPI service and React dashboard display the stored results. They never compute a KPI.
+2. **Optimize.** A mixed-integer program (HiGHS) picks quantities, trips and vehicles for what remains. It never fails: soft constraints, a 30 s limit and a FEFO-greedy fallback. A rounded-LP start puts a first plan on screen in about a second, and better plans stream in while HiGHS keeps searching.
+3. **Measure.** One seeded simulator replays every policy's plan, so none can flatter itself.
+4. **Audit.** An independent validator, sharing no maths code with the optimizer, checks every hard constraint.
+5. **Show.** A FastAPI service and React dashboard display the stored results. They never compute a KPI.
 
 The solver decides, the simulator measures, the validator audits, the UI displays. No LLM makes any decision.
 
@@ -25,18 +24,18 @@ Synthetic `practice` scenario, seed 42, base realization. Source: `outputs/demo_
 |---|---|---|---|---|---|---|
 | fifo | 937.0 | 1.73 | 77.6 | 34.7 | 318,668 | 19 |
 | **fefo** (baseline) | 904.1 | 1.67 | 64.5 | 0.0 | 271,027 | 0 |
-| milp | 835.0 | 1.54 | 75.2 | 32.3 | 395,344 | 0 |
-| **milp_markdown** (FreshRoute) | 835.0 | 1.54 | 75.2 | 32.3 | 395,344 | 0 |
+| **milp** (FreshRoute) | 854.1 | 1.58 | 83.0 | 52.8 | 442,214 | 0 |
 | last_day_50 | 937.0 | 1.73 | 77.6 | 34.7 | 300,674 | 19 |
 
 How to read it honestly:
 
 - **FIFO and `last_day_50` break the rules** (19 violations each). Their higher fulfilment comes from a plan that is not feasible.
-- **FEFO is the fair baseline**: it respects shelf life and windows. Against it, FreshRoute adds about **₹124k net** (+46 %) and raises fulfilment from 64.5 % to 75.2 %, mostly by serving more demand with fewer, fuller trips.
-- **Spoilage falls only modestly** (904 → 835 kg). It is not the main driver here.
-- **Markdown changes nothing on `practice`**: the plan ships at most median demand, so no lot has surplus to clear. It matters when demand falls short, which the stress test samples.
+- **FEFO is the fair baseline**: it respects shelf life and windows. Against it, FreshRoute adds about **₹171k net** (+63 %) and raises fulfilment from 64.5 % to 83.0 %, mostly by serving more demand at a lower transport bill.
+- **Spoilage falls only modestly** (904 → 854 kg). It is not the main driver here.
+- **No markdown in FreshRoute's own plan**: a tiered markdown policy gave results identical to `milp` on `practice` and was removed (D-33). `last_day_50` stays as the fair "just discount it" baseline.
+- **The MILP is time-limited** (30 s), so its net can differ by a few percent between machines or runs; the figures above are one measured run.
 
-Waterfall, FEFO → FreshRoute: spoilage cost avoided +₹1,858 · extra sales +₹176,583 · extra goods sold −₹122,539 · transport +₹70,886 · handling −₹2,472 · discounts ₹0.
+Waterfall, FEFO → FreshRoute: spoilage cost avoided +₹1,357 · extra sales +₹321,101 · extra goods sold −₹186,364 · transport +₹45,543 · handling −₹10,450 · discounts ₹0.
 
 **Robustness** (200 sampled futures, plan evaluated without re-solving, paired against FEFO): net ₹ P10/P50/P90 is 361,681 / 375,373 / 382,259 for FreshRoute against 238,588 / 249,720 / 258,322 for FEFO. FreshRoute wins on net in 100 % of futures and on spoilage in 93.5 %.
 
@@ -58,9 +57,9 @@ No `make` on Windows? Run the recipe lines in the `Makefile` by hand (for exampl
 Direct commands, all through `uv run`:
 
 ```bash
-uv run freshroute run --scenario data/scenarios/practice --policy milp_markdown --seed 42
+uv run freshroute run --scenario data/scenarios/practice --policy milp --seed 42
 uv run freshroute ladder --scenario data/scenarios/practice --seed 42
-uv run freshroute stress --scenario data/scenarios/practice --policy milp_markdown --n 200 --seed 42
+uv run freshroute stress --scenario data/scenarios/practice --policy milp --n 200 --seed 42
 uv run freshroute sensitivity --scenario data/scenarios/practice --seed 42
 uv run freshroute replan --run <run dir> --event <event.json>
 ```
@@ -77,7 +76,6 @@ Each run writes `plan.csv`, `trips.csv`, `discounts.csv`, `metrics.json`, `valid
 | Compare against FEFO, not only FIFO | Beating a naive baseline proves little |
 | Procurement cost inside net ₹ | Otherwise selling more is always profitable |
 | Soft constraints plus fallback plan | A degraded plan beats a crash on a hidden scenario |
-| Disclosed rule for markdown | Judges can read five steps; a learned policy would be opaque |
 | CSV on disk, no database | Reproducible, diffable, easy to load hidden scenarios |
 
 ## Limits and assumptions
