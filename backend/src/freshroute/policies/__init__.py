@@ -8,6 +8,7 @@ REGISTRY = {  # name -> (module, class)
     "fefo": ("freshroute.policies.fefo", "FefoPolicy"),
     "last_day_50": ("freshroute.policies.last_day_50", "LastDay50Policy"),
     "milp": ("freshroute.policies.milp", "MilpPolicy"),
+    "milp_robust": ("freshroute.policies.milp_robust", "MilpRobustPolicy"),
 }
 
 

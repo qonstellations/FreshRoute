@@ -70,6 +70,10 @@ def main(argv: list[str] | None = None) -> None:
     sen.add_argument("--scenario", required=True)
     sen.add_argument("--seed", type=int, default=DEFAULT_SEED)
     sen.add_argument("--out")
+    fr = sub.add_parser("frontier", help="profit vs spoilage over FRONTIER_LAMBDAS -> frontier.csv")
+    fr.add_argument("--scenario", required=True)
+    fr.add_argument("--seed", type=int, default=DEFAULT_SEED)
+    fr.add_argument("--out")
     st = sub.add_parser("stress", help="Monte Carlo bands -> stress.csv, stress_summary.json")
     st.add_argument("--scenario", required=True)
     st.add_argument("--policy", default="milp", choices=POLICY_CHOICES)
@@ -122,6 +126,11 @@ def main(argv: list[str] | None = None) -> None:
     if a.cmd == "demo":
         if demo(a.scenario, a.seed, a.out, a.with_sensitivity):
             sys.exit(1)
+        return
+    if a.cmd == "frontier":
+        from freshroute.runs.frontier import run_frontier
+        out = run_frontier(a.scenario, a.seed, a.out)
+        print((out / "frontier.csv").read_text(encoding="utf-8"), end="")
         return
     if a.cmd == "sensitivity":
         from freshroute.runs.sensitivity import run_sensitivity

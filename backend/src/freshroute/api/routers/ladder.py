@@ -1,4 +1,4 @@
-"""Ladder, stress and sensitivity outputs (DATABASE.md section 11.2)."""
+"""Ladder, stress, sensitivity and frontier outputs (DATABASE.md section 11.2)."""
 from __future__ import annotations
 
 from fastapi import APIRouter
@@ -51,4 +51,12 @@ def sensitivity(scenario: str, seed: int) -> dict:
     p = out.out_dir(scenario, "sensitivity", seed) / "sensitivity.csv"
     if not p.is_file():
         raise deps.NotFound(f"no sensitivity run for {scenario!r} seed {seed}")
+    return {"records": out.records(p)["records"]}
+
+
+@router.get("/frontier")
+def frontier(scenario: str, seed: int) -> dict:
+    p = out.out_dir(scenario, "frontier", seed) / "frontier.csv"
+    if not p.is_file():
+        raise deps.NotFound(f"no frontier run for {scenario!r} seed {seed}")
     return {"records": out.records(p)["records"]}

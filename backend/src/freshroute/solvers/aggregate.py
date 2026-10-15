@@ -5,7 +5,7 @@ from dataclasses import replace
 
 import pandas as pd
 
-from freshroute.config import AGG_RSL_BUCKET_H, FLOAT_TOL
+from freshroute.config import AGG_RSL_BUCKET_H, FLOAT_TOL, LAMBDA_SPOIL
 from freshroute.data.io import Scenario
 from freshroute.policies.base import Plan
 from freshroute.solvers import milp_model
@@ -91,7 +91,8 @@ def plan_aggregated(sc: Scenario, ctx: dict, policy: str, time_limit_s: float, g
     # imports this module, so the dependency stays one-way.
 
     agg, members, fleet, vmem = aggregate(sc)
-    arcs, batches, unship = milp_model.model_data(agg)
+    lam = ctx.get("lambda_spoil", LAMBDA_SPOIL)  # frontier
+    arcs, batches, unship = milp_model.model_data(agg, lam)
     ov, slack = ctx.get("demand_cap_override"), overship
     used = ctx.get("residual_use")
     frozen = (used or {}).get("trips", {})  # replan: concrete (v, day) trips -> class keys
@@ -149,7 +150,7 @@ def plan_aggregated(sc: Scenario, ctx: dict, policy: str, time_limit_s: float, g
                            vehicle_id=warm.vehicle_id.map(cls_of).map(fleet.lane_class))
     sol, info = milp_model.solve(agg, arcs, batches, unship, time_limit_s, gap,
                                  override=ov, overship=slack, used=used_c, warm=warm,
-                                 fleet=fleet, on_incumbent=inc)
+                                 fleet=fleet, on_incumbent=inc, lam=lam)
     info["fallback_used"] = sol is None
     if sol is None:
         info.update(slack_usage={}, mip_gap=None)

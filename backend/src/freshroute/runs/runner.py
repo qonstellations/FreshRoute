@@ -25,7 +25,7 @@ from freshroute.runs import naming
 from freshroute.runs.progress import Progressive
 from validator.validate import validate
 
-POLICIES = ("fifo", "fefo", "last_day_50", "milp")
+POLICIES = ("fifo", "fefo", "last_day_50", "milp", "milp_robust")
 NEWSVENDOR_POLICIES = ("milp",)
 # Recognised names that cannot run yet. Listed in --policy choices so the parser accepts them
 # and _policy() can explain the block, instead of argparse saying "invalid choice".

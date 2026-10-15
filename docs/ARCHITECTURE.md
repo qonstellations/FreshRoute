@@ -398,6 +398,15 @@ The simulator executes the plan; it does **not** enforce windows/capacities (tha
 - `q*` clamped to `[0.05, 0.95]`; if `c_u ≤ 0` the target is 0. The quantile comes from the same piecewise inverse CDF as §14.1.
 - Output is a `demand_target` table; the MILP reads it in place of `demand_kg_p50` (hook `demand_cap_override`). Off by default in the ladder; `--newsvendor` turns it on; an ablation row shows its effect.
 
+### 14.5 Robust plan (`policies/milp_robust.py`)
+- Policy `milp_robust` (flag policy, Rule 9): the §9 MILP solved on a pessimistic copy of the scenario, every batch at `rsl_p10_h` and every lane at `travel_h_p90`, so a shipment is only chosen if it still fits its shelf life and window when the batch is short-lived and the truck is late.
+- The chosen lines are then re-timed on the base (p50) arcs (same batch, destination, vehicle, dispatch day), so the simulator, validator and stress test measure it exactly like `milp` (Rule 3). A line feasible at P10/P90 is feasible at p50 (tested); any that is not is dropped and counted in `run_manifest.json → solver.robust.dropped_lines`.
+- Trade-off and measurements: A-52. Reproduce: `uv run freshroute stress --scenario data/scenarios/practice --policy milp_robust --seed 42`.
+
+### 14.6 Profit-vs-spoilage frontier (`runs/frontier.py`)
+- Re-plans `milp` once per spoilage weight λ in `FRONTIER_LAMBDAS` (ctx `lambda_spoil`, passed to `milp_model.model_data` and `solve`; default `LAMBDA_SPOIL`, so `milp` itself is unchanged) and scores each plan with the one simulator. Writes `frontier.csv` (DATABASE.md §5.12); served by `GET /api/frontier`.
+- It answers "why did spoilage not fall more?" with measured points: what each extra kg of spoilage avoided costs in net ₹. Per-point solve cap `FRONTIER_TIME_LIMIT_S` (A-53).
+
 ### 14.4 Narrator (stretch)
 - `narrator.template_narration(diff_json, metrics_json)` is built first (always available, no network).
 - Optional LLM: (a) turn a sentence into an event via function calling → pydantic validation → on failure show "I couldn't parse that — pick from these" and the 5-event dropdown; (b) narrate **only** the metrics/diff JSON it is given. Guard: every number in the narration must appear in the supplied JSON (after rounding) or the template narration is used instead. API key via environment variable only.
@@ -518,6 +527,7 @@ Toolchain (D-15): uv owns Python. `uv sync` installs the project plus the dev gr
 | `MC_NAMED` | optimistic (0.9, 0.5, 0.9) · base (0.5, 0.5, 0.5) · stress (0.1, 0.9, 0.1) as quantile `u` for (demand, travel, RSL) | team assumption (A-42) |
 | `NEWSVENDOR_CLAMP` | [0.05, 0.95] | team assumption |
 | `NEWSVENDOR_MARKDOWN_REF` | 0.20 | team assumption |
+| `FRONTIER_LAMBDAS` / `FRONTIER_TIME_LIMIT_S` | 0, 1, 2, 4, 8 / 30 s | team assumption (A-53) |
 | `SENS_Q10` / `SENS_ELASTICITY_MULT` / `SENS_OVERSHIP_SLACK` / `SENS_DEMAND_MULT` | 1.5, 2, 3 / 1, 0.5 / 0, 0.05, 0.10 / 0.8, 1, 1.2 | team assumption (sensitivity values) |
 | `DEFAULT_SEED` | 42 | research doc (CLI example) |
 | `DEMO_SCENARIO` / `DEMO_SEED` | `data/scenarios/practice` / 42 | team assumption — what `freshroute demo` and `make demo` run |
@@ -589,6 +599,8 @@ Anything marked **confirm** must be checked against the organizers' documents on
 | A-49 | Generator v3 geography, demand and fleet: real node names and coordinates (hubs `HUB1` Kolar, `HUB2` Chikkaballapur; destinations `D1`–`D8` from `generator.DESTS`); road lane time = road km (haversine × 1.3) / 40 km/h + 0.5 h; rail lanes only to destinations ≥ 200 km; outlet type sets the daily delivery window (`window_mode = daily`), price premium, commodity basket and receiving capacity. Demand per commodity ≈ U(0.9, 1.1) × supply, placed only on days some lane can reach the outlet inside its window (no unreachable demand), with lognormal outlet shares capped at 35 %. Fleet: both road modes per hub, capacities 1 / 3 / 5 / 9 t, `max_trips_day = floor(16 / (2 × median lane h))` and at least 1, one rail vehicle per hub that has a rail lane. `price_source = static_table_generator_v3`. Practice = seed 42, 200 batches, 8 destinations, 3 days, 6 road vehicles | team |
 | A-50 | The MILP uses the fleet-pooled scale model by default above `AGG_ARC_THRESHOLD = 20,000` candidate arcs (A-46), which includes `practice`. Solution quality versus the unpooled model cannot be compared there: the unpooled model finds no incumbent in 30 s on practice v3 data | team |
 | A-51 | MILP start and shape. On `practice` HiGHS finds no usable plan for about 12 s (root cuts), and a FEFO-greedy start scores far below the MILP objective because it ignores C6. So: (a) the trip integers are relaxed, the LP solved and rounded up by diving (best of two dives) to give a feasible start in about 0.1 s; (b) the C6 average-fill row is built from per-destination totals `f_d` instead of one dense row, the same model with much cheaper cuts. Measured on the 200-batch `practice` scenario, seed 42, one machine: first plan after about 1.5 s, a plan above the previous 30 s result after about 7 s, 30 s final net ₹442,214 against ₹395,344 before. Timing varies by machine and load | team |
+| A-52 | `milp_robust` plans on `rsl_p10_h` and `travel_h_p90` (§14.5) and is measured on p50 like every policy. Measured on synthetic `practice`, seed 42, one machine: base spoilage 726 kg against `milp` 854 kg, net ₹396,895 against ₹442,214, minimum destination fill 0 % against 52.8 %; under the 200-future stress test it beats FEFO on spoilage kg in 100 % of futures (`milp`: 84.5 %) and on net in 100 %. It is a trade-off, not a replacement: it ships less to protect against bad futures. Reproduce: `uv run freshroute run --scenario data/scenarios/practice --policy milp_robust --seed 42` and the stress command in §14.5 | team |
+| A-53 | Frontier weights `FRONTIER_LAMBDAS = (0, 1, 2, 4, 8)` scale the spoilage term of the §9.2 objective only; the reported KPIs come from the simulator. Each point is a time-limited solve (`FRONTIER_TIME_LIMIT_S = 30`); a 10 s cap gave incumbents too noisy to read as a curve, and even at 30 s a point can sit off the curve because the incumbent, not the optimum, is reported (A-40). Reproduce: `uv run freshroute frontier --scenario data/scenarios/practice --seed 42` | team |
 
 ---
 

@@ -1,6 +1,6 @@
 # 08 · Robustness, replanning and the role of the LLM
 
-The rubric gives 10 points to robustness and sensitivity. A plan that is optimal for the *forecast* is easy; the question is what happens when the world differs. This guide covers the four tools we use. Reference: `ARCHITECTURE.md` §14.
+The rubric gives 10 points to robustness and sensitivity. A plan that is optimal for the *forecast* is easy; the question is what happens when the world differs. This guide covers the tools we use. Reference: `ARCHITECTURE.md` §14.
 
 ## Monte Carlo stress test (`runs/stress.py`)
 
@@ -16,6 +16,14 @@ Output: P10/P50/P90 bands for each KPI plus the share of futures where we win on
 ## Sensitivity (`runs/sensitivity.py`)
 
 Varies `q10`, elasticity (`ε` against `ε/2`), the overship slack and demand ±20 %, and writes `sensitivity.csv`. It exists to answer the judge question "why should we trust your elasticity?": we do not claim it is right, we show how much the answer depends on it. It takes a few minutes, which is why `make demo` leaves it behind `--with-sensitivity`.
+
+## Robust plan (`policies/milp_robust.py`)
+
+The stress test *measures* the plan against bad futures; `milp_robust` *plans* for them. It solves the same MILP with every batch at its P10 shelf life and every truck at its P90 travel time, then re-times the chosen shipments on the normal (p50) data so the one simulator scores it like everything else. It ships less, so base net ₹ is lower, but its spoilage beats FEFO in every one of the 200 futures (A-52). Run it with `--policy milp_robust` on `run` or `stress`.
+
+## Profit-vs-spoilage frontier (`runs/frontier.py`)
+
+Re-plans the MILP with the spoilage weight λ at each value of `FRONTIER_LAMBDAS` and writes `frontier.csv`. It shows what each kilogram of spoilage avoided costs in net ₹, which is the honest answer to "why did spoilage not fall more?". About 3 minutes on `practice` (five 30 s solves): `uv run freshroute frontier --scenario data/scenarios/practice --seed 42`.
 
 ## Event replan (`runs/replan.py`)
 

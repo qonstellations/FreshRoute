@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from freshroute.config import (  # noqa: F401  patched by tests, read at call time
     AGG_ARC_THRESHOLD,
+    LAMBDA_SPOIL,
     MILP_TIME_LIMIT_S,
     MIP_REL_GAP,
     OVERSHIP_SLACK,
@@ -31,7 +32,8 @@ class MilpPolicy(Policy):
             return plan_aggregated(
                 scenario, ctx, self.name, ctx.get("time_limit_s", MILP_TIME_LIMIT_S),
                 ctx.get("gap", MIP_REL_GAP), ctx.get("overship_slack", OVERSHIP_SLACK))
-        arcs, batches, unship = milp_model.model_data(scenario)
+        lam = ctx.get("lambda_spoil", LAMBDA_SPOIL)  # frontier
+        arcs, batches, unship = milp_model.model_data(scenario, lam)
         ov = ctx.get("demand_cap_override")
         slack = ctx.get("overship_slack", OVERSHIP_SLACK)  # sensitivity
         used = ctx.get("residual_use")  # replan: frozen trips and arrivals
@@ -43,7 +45,7 @@ class MilpPolicy(Policy):
         sol, info = milp_model.solve(scenario, arcs, batches, unship,
                            ctx.get("time_limit_s", MILP_TIME_LIMIT_S), ctx.get("gap", MIP_REL_GAP),
                            override=ov, overship=slack, used=used,
-                           warm=ctx.get("warm_start"), on_incumbent=inc)
+                           warm=ctx.get("warm_start"), on_incumbent=inc, lam=lam)
         info["fallback_used"] = sol is None
         if sol is None:
             info.update(slack_usage={}, mip_gap=None)

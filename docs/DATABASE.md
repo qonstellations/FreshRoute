@@ -399,7 +399,7 @@ Step formulas: `ARCHITECTURE.md` §12. Signs: cost steps are negative when the p
 
 **While there is no organizer baseline (`organizer_baseline` is planned, not built):** `ladder.json → official_baseline` is `null` and `waterfall.json → baseline` is `"fefo"`. Both would switch to `organizer_baseline` once it is implemented. Written by `freshroute ladder` to `outputs/<scenario>__ladder__s<seed>/`; each ladder policy also gets its normal `outputs/<run_id>/`.
 
-### 5.12 Stress and sensitivity
+### 5.12 Stress, sensitivity and frontier
 
 - `stress.csv` — one row per scenario `i` per policy: `scenario_i, policy, spoilage_kg, spoilage_pct, demand_fulfillment_pct, min_dest_fill_pct, net_inr`.
 - `stress_summary.json`:
@@ -412,6 +412,7 @@ Step formulas: `ARCHITECTURE.md` §12. Signs: cost steps are negative when the p
 ```
 `share_plan_beats_baseline` is in 0–1 over **paired** scenarios. Bands are `numpy.percentile` (linear) over the `n` scenarios; `baseline` is `fefo` while there is no organizer baseline. With `--named`, `n = 3` and `scenario_i` 0/1/2 = optimistic/base/stress (`MC_NAMED`, A-42). Written by `freshroute stress` to `outputs/<scenario>__stress__s<seed>/`.
 - `sensitivity.csv` — `parameter, value, policy, net_inr, spoilage_kg, demand_fulfillment_pct`. Parameters: `q10` (1.5, 2.0, 3.0; overrides every commodity's `q10`), `elasticity_multiplier` (1, 0.5; scales `price_elasticity`), `overship_slack` (0, 0.05, 0.10), `demand_multiplier` (0.8, 1.0, 1.2; scales p10/p50/p90). One row per (parameter, value), one parameter moved at a time, `policy` = `milp`; rows at the base value (`elasticity_multiplier` 1, `overship_slack` = `OVERSHIP_SLACK`, `demand_multiplier` 1.0) are the plain run. Values from `config.py` `SENS_*`. Written by `freshroute sensitivity` to `outputs/<scenario>__sensitivity__s<seed>/`.
+- `frontier.csv` — `lambda_spoil, net_inr, spoilage_kg, demand_fulfillment_pct, min_dest_fill_pct`, one row per value of `config.FRONTIER_LAMBDAS` in that order, policy `milp` with the spoilage weight λ moved (ARCHITECTURE.md §14.6, A-53); the row at `LAMBDA_SPOIL` is the plain run up to the solve time limit. Written by `freshroute frontier` to `outputs/<scenario>__frontier__s<seed>/`.
 
 ### 5.13 Replan outputs — `replan/<event_id>/`
 
@@ -453,6 +454,7 @@ outputs/<run_id>/             run_manifest.json plan.csv trips.csv discounts.csv
 outputs/<scenario>__ladder__s<seed>/       ladder.json waterfall.json (§5.11)
 outputs/<scenario>__stress__s<seed>/       stress.csv stress_summary.json (§5.12)
 outputs/<scenario>__sensitivity__s<seed>/  sensitivity.csv (§5.12)
+outputs/<scenario>__frontier__s<seed>/     frontier.csv (§5.12)
 outputs/.api/jobs/              API run-queue state only (§11); gitignored with the rest of outputs/
 outputs/demo_backup/            committed copy of the demo outputs (practice, seed 42): the fifo, fefo, last_day_50 and
                                 milp runs, plus the ladder, stress and sensitivity directories (fallback if the solver fails on demo day)
@@ -608,6 +610,7 @@ Robustness and replan endpoints:
 | `GET /api/stress?scenario=&seed=` | 200 / 404 | `{"summary": stress_summary.json, "rows": stress.csv records or null}` (§5.12); `scenario` is the scenario name; 404 with a detail when not on disk |
 | `POST /api/stress` | 202 / 400 | Request `{"scenario", "policy": "milp", "seed": 42, "n": 200}`; response `{"run_id": "<scenario>__stress__s<seed>", "status"}`; poll `GET /api/runs/{run_id}/status` with that id |
 | `GET /api/sensitivity?scenario=&seed=` | 200 / 404 | `{"records": [...sensitivity.csv rows...]}` (§5.12), or 404 when not on disk |
+| `GET /api/frontier?scenario=&seed=` | 200 / 404 | `{"records": [...frontier.csv rows...]}` (§5.12), or 404 when not on disk (additive, `api_version` unchanged) |
 | `POST /api/replan` | 202 / 400 / 404 | Request `{"run_id", "event": {…§6…}}`; invalid event 400, unknown run 404; response `{"run_id", "event_id", "status"}`; poll `GET /api/runs/{run_id}__replan__{event_id}/status` |
 | `GET /api/runs/{run_id}/replan/{event_id}` | 200 / 404 | `{"diff": diff.json (§5.13), "narration": narrator.template_narration(diff, metrics), "trips": trips.csv records}` (the replanned trips; additive in `api_version` 1); 404 until the replan has been written |
 

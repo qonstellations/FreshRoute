@@ -32,9 +32,10 @@ _IMPROVING = highspy.cb.HighsCallbackType.kCallbackMipImprovingSolution
 _OK = (pulp.LpSolveStatus.Optimal, pulp.LpSolveStatus.TimeLimit, pulp.LpSolveStatus.GapLimit)
 
 
-def model_data(sc: Scenario):
+def model_data(sc: Scenario, lam: float = LAMBDA_SPOIL):
     """Feasible arcs with objective coefficient `coef`, batches, and the per-kg INR spoilage cost
-    of leaving each batch unshipped (s_c * e_b, before LAMBDA_SPOIL)."""
+    of leaving each batch unshipped (s_c * e_b, before LAMBDA_SPOIL). `lam` weights
+    spoilage in `coef` (frontier, A-53)."""
     t = sc.tables
     horizon = int(sc.meta["horizon_days"])
     arcs = build_arcs(sc)
@@ -46,7 +47,7 @@ def model_data(sc: Scenario):
         r.unit_cost_inr_kg, r.disposal_cost_inr_kg, r.salvage_value_inr_kg)
         for c, r in com.iterrows()})
     arcs["spoil_inr_kg"] = arcs.commodity.map(com.handling_loss_frac) * arcs.commodity.map(s_c)
-    arcs["coef"] = (arcs.margin_inr_kg - LAMBDA_SPOIL * arcs.spoil_inr_kg
+    arcs["coef"] = (arcs.margin_inr_kg - lam * arcs.spoil_inr_kg
                     + EPS_FEFO / arcs.usable_life_at_arrival_h)
     arcs = arcs.sort_values(["batch_id", "dest_id", "vehicle_id", "dispatch_day"],
                             ignore_index=True)
@@ -59,7 +60,8 @@ def model_data(sc: Scenario):
 
 
 def solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None,
-           overship=OVERSHIP_SLACK, used=None, warm=None, fleet=None, on_incumbent=None):
+           overship=OVERSHIP_SLACK, used=None, warm=None, fleet=None, on_incumbent=None,
+           lam=LAMBDA_SPOIL):
     """Returns ((x, n) | None, info); None when there is no usable incumbent. `used` (replan,
     section 14.2): {"trips": {(v, day): n}, "recv": {(d, day): kg}} already taken by frozen
     shipments, subtracted from C3 and C4, plus "fill": {d: kg} counted in C6; `warm`: old plan
@@ -82,7 +84,7 @@ def solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None,
              for k in nk}
     prob += (pulp.lpSum(float(c) * xi for c, xi in zip(arcs.coef, x, strict=True))
              - pulp.lpSum(fixed[k] * n[k] for k in nk)
-             - pulp.lpSum(LAMBDA_SPOIL * unship[b] * u[b] for b in u))
+             - pulp.lpSum(lam * unship[b] * u[b] for b in u))
     by_b = arcs.groupby("batch_id").groups
     for bid in batches.index:  # C1 stock balance; arc-less batches too, so u = qty
         prob += pulp.lpSum(x[i] for i in by_b.get(bid, [])) + u[bid] == float(batches.qty_kg[bid])
