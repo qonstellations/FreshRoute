@@ -6,7 +6,7 @@ import { IconArrowRight, IconBook2, IconLeaf } from '@tabler/icons-react'
 import { gsap } from 'gsap'
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin)
 
@@ -49,6 +49,12 @@ const GUIDE_STEPS = [
   },
 ]
 
+// Frame-sequence intro: enter_video.mp4 pre-extracted to 205 stills
+// (frontend/public/frames/). Scrubbing stills on a canvas is smooth;
+// seeking video.currentTime on scroll is not.
+const FRAME_COUNT = 205
+const frameSrc = (i: number) => `/frames/frame_${String(i + 1).padStart(3, '0')}.jpg`
+
 interface LandingPageProps {
   onLaunch: () => void
 }
@@ -56,36 +62,96 @@ interface LandingPageProps {
 export function LandingPage({ onLaunch }: LandingPageProps) {
   const root = useRef<HTMLDivElement>(null)
   const introRef = useRef<HTMLElement>(null)
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
   const guideRef = useRef<HTMLElement>(null)
-  // Reduced-motion or a broken video skips the scroll intro and shows the hero directly.
+  const framesRef = useRef<(HTMLImageElement | null)[]>(Array(FRAME_COUNT).fill(null))
+  const progressRef = useRef(0)
+  // Reduced-motion or broken frames skips the scroll intro and shows the hero directly.
   const [introOff, setIntroOff] = useState(
     () =>
       typeof window !== 'undefined' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   )
+  const [framesReady, setFramesReady] = useState(0) // loaded stills, for the % counter
+  const [framesFailed, setFramesFailed] = useState(false)
+
+  // Preload the stills; draw the nearest loaded frame for any scroll position.
+  useEffect(() => {
+    if (introOff) return
+    let cancelled = false
+    let loaded = 0
+    for (let i = 0; i < FRAME_COUNT; i++) {
+      const img = new Image()
+      img.src = frameSrc(i)
+      img.onload = () => {
+        if (cancelled) return
+        framesRef.current[i] = img
+        loaded += 1
+        setFramesReady(loaded)
+        if (loaded === 1 || i === Math.round(progressRef.current * (FRAME_COUNT - 1))) drawFrame()
+      }
+      img.onerror = () => {
+        if (cancelled) return
+        loaded += 1
+        setFramesReady(loaded)
+        if (loaded === FRAME_COUNT && framesRef.current.every((f) => f == null)) setFramesFailed(true)
+      }
+    }
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [introOff])
+
+  // Cover-fit draw of the frame matching the current scroll progress.
+  const drawFrame = () => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    const want = Math.round(progressRef.current * (FRAME_COUNT - 1))
+    let img: HTMLImageElement | null = null
+    for (let i = want; i >= 0; i--) {
+      if (framesRef.current[i]) {
+        img = framesRef.current[i]
+        break
+      }
+    }
+    if (!img) return
+    const cw = canvas.width, ch = canvas.height
+    const s = Math.max(cw / img.naturalWidth, ch / img.naturalHeight)
+    const dw = img.naturalWidth * s, dh = img.naturalHeight * s
+    ctx.fillStyle = '#000'
+    ctx.fillRect(0, 0, cw, ch)
+    ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh)
+  }
 
   useLayoutEffect(() => {
-    if (introOff || !introRef.current || !videoRef.current) return
-    const video = videoRef.current
+    if (introOff || !introRef.current || !canvasRef.current) return
+    const canvas = canvasRef.current
+    const fitCanvas = () => {
+      canvas.width = canvas.clientWidth || window.innerWidth
+      canvas.height = canvas.clientHeight || window.innerHeight
+      drawFrame()
+    }
+    fitCanvas()
+    window.addEventListener('resize', fitCanvas)
     const ctx = gsap.context(() => {
-      // Pin the fullscreen video while it plays continuously (muted autoplay loop).
-      // Long hold: even a hard trackpad fling spends time on the video instead
-      // of jumping past it. Progress bar shows how much intro is left.
-      const bar = root.current?.querySelector<HTMLElement>('.landing-intro-progress-fill')
-      const trigger = ScrollTrigger.create({
+      // Pin the fullscreen film; scroll progress scrubs the full 20 s,
+      // first still to last. scrub smooths the frame walk.
+      ScrollTrigger.create({
         trigger: introRef.current,
         start: 'top top',
-        end: '+=300%',
+        end: '+=400%',
         pin: true,
         anticipatePin: 1,
+        scrub: 0.6,
         onUpdate: (self) => {
+          progressRef.current = self.progress
+          drawFrame()
+          const bar = root.current?.querySelector<HTMLElement>('.landing-intro-progress-fill')
           if (bar) bar.style.transform = `scaleX(${self.progress})`
         },
-        onEnter: () => video.play().catch(() => {}),
-        onEnterBack: () => video.play().catch(() => {}),
-        onLeave: () => video.pause(),
-        onLeaveBack: () => video.pause(),
       })
       // Keep the ambient marquee looping (the one section we kept as-is).
       gsap.to('.marquee-track', { xPercent: -50, duration: 25, ease: 'none', repeat: -1 })
@@ -97,10 +163,13 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
         stagger: 0.12,
         scrollTrigger: { trigger: '.landing-hero', start: 'top 80%', once: true },
       })
-      return () => trigger.kill()
     }, root)
-    return () => ctx.revert()
-  }, [introOff])
+    return () => {
+      window.removeEventListener('resize', fitCanvas)
+      ctx.revert()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [introOff, framesFailed])
 
   const scrollToGuide = () => {
     gsap.to(window, { duration: 1, ease: 'power3.inOut', scrollTo: { y: '#guide', offsetY: 70 } })
@@ -115,29 +184,33 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
 
   return (
     <div ref={root} className="landing-page">
-      {/* SCROLL INTRO: fullscreen enter_video.mp4, pinned while it plays */}
+      {/* SCROLL INTRO: fullscreen film stills, scrubbed by scroll */}
       {!introOff && (
-        <section ref={introRef} className="landing-intro" aria-label="Introduction video: scroll to continue">
+        <section ref={introRef} className="landing-intro" aria-label="Introduction film: scroll to play it">
           <div className="landing-intro-sticky">
-            <video
-              ref={videoRef}
-              className="landing-intro-video"
-              src="/enter_video.mp4"
-              muted
-              loop
-              autoPlay
-              playsInline
-              preload="auto"
-              aria-label="FreshRoute introduction video"
-              onError={() => setIntroOff(true)}
-            />
+            {framesFailed ? (
+              <video
+                className="landing-intro-video"
+                src="/enter_video.mp4"
+                muted
+                loop
+                autoPlay
+                playsInline
+                preload="auto"
+                aria-label="FreshRoute introduction video"
+              />
+            ) : (
+              <canvas ref={canvasRef} className="landing-intro-video" aria-label="FreshRoute introduction film" />
+            )}
             <div className="landing-intro-overlay">
               <Text className="sec-tag">[SCROLL TO ENTER]</Text>
               <div className="landing-intro-progress" aria-hidden>
                 <div className="landing-intro-progress-fill" />
               </div>
               <Text size="sm" c="var(--cream)" opacity={0.85}>
-                Keep scrolling to enter the site.
+                {framesReady < FRAME_COUNT
+                  ? `LOADING THE FILM … ${Math.round((framesReady / FRAME_COUNT) * 100)}% — KEEP SCROLLING`
+                  : 'THE FULL FILM PLAYS AS YOU SCROLL — KEEP GOING TO ENTER.'}
               </Text>
               <button className="atelier-ghost landing-intro-skip" onClick={skipIntro} data-cursor="SKIP">
                 SKIP INTRO ↓
