@@ -5,12 +5,29 @@ The API never computes a KPI; it only loads what the pipeline wrote.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 from freshroute.runs.naming import run_id
 
 ROOT = Path(__file__).resolve().parents[4]  # backend/src/freshroute/api/ -> repo root
-OUTPUTS = ROOT / "outputs"
+
+
+def _resolve_outputs() -> Path:
+    env = os.getenv("FRESHROUTE_OUTPUTS")
+    if env:
+        return Path(env)
+    p = ROOT / "outputs"
+    if p.is_dir() and any((d / "metrics.json").is_file() for d in p.iterdir() if d.is_dir()):
+        return p
+    backup = p / "demo_backup"
+    has_demo = backup.is_dir() and any(
+        (d / "metrics.json").is_file() for d in backup.iterdir() if d.is_dir()
+    )
+    return backup if has_demo else p
+
+
+OUTPUTS = _resolve_outputs()
 FIXTURE = ROOT / "backend" / "tests" / "fixtures" / "metrics_example.json"
 
 
