@@ -25,7 +25,7 @@ In development, `make api` (port 8000) and `make web` (Vite on 5173, proxying `/
 
 ## What the user sees
 
-The frontend has two parts, switched by URL hash (D-32): a narrative **landing page**, and an **operations dashboard** with four tabs: Overview & Financials, Fleet & Dispatches, What-if & Disruptions (the route map where a road can be closed live, plus the replan diff) and Independent Audit. Overview shows baseline against ours on spoilage, fulfilment, net ₹ and violations, plus the waterfall and ladder. Audit shows the validator panel, assumptions and `run_manifest.json`.
+The frontend has two parts, switched by URL hash (D-32): a narrative **landing page**, and an **operations dashboard** with four tabs: 1. Results, 2. Today's plan, 3. What if something breaks? (the route map where a road can be closed live, plus the replan diff) and 4. Proof & audit. Results shows baseline against ours on food spoiled, orders filled, profit after all costs and rule breaks, plus the waterfall ("Where the extra profit comes from") and the ladder ("Every rule vs FreshRoute"). Proof & audit shows the validator panel, assumptions and `run_manifest.json`.
 
 A synthetic-data banner is driven by `scenario.json → source` and is shown whenever the data is synthetic (Rule 7).
 

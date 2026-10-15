@@ -46,9 +46,9 @@ export function Plan({ run, runId, step }: { run: RunDetail; runId: string; step
 
   useEffect(() => {
     setSheet(undefined); setCards(undefined); setOpen(undefined); setDest(undefined); setError('')
-    const fail = (what: string) => (e: Error) => setError(`Cannot load ${what}: ${e.message}`)
-    api.dispatchSheet(runId).then(setSheet).catch(fail('dispatch sheet'))
-    api.reasonCards(runId).then(setCards).catch(fail('reason cards'))
+    const fail = (what: string) => (e: Error) => setError(`Couldn't load ${what}. Try refreshing the page. (${e.message})`)
+    api.dispatchSheet(runId).then(setSheet).catch(fail('the truck loading list'))
+    api.reasonCards(runId).then(setCards).catch(fail('the explanations for each shipment'))
   }, [runId])
 
   // dispatch rows carry no shipment_id; priority_rank + batch_id identify the plan row (§5.2, §5.10)
@@ -78,7 +78,7 @@ export function Plan({ run, runId, step }: { run: RunDetail; runId: string; step
 
   return (
     <Stack gap="xl" pb="xl" className="plan">
-      {error && <Alert color="red" icon={<IconAlertTriangle />} title="Load error">{error}</Alert>}
+      {error && <Alert color="red" icon={<IconAlertTriangle />} title="Something didn't load">{error}</Alert>}
       {sheet === undefined ? <>
         <Paper withBorder radius="md" p="md"><Skeleton h={22} w={260} mb="sm" /><Skeleton h={380} /></Paper>
         <Stack gap={8}><Skeleton h={22} w={200} />{Array.from({ length: 8 }, (_, i) => <Skeleton key={i} h={30} />)}</Stack>
@@ -91,9 +91,9 @@ export function Plan({ run, runId, step }: { run: RunDetail; runId: string; step
             <Dispatch sheet={sheet} runId={runId} onRow={openRow} filter={dest} onClear={() => setDest(undefined)} />
           </Reveal>
         </>
-        : <Empty icon={IconClipboardOff} text="No dispatch sheet for this run." />}
+        : <Empty icon={IconClipboardOff} text="No loading list was saved for this result." />}
       <Reveal hidden={folded}>
-        {cards === null && <Empty icon={IconFileUnknown} text="No reason cards for this run." />}
+        {cards === null && <Empty icon={IconFileUnknown} text="No explanations or price cuts were saved for this result." />}
         {cards === undefined && sheet !== undefined && <Skeleton h={120} />}
         {cards && <DiscountCards cards={cards} onOpen={openCard} />}
       </Reveal>

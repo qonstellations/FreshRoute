@@ -1,5 +1,5 @@
 // POST /api/runs, then poll GET /api/runs/{id}/status every second until done/error (D-21).
-import { Box, Button, Loader } from '@mantine/core'
+import { Box, Button, Loader, Tooltip } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { IconCheck, IconPlayerPlayFilled } from '@tabler/icons-react'
 import { AnimatePresence, m } from 'motion/react'
@@ -28,7 +28,7 @@ export function RunButton({ request, onDone, onProgress, onError }: {
 
   function fail(msg: string) {
     onError(msg)
-    notifications.show({ color: 'red', title: 'Plan failed', message: msg })
+    notifications.show({ color: 'red', title: 'Could not make a plan', message: msg })
   }
 
   async function run() {
@@ -45,10 +45,10 @@ export function RunButton({ request, onDone, onProgress, onError }: {
         if (s.state === 'done') {
           setDone(Date.now())
           setTimeout(() => setDone(null), 1800) // back to the idle label
-          notifications.show({ color: 'green', title: 'Plan ready', message: `Run ${run_id} finished.`, icon: <IconCheck size={18} /> })
+          notifications.show({ color: 'green', title: 'Plan ready', message: 'The optimiser finished. Results are up to date.', icon: <IconCheck size={18} /> })
           return onDone(run_id)
         }
-        if (s.state === 'error') return fail(`Run ${run_id} failed: ${s.error ?? 'unknown error'}`)
+        if (s.state === 'error') return fail(`The optimiser stopped with an error (${run_id}): ${s.error ?? 'unknown error'}`)
       }
     } catch (err) {
       fail(String(err instanceof Error ? err.message : err))
@@ -62,6 +62,8 @@ export function RunButton({ request, onDone, onProgress, onError }: {
 
   return (
     <Box pos="relative">
+      <Tooltip multiline w={280} withArrow
+        label="Solves the plan with HiGHS (up to 30 s). A first plan shows in about 1 s and improves while you watch.">
       <Button fullWidth size="md" radius="md" onClick={run} disabled={!request.scenario}
         aria-busy={!!busy} className="plan-btn" data-state={state}
         style={{ overflow: 'hidden', cursor: busy ? 'progress' : undefined }}>
@@ -70,16 +72,17 @@ export function RunButton({ request, onDone, onProgress, onError }: {
           <m.span key={state} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, position: 'relative' }}
             initial={{ opacity: 0, y: 14, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -14, scale: 0.9 }} transition={spring.snappy}>
-            {state === 'busy' && <><Loader size={16} color="white" type="dots" /> {improving ? 'Improving…' : 'Planning…'}</>}
+            {state === 'busy' && <><Loader size={16} color="white" type="dots" /> {improving ? 'Improving the plan…' : 'Planning…'}</>}
             {state === 'done' && <>
               <m.span style={{ display: 'inline-flex' }} initial={{ scale: 0, rotate: -45 }}
                 animate={{ scale: 1, rotate: 0 }} transition={spring.bouncy}><IconCheck size={18} stroke={3} /></m.span>
               Done
             </>}
-            {state === 'idle' && <><IconPlayerPlayFilled size={16} /> Plan</>}
+            {state === 'idle' && <><IconPlayerPlayFilled size={16} /> Run the optimiser</>}
           </m.span>
         </AnimatePresence>
       </Button>
+      </Tooltip>
       {/* one-shot burst, re-keyed per success */}
       {state === 'done' && (
         <Box key={done} pos="absolute" inset={0} style={{ pointerEvents: 'none' }} aria-hidden>

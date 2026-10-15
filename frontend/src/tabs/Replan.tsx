@@ -10,6 +10,7 @@ import { LayoutGroup, m, useReducedMotion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 import { api, waitReplan } from '../api/client'
 import { ExampleBanner } from '../components/Banners'
+import { Explain } from '../components/Explain'
 import { KpiTile, toneOf } from '../components/KpiTile'
 import { ShelfLifeMap } from '../components/plan/ShelfLifeMap'
 import { Reveal } from '../components/score/Reveal'
@@ -20,16 +21,28 @@ import type { Diff, DispatchRow, EventType, ReplanEvent, ReplanKpis, ReplanResul
 
 // The 5 canned events of DATABASE §6; magnitudes are the documented demo defaults (editable inputs, not coefficients).
 type Ids = { dest: string; commodity: string; vehicle: string }
-const CANNED: Record<EventType, { label: string; note: string; magnitude: number; unit: string; target: (i: Ids) => string }> = {
-  route_delay: { label: 'NH-48 jam: route delay', note: 'NH-48 jam', magnitude: 6, unit: '+h',
+// `field` labels the magnitude input; `where` explains the target format in a hover note.
+const CANNED: Record<EventType, { label: string; note: string; magnitude: number; field: string; where: string
+  target: (i: Ids) => string }> = {
+  route_delay: { label: 'Traffic jam on a highway (route delay)', note: 'highway traffic jam', magnitude: 6,
+    field: 'Extra delay (hours)',
+    where: 'Which roads, as from|to|truck type (* = any). Example: *|M3|* means every road into market M3.',
     target: i => `*|${i.dest}|*` },
-  capacity_drop: { label: 'Reefer breakdown: capacity drop', note: 'reefer breakdown', magnitude: 0.5, unit: 'lost, 0–1',
+  capacity_drop: { label: 'Refrigerated truck breaks down (loses capacity)', note: 'refrigerated truck breakdown', magnitude: 0.5,
+    field: 'Share of capacity lost (0–1)',
+    where: 'Which truck, as vehicle:<truck id>. Example: vehicle:V1 means truck V1.',
     target: i => `vehicle:${i.vehicle}` },
-  demand_spike: { label: 'Demand spike', note: 'festival demand', magnitude: 1.5, unit: '× demand',
+  demand_spike: { label: 'Festival demand spike at a market', note: 'festival demand', magnitude: 1.5,
+    field: 'Demand multiplier (×)',
+    where: 'Which market and produce, as dest:<market>|<produce> (* = any). Example: dest:M3|tomato.',
     target: i => `dest:${i.dest}|${i.commodity}` },
-  new_order: { label: 'New order', note: 'walk-in bulk order', magnitude: 300, unit: '+kg',
+  new_order: { label: 'Surprise bulk order', note: 'walk-in bulk order', magnitude: 300,
+    field: 'Extra order (kg)',
+    where: 'Which market and produce, as dest:<market>|<produce>. Example: dest:M3|tomato.',
     target: i => `dest:${i.dest}|${i.commodity}` },
-  price_shock: { label: 'Price shock', note: 'mandi glut', magnitude: 0.8, unit: '× price',
+  price_shock: { label: 'Market price crash', note: 'market glut', magnitude: 0.8,
+    field: 'Price multiplier (×)',
+    where: 'Which market and produce, as dest:<market>|<produce> (* = any). Example: dest:M3|* means everything sold at M3.',
     target: i => `dest:${i.dest}|*` },
 }
 const TYPES = Object.keys(CANNED) as EventType[]
@@ -96,10 +109,13 @@ export function Replan({ run, runId, step }: TabProps) {
       <ExampleBanner show={!!result?.example} what="replan" />
       {rows.length > 0 && (
         <Stack gap={4}>
-          <Text fw={700}>Break it live: click any road to close it for {CLOSE_H} h from hour {AT_H}, or a market to stage a demand spike.</Text>
+          <Text fw={700}>Break the plan and watch FreshRoute recover</Text>
+          <Text size="sm">1. Click any road on the map to close it for {CLOSE_H} h starting at hour {AT_H}. FreshRoute re-plans in a few seconds.</Text>
+          <Text size="sm">2. Or click a market to set up a demand spike there, or pick any event below and press “Re-plan now”.</Text>
+          <Text size="sm" mb={4}>3. Below, see which shipments moved and how profit changed.</Text>
           <ShelfLifeMap scenario={run.scenario.split(/[\\/]/).pop() ?? run.scenario} runId={runId} rows={rows}
             onPick={spikeAt} onRoute={closeRoad} after={after} />
-          {after && <Text size="xs" c="dimmed">Red dashed: roads the replan stopped using · bold green: roads it uses now.</Text>}
+          {after && <Text size="xs" c="dimmed">Red dashed = roads the new plan stopped using · bold green = roads it uses now</Text>}
         </Stack>
       )}
       <Paper withBorder radius="lg" p="lg">
@@ -107,26 +123,26 @@ export function Replan({ run, runId, step }: TabProps) {
           <ThemeIcon size={44} radius="md" variant="light"><IconBolt size={26} /></ThemeIcon>
           <div>
             <Title order={3}>Something changed mid-day</Title>
-            <Text size="sm" c="dimmed">Shipments dispatched at or before the event hour are frozen; HiGHS re-solves the rest.</Text>
+            <Text size="sm" c="dimmed">Shipments already on the road are <Explain term="frozen">frozen</Explain>; FreshRoute re-plans everything else.</Text>
           </div>
         </Group>
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 5 }} spacing="sm">
-          <Select label="Event" value={form.type} allowDeselect={false} data={TYPES.map(t => ({ value: t, label: CANNED[t].label }))}
+          <Select label="What happened" value={form.type} allowDeselect={false} data={TYPES.map(t => ({ value: t, label: CANNED[t].label }))}
             onChange={v => v && setForm(formFor(v as EventType, ids))} style={{ gridColumn: 'span 2' }} />
-          <TextInput label="Target" value={form.target} onChange={e => setForm({ ...form, target: e.currentTarget.value })} />
-          <NumberInput label={`Magnitude (${meta.unit})`} value={form.magnitude} min={0} decimalScale={2}
+          <TextInput label={<Explain note={meta.where}>Where</Explain>} value={form.target} onChange={e => setForm({ ...form, target: e.currentTarget.value })} />
+          <NumberInput label={meta.field} value={form.magnitude} min={0} decimalScale={2}
             onChange={v => setForm({ ...form, magnitude: Number(v) })} />
-          <NumberInput label="At hour" value={form.at_h} min={0} decimalScale={1}
+          <NumberInput label="Happens at hour (of the 3-day plan)" value={form.at_h} min={0} decimalScale={1}
             onChange={v => setForm({ ...form, at_h: Number(v) })} />
         </SimpleGrid>
         <Group mt="md" justify="space-between" align="flex-end">
-          <TextInput label="Note (not used by the solver)" value={form.note ?? ''} w={320}
+          <TextInput label="Your note (for the record only)" value={form.note ?? ''} w={320}
             onChange={e => setForm({ ...form, note: e.currentTarget.value })} />
           <Button size="md" radius="xl" leftSection={<IconRefresh size={18} />} loading={busy} onClick={() => apply()}
-            disabled={!form.target.trim()}>Apply and replan</Button>
+            disabled={!form.target.trim()}>Re-plan now</Button>
         </Group>
       </Paper>
-      {error && <Alert color="red" icon={<IconAlertTriangle />} title="Replan failed">{error}</Alert>}
+      {error && <Alert color="red" icon={<IconAlertTriangle />} title="Re-plan failed">{error}</Alert>}
       {result && <DiffView r={result} step={step} at={at} />}
     </Stack>
   )
@@ -134,13 +150,13 @@ export function Replan({ run, runId, step }: TabProps) {
 
 const KPI_TILES: { key: keyof ReplanKpis; label: string; unit: string; digits: number; lowerIsBetter?: boolean
   show: (v: number) => string }[] = [
-  { key: 'net_inr', label: 'Net (replanned)', unit: ' ₹', digits: 0, show: v => `₹${fmt(v)}` },
-  { key: 'spoilage_kg', label: 'Spoilage (replanned)', unit: ' kg', digits: 0, lowerIsBetter: true, show: v => `${fmt(v)} kg` },
-  { key: 'demand_fulfillment_pct', label: 'Fulfilment (replanned)', unit: ' pp', digits: 1, show: v => `${fmt(v, 1)}%` },
+  { key: 'net_inr', label: 'Profit after re-planning', unit: ' ₹', digits: 0, show: v => `₹${fmt(v)}` },
+  { key: 'spoilage_kg', label: 'Food spoiled after re-planning', unit: ' kg', digits: 0, lowerIsBetter: true, show: v => `${fmt(v)} kg` },
+  { key: 'demand_fulfillment_pct', label: 'Orders filled after re-planning', unit: ' pp', digits: 1, show: v => `${fmt(v, 1)}%` },
 ]
 
 type Spot = { dest_id: string | null; dispatch_day: number | null } // null = left unshipped by the replan (§5.13)
-const destOf = (x: Spot) => x.dest_id ?? 'unshipped'
+const destOf = (x: Spot) => x.dest_id ?? 'not shipped'
 const dayOf = (x: Spot) => (x.dispatch_day === null ? '' : ` · day ${x.dispatch_day}`)
 const where = (x: Spot) => `${destOf(x)}${dayOf(x)}`
 
@@ -159,20 +175,23 @@ function DiffView({ r, step, at }: { r: ReplanResult; step?: number; at: (s: num
         <Reveal show={at(1)} collapse={step != null}>
           <Paper withBorder radius="lg" p="lg">
             <Group justify="space-between" mb="sm">
-              <Title order={3}>What moved</Title>
+              <div>
+                <Title order={3}>What moved</Title>
+                <Text size="sm" c="dimmed">Each card is a batch sliding from its old market to its new one. The tables list every change.</Text>
+              </div>
               <Group gap="xs">
-                <Badge size="lg" variant="light" color="gray">{d.event_id} at hour {d.at_h}</Badge>
+                <Badge size="lg" variant="light" color="gray" title={d.event_id}>Event at hour {d.at_h}</Badge>
                 <Badge size="lg" variant="light" color="blue" leftSection={<IconSnowflake size={14} />}>
-                  {d.frozen_shipments} shipments frozen</Badge>
-                <Badge size="lg" variant="light" color="grape">re-solved in {d.solve_seconds} s</Badge>
+                  {d.frozen_shipments} shipments already on the road (frozen)</Badge>
+                <Badge size="lg" variant="light" color="grape">Re-planned in {d.solve_seconds} s</Badge>
               </Group>
             </Group>
             <Flights key={d.event_id} diff={d} />
             <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg" mt="lg">
               <div>
-                <Text fw={700} mb={4}>Moved batches ({d.moved_batches.length})</Text>
+                <Text fw={700} mb={4}>Batches sent to a different market ({d.moved_batches.length})</Text>
                 <Table striped fz="sm" className="num">
-                  <Table.Thead><Table.Tr><Table.Th>batch</Table.Th><Table.Th>from</Table.Th><Table.Th /><Table.Th>to</Table.Th>
+                  <Table.Thead><Table.Tr><Table.Th>Batch</Table.Th><Table.Th>Was going to</Table.Th><Table.Th /><Table.Th>Now going to</Table.Th>
                     <Table.Th ta="right">kg</Table.Th></Table.Tr></Table.Thead>
                   <Table.Tbody>
                     {d.moved_batches.map(b => (
@@ -181,13 +200,13 @@ function DiffView({ r, step, at }: { r: ReplanResult; step?: number; at: (s: num
                         <Table.Td>{where(b.to)}</Table.Td><Table.Td ta="right">{fmt(b.kg, 1)}</Table.Td></Table.Tr>))}
                   </Table.Tbody>
                 </Table>
-                {!d.moved_batches.length && <Text c="dimmed" size="sm">Every batch kept its destination.</Text>}
+                {!d.moved_batches.length && <Text c="dimmed" size="sm">Every batch still goes to the same market.</Text>}
               </div>
               <div>
-                <Text fw={700} mb={4}>Discount changes ({d.discount_changes.length})</Text>
+                <Text fw={700} mb={4}>Price changes ({d.discount_changes.length})</Text>
                 <Table striped fz="sm" className="num">
-                  <Table.Thead><Table.Tr><Table.Th>lot</Table.Th><Table.Th ta="right">day</Table.Th>
-                    <Table.Th ta="right">from</Table.Th><Table.Th /><Table.Th>to</Table.Th></Table.Tr></Table.Thead>
+                  <Table.Thead><Table.Tr><Table.Th>Stock lot</Table.Th><Table.Th ta="right">Day</Table.Th>
+                    <Table.Th ta="right">Old discount</Table.Th><Table.Th /><Table.Th>New discount</Table.Th></Table.Tr></Table.Thead>
                   <Table.Tbody>
                     {d.discount_changes.map(c => (
                       <Table.Tr key={`${c.lot_id}-${c.day}`}><Table.Td>{c.lot_id}</Table.Td><Table.Td ta="right">{c.day}</Table.Td>
@@ -195,7 +214,7 @@ function DiffView({ r, step, at }: { r: ReplanResult; step?: number; at: (s: num
                         <Table.Td fw={700}>{c.to_pct}%</Table.Td></Table.Tr>))}
                   </Table.Tbody>
                 </Table>
-                {!d.discount_changes.length && <Text c="dimmed" size="sm">No markdown changed.</Text>}
+                {!d.discount_changes.length && <Text c="dimmed" size="sm">No discount changed.</Text>}
               </div>
             </SimpleGrid>
           </Paper>
@@ -210,10 +229,10 @@ function DiffView({ r, step, at }: { r: ReplanResult; step?: number; at: (s: num
                 if (now == null) return null
                 return <KpiTile key={t.key} label={t.label} value={t.show(now)}
                   delta={dk == null ? null : fmtSigned(dk, t.digits, t.unit)} tone={toneOf(dk ?? null, t.lowerIsBetter)}
-                  sub={old == null ? undefined : `old plan under the event: ${t.show(old)}`} />
+                  sub={old == null ? undefined : `If we had kept the old plan: ${t.show(old)}`} />
               })}
             </SimpleGrid>
-            <Text size="sm" c="dimmed" mt={0}>Badges: replanned minus the old plan executed in the changed world (diff.json delta_kpis).</Text>
+            <Text size="sm" c="dimmed" mt={0}>Coloured badges = re-planned result minus keeping the old plan after the event.</Text>
             <Blockquote color="green" icon={<IconMessage2 size={22} />} radius="lg" p="lg">
               <Text fz="lg">{r.narration}</Text>
             </Blockquote>
@@ -253,8 +272,8 @@ function Flights({ diff }: { diff: Diff }) {
         </div>
       </LayoutGroup>
       <Group justify="space-between" mt="xs">
-        <Text size="xs" c="dimmed">{landed ? 'new destinations (replanned)' : 'old destinations (before the event)'}</Text>
-        <Button size="compact-sm" variant="subtle" onClick={() => setLanded(false)} disabled={!landed}>Replay</Button>
+        <Text size="xs" c="dimmed">{landed ? 'Now: where each batch goes after re-planning' : 'Before: where each batch was going'}</Text>
+        <Button size="compact-sm" variant="subtle" onClick={() => setLanded(false)} disabled={!landed}>Replay the move</Button>
       </Group>
     </>
   )

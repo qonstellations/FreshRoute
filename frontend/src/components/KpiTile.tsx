@@ -4,7 +4,9 @@ import { Badge, Group, Paper, Text } from '@mantine/core'
 import { IconArrowDownRight, IconArrowUpRight, IconMinus } from '@tabler/icons-react'
 import { m, useMotionValue, useReducedMotion, useSpring, useTransform, type Variants } from 'motion/react'
 import type { PointerEvent } from 'react'
+import type { Term } from '../lib/words'
 import { spring } from '../theme'
+import { Explain } from './Explain'
 
 export type Tone = 'good' | 'bad' | 'neutral'
 
@@ -58,8 +60,8 @@ export const tileVariants: Variants = {
 
 const toneColor = { good: 'green', bad: 'red', neutral: 'gray' } as const
 
-export function KpiTile({ label, value, delta, tone = 'neutral', ring, ringTone, sub }: {
-  label: string; value: string; delta?: string | null; tone?: Tone
+export function KpiTile({ label, hint, value, delta, tone = 'neutral', ring, ringTone, sub }: {
+  label: string; hint?: Term; value: string; delta?: string | null; tone?: Tone
   ring?: number; ringTone?: Tone; sub?: string
 }) {
   const reduce = useReducedMotion()
@@ -85,7 +87,7 @@ export function KpiTile({ label, value, delta, tone = 'neutral', ring, ringTone,
       style={{ rotateX, rotateY, transformPerspective: 900 }} className="kpi-tile">
       <Paper withBorder radius="lg" p="lg" h="100%" className="kpi-paper">
         <m.div className="kpi-shine" style={{ x: shineX, y: shineY }} aria-hidden />
-        <Text size="sm" c="dimmed" fw={600} tt="uppercase" lts={0.6}>{label}</Text>
+        <Text size="sm" c="dimmed" fw={600} tt="uppercase" lts={0.6}>{hint ? <Explain term={hint}>{label}</Explain> : label}</Text>
         <Text fz={28} fw={800} lh={1.2} mt={6}><Odometer text={value} /></Text>
         {sub && <Text size="sm" c="dimmed" mt={2}>{sub}</Text>}
         {(delta || ring != null) && (

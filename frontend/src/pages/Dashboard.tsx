@@ -7,6 +7,7 @@ import {
 } from '@tabler/icons-react'
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../api/client'
+import { Explain } from '../components/Explain'
 import { RunButton } from '../components/RunButton'
 import { RunPicker } from '../components/RunPicker'
 import { Plan } from '../tabs/Plan'
@@ -14,6 +15,7 @@ import { Replan } from '../tabs/Replan'
 import { Robustness } from '../tabs/Robustness'
 import { Scoreboard } from '../tabs/Scoreboard'
 import { Trust } from '../tabs/Trust'
+import { policyName, scenarioName } from '../lib/words'
 import type { Progress, RunDetail, RunsList, ScenarioInfo } from '../types'
 
 interface DashboardProps {
@@ -49,7 +51,7 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
       )
       setRunId(select ?? demo?.run_id ?? r.runs[0]?.run_id ?? (r.fixture ? FIXTURE_RUN_ID : null))
     } catch (e) {
-      setError(`Cannot list runs: ${e instanceof Error ? e.message : e}`)
+      setError(`Could not load the saved results: ${e instanceof Error ? e.message : e}`)
     }
   }, [])
 
@@ -60,7 +62,7 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
         setScenarios(s)
         setScenario((v) => v || s.find((x) => x.name === 'practice')?.name || s[0]?.name || 'practice')
       })
-      .catch((e) => setError(`Cannot list scenarios: ${e.message}`))
+      .catch((e) => setError(`Could not load the list of scenarios: ${e.message}`))
     loadRuns()
   }, [loadRuns])
 
@@ -72,14 +74,13 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
         setRun(r)
         setError('')
       })
-      .catch((e) => setError(`Cannot load run ${runId}: ${e.message}`))
+      .catch((e) => setError(`Could not open this result (${runId}): ${e.message}`))
   }, [runId, reload])
 
   const onProgress = (id: string, p: Progress) => { setLive(p); loadRuns(id); setReload((n) => n + 1) }
   const onDone = (id: string) => { setLive(null); loadRuns(id); setReload((n) => n + 1) }
 
   const ready = run && runId
-  const scenarioDisplayName = scenario === 'practice' ? 'Bangalore Central Hub (200 Batches · 8 Mandis)' : scenario
 
   return (
     <div className="dashboard-container">
@@ -92,12 +93,18 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
                 OPERATIONS CONSOLE
               </Badge>
               <Text size="xs" c="dimmed">
-                DECISION SUPPORT SYSTEM
+                <Explain term="synthetic">SYNTHETIC DATA</Explain>
               </Text>
             </Group>
             <Title order={2} className="anton" style={{ letterSpacing: '0.02em', fontSize: '1.75rem' }}>
-              {scenarioDisplayName.toUpperCase()}
+              {scenarioName(scenario).toUpperCase()}
             </Title>
+            <Text size="sm" c="dimmed" maw={720} mt={4}>
+              What you're looking at: a made-up but realistic produce hub near Bengaluru with 200 batches of fresh
+              produce, 8 markets and a 3-day plan. Results compares FreshRoute with simple rules. Today's plan shows
+              which crate goes on which truck. What if something breaks? lets you close a road and watch it re-plan.
+              Proof &amp; audit shows the independent check.
+            </Text>
           </div>
 
           <Group gap="sm" wrap="nowrap">
@@ -115,20 +122,20 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
             />
 
             {/* Subtle Advanced Settings Drawer trigger */}
-            <Tooltip label="Scenario & Advanced Settings">
+            <Tooltip label="Advanced settings: scenario, plan type, seed, saved results">
               <ActionIcon
                 variant="default"
                 size="xl"
                 radius="xs"
                 onClick={() => setSettingsOpen(true)}
-                aria-label="Simulation settings"
+                aria-label="Advanced settings"
               >
                 <IconAdjustments size={20} stroke={1.8} />
               </ActionIcon>
             </Tooltip>
 
             {/* Return to Product Story */}
-            <Tooltip label="Return to Product Story">
+            <Tooltip label="Back to the overview page">
               <Button
                 variant="subtle"
                 color="gray"
@@ -136,20 +143,20 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
                 onClick={onBackToStory}
                 visibleFrom="md"
               >
-                Tour
+                Back to overview
               </Button>
             </Tooltip>
           </Group>
         </Group>
 
         {live && (
-          <Alert color="green" variant="light" mt="sm" title="Showing the best plan found so far">
-            Still searching for a better one. Plan v{live.version} · net ₹{Math.round(live.net_inr).toLocaleString('en-IN')} · {live.elapsed_s} s
+          <Alert color="green" variant="light" mt="sm" title={`Showing the best plan so far (version ${live.version}) · still looking for a better one`}>
+            Profit after all costs so far: ₹{Math.round(live.net_inr).toLocaleString('en-IN')} · {live.elapsed_s} s of searching
           </Alert>
         )}
 
         {error && (
-          <Alert color="red" icon={<IconAlertTriangle />} title="System Alert" mt="sm">
+          <Alert color="red" icon={<IconAlertTriangle />} title="Something went wrong" mt="sm">
             {error}
           </Alert>
         )}
@@ -160,16 +167,16 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
         <Tabs value={activeTab} onChange={(val) => val && setActiveTab(val)} color="green">
           <Tabs.List className="dashboard-tabs-list">
             <Tabs.Tab value="overview" leftSection={<IconTrendingUp size={18} />}>
-              1. OVERVIEW & FINANCIALS
+              1. RESULTS
             </Tabs.Tab>
             <Tabs.Tab value="trucks" leftSection={<IconTruck size={18} />}>
-              2. FLEET & DISPATCHES
+              2. TODAY'S PLAN
             </Tabs.Tab>
             <Tabs.Tab value="disruptions" leftSection={<IconRoute size={18} />}>
-              3. WHAT-IF & DISRUPTIONS
+              3. WHAT IF SOMETHING BREAKS?
             </Tabs.Tab>
             <Tabs.Tab value="audit" leftSection={<IconShieldCheck size={18} />}>
-              4. INDEPENDENT AUDIT
+              4. PROOF &amp; AUDIT
             </Tabs.Tab>
           </Tabs.List>
         </Tabs>
@@ -182,9 +189,9 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
             <ThemeIcon size={64} radius="xl" color="green" variant="light" mx="auto" mb="md">
               <IconCpu size={36} />
             </ThemeIcon>
-            <Title order={3}>NO DISPATCH PLAN GENERATED YET</Title>
+            <Title order={3}>NO PLAN YET</Title>
             <Text size="sm" c="dimmed" maw={460} mx="auto" mt={8} mb="xl">
-              Click the button above to run the optimization engine. In seconds, FreshRoute will allocate 200 batches across 8 markets.
+              Click Run the optimiser to make one. FreshRoute decides where each of the 200 batches goes across the 8 markets. A first plan appears in about 1 second.
             </Text>
             <RunButton
               request={{
@@ -217,13 +224,15 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
                 <Paper withBorder p="md" radius="xs" style={{ background: 'var(--panel)' }}>
                   <Group justify="space-between" mb="xs">
                     <div>
-                      <Title order={4}>Mid-Day Route & Fleet Disruption Simulator</Title>
+                      <Title order={4}>What if something breaks mid-day?</Title>
                       <Text size="xs" c="dimmed">
-                        Test system resilience: simulate an unexpected highway closure, reefer breakdown, or demand spike.
+                        How to use: close a road on the map, break down a{' '}
+                        <Explain term="reefer">cold truck</Explain> or add a demand spike. FreshRoute re-plans the rest of
+                        the day in a few seconds and shows what changed.
                       </Text>
                     </div>
                     <Badge color="blue" variant="light">
-                      HiGHS RE-SOLVE · 2 S CAP
+                      SOLVER LIMIT 2 S PER RE-PLAN
                     </Badge>
                   </Group>
                 </Paper>
@@ -245,55 +254,55 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
       <Drawer
         opened={settingsOpen}
         onClose={() => setSettingsOpen(false)}
-        title="Simulation Settings"
+        title="Advanced settings"
         position="right"
         size="md"
       >
         <Stack gap="md">
           <Text size="xs" c="dimmed">
-            Configure scenario inputs and solver parameters. The default configuration executes the recommended
-            A+ solver spine on the calibrated practice scenario.
+            Change what the optimiser plans for. The defaults run FreshRoute on the practice scenario, which is the
+            setup every result on this page uses.
           </Text>
 
           <Select
-            label="Scenario Dataset"
+            label="Scenario"
             value={scenario}
             onChange={(v) => v && setScenario(v)}
-            data={scenarios.map((s) => ({ value: s.name, label: `${s.name} (${s.horizon_days}d)` }))}
+            data={scenarios.map((s) => ({ value: s.name, label: `${scenarioName(s.name)} (${s.horizon_days} days)` }))}
             allowDeselect={false}
           />
 
           <Select
-            label="Dispatch Algorithm"
+            label="How to plan"
             value={policy}
             onChange={(v) => v && setPolicy(v)}
             data={[
-              { value: 'milp', label: 'FreshRoute MILP (Recommended)' },
-              { value: 'fefo', label: 'FEFO-Greedy Baseline (Warehouse Rule)' },
-              { value: 'fifo', label: 'Naive FIFO Baseline' },
-              { value: 'last_day_50', label: 'Naive FIFO + Flat 50% Cut' },
+              { value: 'milp', label: `${policyName('milp')} (recommended)` },
+              { value: 'fefo', label: policyName('fefo') },
+              { value: 'fifo', label: policyName('fifo') },
+              { value: 'last_day_50', label: policyName('last_day_50') },
             ]}
             allowDeselect={false}
           />
 
           <NumberInput
-            label="Simulation Random Seed"
-            description="Fixes common random numbers for determinism"
+            label={<Explain term="seed">Random seed</Explain>}
+            description="Same seed, same result, every time"
             value={seed}
             onChange={(v) => setSeed(Number(v))}
             allowDecimal={false}
           />
 
           <Switch
-            label="Newsvendor Demand Quantiles"
-            description="Adjusts target delivery quantiles based on underage/overage cost"
+            label={<Explain term="newsvendor">Ship more or less than forecast (newsvendor)</Explain>}
+            description="Aims a little above or below expected demand, whichever loses less money"
             checked={newsvendor}
             onChange={(e) => setNewsvendor(e.currentTarget.checked)}
           />
 
           <div style={{ marginTop: 16 }}>
             <Text size="xs" fw={700} mb="xs">
-              SAVED RUN ARCHIVE
+              SAVED RESULTS
             </Text>
             <RunPicker runs={runs.runs} value={runId} onChange={setRunId} />
           </div>
@@ -306,7 +315,7 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
               setSettingsOpen(false)
             }}
           >
-            Apply & Close
+            Save and close
           </Button>
         </Stack>
       </Drawer>

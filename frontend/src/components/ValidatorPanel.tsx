@@ -2,6 +2,7 @@
 import { Badge, Group, Paper, Stack, Table, Text, ThemeIcon, Title } from '@mantine/core'
 import { IconFileOff } from '@tabler/icons-react'
 import { m, useReducedMotion } from 'motion/react'
+import { ruleText } from '../lib/words'
 import { spring } from '../theme'
 import type { Validation } from '../types'
 
@@ -35,7 +36,7 @@ export function ValidatorPanel({ validation }: { validation: Validation | null }
     <Paper withBorder radius="lg" p="xl">
       <Stack align="center" gap="xs">
         <ThemeIcon size={48} radius="xl" variant="light" color="gray"><IconFileOff size={28} /></ThemeIcon>
-        <Text fw={600}>No validation.json for this run</Text>
+        <Text fw={600}>No independent check saved for this plan yet</Text>
       </Stack>
     </Paper>
   )
@@ -47,28 +48,31 @@ export function ValidatorPanel({ validation }: { validation: Validation | null }
       <Group gap="xl" wrap="nowrap" align="center">
         <Shield ok={ok} />
         <div>
-          <Title order={3}>Independent validator</Title>
-          <Text size="sm" c="dimmed">Re-implements the maths separately and checks the plan against every hard rule.</Text>
+          <Title order={3}>Independent check</Title>
+          <Text size="sm" c="dimmed">
+            A separate program re-does the maths from scratch and checks the plan against every hard rule: no
+            overloaded truck, nothing rotten on arrival, no market over capacity. Green shield means none broken.
+          </Text>
           <Badge mt="sm" size="xl" radius="sm" color={ok ? 'green' : 'red'} variant="filled">
-            {validation.violation_total} violations
+            {validation.violation_total} rule breaks
           </Badge>
           {warnings.length > 0 && <Badge mt="sm" ml="sm" size="xl" radius="sm" color="yellow" variant="light">
-            {warnings.length} warnings</Badge>}
+            {warnings.length} warnings (not rule breaks)</Badge>}
         </div>
       </Group>
       {counts.length > 0 && (
         <Table mt="md" striped fz="md" maw={480}>
-          <Table.Thead><Table.Tr><Table.Th>code</Table.Th><Table.Th ta="right">count</Table.Th></Table.Tr></Table.Thead>
+          <Table.Thead><Table.Tr><Table.Th>Rule</Table.Th><Table.Th ta="right">Times broken</Table.Th></Table.Tr></Table.Thead>
           <Table.Tbody>
-            {counts.map(([c, n]) => <Table.Tr key={c}><Table.Td>{c}</Table.Td><Table.Td ta="right">{n}</Table.Td></Table.Tr>)}
+            {counts.map(([c, n]) => <Table.Tr key={c}><Table.Td title={c}>{ruleText(c)} <Text span size="xs" c="dimmed">{c}</Text></Table.Td><Table.Td ta="right">{n}</Table.Td></Table.Tr>)}
           </Table.Tbody>
         </Table>
       )}
       {warnings.length > 0 && (
         <Table mt="md" striped fz="md">
-          <Table.Thead><Table.Tr><Table.Th>warning</Table.Th><Table.Th>detail</Table.Th></Table.Tr></Table.Thead>
+          <Table.Thead><Table.Tr><Table.Th>Warning</Table.Th><Table.Th>Detail</Table.Th></Table.Tr></Table.Thead>
           <Table.Tbody>
-            {warnings.map((w, i) => <Table.Tr key={i}><Table.Td>{w.code}</Table.Td><Table.Td>{w.detail}</Table.Td></Table.Tr>)}
+            {warnings.map((w, i) => <Table.Tr key={i}><Table.Td title={w.code}>{ruleText(w.code)} <Text span size="xs" c="dimmed">{w.code}</Text></Table.Td><Table.Td>{w.detail}</Table.Td></Table.Tr>)}
           </Table.Tbody>
         </Table>
       )}

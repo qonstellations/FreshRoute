@@ -5,6 +5,8 @@ import { AnimatePresence, m, type HTMLMotionProps, type Variants } from 'motion/
 import { useEffect, useState } from 'react'
 import { spring } from '../../theme'
 import type { DispatchRow, DispatchSheet } from '../../types'
+import { TERM } from '../../lib/words'
+import { Explain } from '../Explain'
 import { band, FUSE_SCALE_H, num } from './format'
 import { Fuse } from './Fuse'
 
@@ -48,22 +50,25 @@ export function Dispatch({ sheet, runId, onRow, filter, onClear }: {
     <Stack gap="sm">
       <Group justify="space-between" align="flex-end">
         <div>
-          <Title order={3}>Dispatch sheet</Title>
-          <Text size="sm" c="dimmed">{filter ? `${rows.length} of ${sheet.csv.length}` : sheet.csv.length} lines in priority order · click a line for its reason card ·
-            fuse = slack h on a {FUSE_SCALE_H} h scale</Text>
+          <Title order={3}>Truck loading list</Title>
+          <Text size="sm" c="dimmed">{filter ? `${rows.length} of ${sheet.csv.length}` : sheet.csv.length} shipments, most urgent first ·
+            click any row to see why FreshRoute chose it</Text>
         </div>
         {filter && <Pill size="lg" withRemoveButton onRemove={onClear} ml="auto"
-          removeButtonProps={{ 'aria-label': 'Clear destination filter' }}>Destination: {rows[0]?.dest_name ?? filter}</Pill>}
+          removeButtonProps={{ 'aria-label': 'Show all markets again' }}>Market: {rows[0]?.dest_name ?? filter}</Pill>}
         <Button component="a" href={href} download={`${runId}__dispatch_sheet.csv`} variant="light"
-          leftSection={<IconDownload size={18} />}>Download CSV</Button>
+          leftSection={<IconDownload size={18} />}>Download as spreadsheet (CSV)</Button>
       </Group>
       <Paper withBorder radius="md" style={{ overflow: 'hidden' }}>
         <Table.ScrollContainer minWidth={900} maxHeight={460}>
           <Table stickyHeader highlightOnHover striped verticalSpacing={7} fz="md">
             <Table.Thead><Table.Tr>
-              <Table.Th>#</Table.Th><Table.Th>Vehicle</Table.Th><Table.Th>Trip</Table.Th><Table.Th>Depart</Table.Th>
-              <Table.Th>Destination</Table.Th><Table.Th>Batch</Table.Th><Table.Th>Commodity</Table.Th>
-              <Table.Th ta="right">kg</Table.Th><Table.Th>Slack h</Table.Th><Table.Th ta="right">Arrive by h</Table.Th>
+              <Table.Th>Load order</Table.Th><Table.Th>Truck</Table.Th><Table.Th>Trip</Table.Th><Table.Th>Leaves at</Table.Th>
+              <Table.Th>Market</Table.Th><Table.Th>Batch</Table.Th><Table.Th>Produce</Table.Th>
+              <Table.Th ta="right">kg</Table.Th>
+              <Table.Th><Explain note={`${TERM.slack} The bar shows it on a ${FUSE_SCALE_H} h scale: a full bar means ${FUSE_SCALE_H} h or more.`}>
+                Time to spare (h)</Explain></Table.Th>
+              <Table.Th ta="right">Must arrive by (hour)</Table.Th>
             </Table.Tr></Table.Thead>
             <MTbody variants={body} initial="hidden" animate="show">
               {rows.map((r, i) => {
@@ -72,7 +77,7 @@ export function Dispatch({ sheet, runId, onRow, filter, onClear }: {
                   <MTr key={`${r.trip_id}|${r.batch_id}|${r.priority_rank}`} variants={lively ? row : undefined}
                     whileHover={{ y: -2 }} transition={spring.snappy} onClick={() => onRow(r)}
                     onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onRow(r))}
-                    tabIndex={0} title="Show reason card" style={{ cursor: 'pointer' }}>
+                    tabIndex={0} title="Why this shipment?" style={{ cursor: 'pointer' }}>
                     <Table.Td>
                       <m.span layoutId={rowLayoutId(r)} style={{ display: 'inline-block' }}>
                         <Badge variant="default" radius="sm" size="lg">{r.priority_rank}</Badge>
@@ -98,7 +103,10 @@ export function Dispatch({ sheet, runId, onRow, filter, onClear }: {
       </Paper>
 
       <Group justify="space-between" mt="sm">
-        <Title order={4}>Driver message</Title>
+        <div>
+          <Title order={4}>Message for drivers</Title>
+          <Text size="sm" c="dimmed">Ready to paste into WhatsApp</Text>
+        </div>
         <CopyButton value={sheet.text} timeout={1500}>
           {({ copied, copy }) => (
             <Button onClick={copy} variant={copied ? 'filled' : 'light'} color={copied ? 'teal' : undefined}
@@ -111,7 +119,7 @@ export function Dispatch({ sheet, runId, onRow, filter, onClear }: {
                   </m.span>
                 </AnimatePresence>
               }>
-              {copied ? 'Copied' : 'Copy text'}
+              {copied ? 'Copied' : 'Copy message'}
             </Button>
           )}
         </CopyButton>

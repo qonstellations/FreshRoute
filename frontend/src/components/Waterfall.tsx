@@ -3,6 +3,7 @@ import { Paper, Text, Title } from '@mantine/core'
 import { m, useReducedMotion } from 'motion/react'
 import { Bar, BarChart, CartesianGrid, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { fmt, fmtSigned, waterfallBars } from '../lib/delta'
+import { policyName } from '../lib/words'
 import { spring } from '../theme'
 import type { Ladder } from '../types'
 
@@ -32,8 +33,11 @@ export function Waterfall({ waterfall }: { waterfall: Ladder['waterfall'] }) {
   const { bars: data, floor } = waterfallBars(waterfall.steps)
   return (
     <Paper withBorder radius="lg" p="lg">
-      <Title order={3}>Net waterfall: {waterfall.baseline} → {waterfall.plan}</Title>
-      <Text size="sm" c="dimmed" mb="sm">Where the extra net comes from, step by step (waterfall.json).</Text>
+      <Title order={3}>Where the extra profit comes from: {policyName(waterfall.baseline)} → {policyName(waterfall.plan)}</Title>
+      <Text size="sm" c="dimmed" mb="sm">
+        How to read this: start from the baseline&apos;s profit on the left. Green bars add profit, red bars take it
+        away, blue bars are totals.
+      </Text>
       <ResponsiveContainer width="100%" height={340}>
         <BarChart data={data} margin={{ top: 8, right: 16, left: 16, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={C.grid} />
@@ -51,8 +55,8 @@ export function Waterfall({ waterfall }: { waterfall: Ladder['waterfall'] }) {
         </BarChart>
       </ResponsiveContainer>
       <Text size="sm" c="dimmed">
-        Step values from waterfall.json (tolerance ₹{waterfall.tolerance_inr}); bar placement only is computed in the UI.
-        {floor !== 0 && ` Axis starts at ₹${fmt(floor)}, not 0, so the deltas are visible.`}
+        Every step is measured by the engine; the steps add up to the final total within ₹{waterfall.tolerance_inr}.
+        {floor !== 0 && ` The scale starts at ₹${fmt(floor)}, not 0, so small steps stay visible.`}
       </Text>
     </Paper>
   )

@@ -5,6 +5,7 @@ import { m, type Variants } from 'motion/react'
 import { useEffect, useId, useState } from 'react'
 import { api } from '../../api/client'
 import type { DispatchRow, GeoRecord } from '../../types'
+import { Explain } from '../Explain'
 import { band, BANDS, HUB, num } from './format'
 import './plan.css'
 
@@ -69,8 +70,9 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
   const legend = (
     <Group gap="md">
       {BANDS.map(([c, l]) => <Group key={l} gap={6}><ColorSwatch color={c} size={14} /><Text size="sm">{l}</Text></Group>)}
-      <Group gap={6}><ColorSwatch color={HUB} size={14} radius={3} /><Text size="sm">hub</Text></Group>
-      <Text size="sm" c="dimmed">· circle size ∝ kg shipped · label = tightest slack h · click a destination to filter the sheet</Text>
+      <Group gap={6}><ColorSwatch color={HUB} size={14} radius={3} /><Text size="sm">hub (warehouse)</Text></Group>
+      <Text size="sm" c="dimmed">· circle size = kg delivered · number = least <Explain term="slack">time to spare</Explain> at
+        that market · click a market to filter the list below</Text>
     </Group>
   )
 
@@ -125,14 +127,15 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
     <Paper withBorder radius="md" p="md">
       <Stack gap="sm">
         <div>
-          <Title order={3}>Shelf-life countdown</Title>
-          <Text size="sm" c="dimmed">{pts.length ? 'Schematic route network (true directions, distances compressed) · routes from served trips' : 'No geo.csv for this scenario, table view'}</Text>
+          <Title order={3}>Where every truck goes, and how much time each delivery has to spare</Title>
+          <Text size="sm" c="dimmed">{pts.length ? 'Simplified map: directions are true, distances are squeezed so everything fits'
+            : 'No map locations for this scenario, so the markets are listed in a table instead'}</Text>
         </div>
         {legend}
         {!pts.length ? (
           <Table striped fz="sm">
-            <Table.Thead><Table.Tr><Table.Th>Destination</Table.Th><Table.Th ta="right">Tightest slack h</Table.Th>
-              <Table.Th>Batch</Table.Th><Table.Th>Vehicle</Table.Th></Table.Tr></Table.Thead>
+            <Table.Thead><Table.Tr><Table.Th>Market</Table.Th><Table.Th ta="right">Least time to spare (h)</Table.Th>
+              <Table.Th>Batch</Table.Th><Table.Th>Truck</Table.Th></Table.Tr></Table.Thead>
             <Table.Tbody>{dests.map(d => (
               <Table.Tr key={d.dest_id}>
                 <Table.Td><Group gap={8}><ColorSwatch color={band(d.slack_h)[0]} size={12} />{d.dest_name} ({d.dest_id})</Group></Table.Td>
@@ -143,7 +146,7 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
           </Table>
         ) : (
           <svg className="plan-map" viewBox={`0 0 ${W} ${H}`} role="img"
-            aria-label="Route network: hubs, destinations coloured by tightest slack, served routes">
+            aria-label="Map of truck routes: hubs, and markets coloured by their least time to spare">
             <defs>
               <filter id={`glow-${uid}`} x="-100%" y="-100%" width="300%" height="300%">
                 <feGaussianBlur stdDeviation="5" />
@@ -159,7 +162,7 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
                     <m.path variants={stroke} d={path} className="route-base" />
                     <path d={path} className="route-flow" />
                     {onRoute && <path d={path} className="route-hit" tabIndex={0} role="button"
-                      aria-label={`Close the road ${o} to ${d} and replan`}
+                      aria-label={`Close the road from ${nameOf(o)} to ${nameOf(d)} and re-plan`}
                       onClick={() => onRoute(o, d)}
                       onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onRoute(o, d))} />}
                   </g>
@@ -195,7 +198,8 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
                   onClick={() => u && onPick(filter === id ? undefined : id)}
                   onKeyDown={e => u && (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onPick(filter === id ? undefined : id))}
                   tabIndex={u ? 0 : undefined} role={u ? 'button' : undefined}
-                  aria-label={u ? `${g.name}: tightest slack ${num(u.slack_h)} h. Filter dispatch sheet` : `${g.name}: no load`}>
+                  aria-label={u ? `${g.name}: least time to spare ${num(u.slack_h)} h. Show only this market in the loading list`
+                    : `${g.name}: no deliveries`}>
                   {u && <circle cx={x} cy={y} r={r + 3} fill={colour} filter={`url(#glow-${uid})`} className="glow" />}
                   {u && <circle cx={x} cy={y} r={r} fill="none" stroke={colour} className={`halo halo-${pulse(u.slack_h)}`} />}
                   <circle cx={x} cy={y} r={r} fill={colour} className="node-mark" />
@@ -208,8 +212,8 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
                 <Tooltip key={id} withArrow position="top" offset={r + 4} transitionProps={{ transition: 'pop', duration: 150 }}
                   label={<Stack gap={0}>
                     <Text size="sm" fw={700}>{u.dest_name} ({u.dest_id})</Text>
-                    <Text size="xs">Tightest slack {num(u.slack_h)} h · arrive by {num(u.arrive_by_h)} h</Text>
-                    <Text size="xs">{u.batch_id} {u.commodity} · {num(u.kg)} kg · {u.vehicle_id} {u.depart_clock}</Text>
+                    <Text size="xs">Least time to spare: {num(u.slack_h)} h · must arrive by hour {num(u.arrive_by_h)}</Text>
+                    <Text size="xs">Batch {u.batch_id} ({u.commodity}) · {num(u.kg)} kg · truck {u.vehicle_id}, leaves {u.depart_clock}</Text>
                   </Stack>}>
                   {node}
                 </Tooltip>
@@ -220,7 +224,7 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
         {/* ponytail: far destinations squeeze the hub cluster on the map, so every road also gets a plain button */}
         {onRoute && pts.length > 0 && (
           <Group gap={6}>
-            <Text size="xs" c="dimmed">Close a road:</Text>
+            <Text size="xs" c="dimmed">Or close a road from this list:</Text>
             {lines.map(([o, d]) => (
               <Button key={`b-${o}-${d}`} size="compact-xs" radius="xl" color={fate([o, d]) === ' cut' ? 'red' : 'gray'}
                 variant={fate([o, d]) === ' cut' ? 'filled' : 'default'} onClick={() => onRoute(o, d)}>

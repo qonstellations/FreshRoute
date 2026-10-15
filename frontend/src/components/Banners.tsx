@@ -21,7 +21,7 @@ export function SyntheticBanner({ show }: { show: boolean }) {
     <AnimatePresence initial={false}>
       {show && (
         <Banner key="synthetic" color="yellow" icon={<IconFlask />}>
-          <strong>SYNTHETIC DATA:</strong> figures come from a synthetic scenario or a hand-written example, not organizer data.
+          <strong>MADE-UP DATA:</strong> these figures come from a realistic practice scenario we generated, not from the organisers' real data.
         </Banner>
       )}
     </AnimatePresence>
@@ -34,8 +34,8 @@ export function ExampleBanner({ show, what }: { show: boolean; what: string }) {
     <AnimatePresence initial={false}>
       {show && (
         <Banner key="example" color="yellow" icon={<IconFlask />}>
-          <strong>FORMAT EXAMPLE, NOT MEASURED:</strong> the {what} endpoint is not live yet, so this shows the
-          made-up fixture from <code>backend/tests/fixtures/</code>. No number here is a result.
+          <strong>EXAMPLE ONLY, NOT A RESULT:</strong> the {what} data is not available yet, so this shows a
+          hand-written example of the layout. No number here was measured.
         </Banner>
       )}
     </AnimatePresence>
@@ -49,12 +49,12 @@ export function StatusBanner({ fixture, manifest, error }:
       <AnimatePresence initial={false}>
         {fixture && (
           <Banner key="fixture" color="blue" icon={<IconInfoCircle />}>
-            No run under outputs/. Showing the example fixture (placeholder).
+            No saved plan yet. Showing a hand-written example until you run the optimiser.
           </Banner>
         )}
         {manifest?.solver?.fallback_used && (
           <Banner key="fallback" color="red" icon={<IconAlertTriangle />}>
-            Solver fallback used: this plan came from the FEFO-greedy fallback, not HiGHS.
+            Safety net used: the optimiser did not finish, so this is the simpler expiry-first plan instead.
           </Banner>
         )}
         {error && (

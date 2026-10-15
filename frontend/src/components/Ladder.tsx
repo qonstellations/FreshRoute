@@ -1,13 +1,15 @@
 // Attribution ladder (ARCHITECTURE §16, DATABASE §5.11 ladder.json) + waterfall, from GET /api/ladder.
-import { Badge, Code, Paper, Skeleton, Stack, Table, Text, ThemeIcon, Title } from '@mantine/core'
+import { Badge, Paper, Skeleton, Stack, Table, Text, ThemeIcon, Title } from '@mantine/core'
 import { IconStairsUp } from '@tabler/icons-react'
 import { AnimatePresence, m, useReducedMotion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { api } from '../api/client'
 import { fmt } from '../lib/delta'
+import { policyName } from '../lib/words'
 import type { Ladder as LadderData, LadderEntry } from '../types'
 import { spring } from '../theme'
+import { Explain } from './Explain'
 import { Reveal } from './score/Reveal'
 import { C, tooltipStyle, Waterfall } from './Waterfall'
 
@@ -15,8 +17,8 @@ const OURS = 'milp' // highlighted by name, not by comparing numbers
 // Story order (Scoreboard steps 2..6 reveal one each); captions are static copy, never numbers.
 const STORY = ['fifo', 'fefo', 'last_day_50', 'milp']
 const CAPTION: Record<string, string> = {
-  fifo: 'first in, first out', fefo: 'first expiry first out (baseline)', last_day_50: '50 % off on the last day',
-  milp: '+ optimisation (HiGHS MILP)',
+  fifo: 'ships stock in the order it arrived', fefo: 'ships what spoils soonest first (our baseline)',
+  last_day_50: 'adds 50% off on the last day', milp: 'weighs every truck, market and batch together',
 }
 const storyIdx = (p: string) => { const i = STORY.indexOf(p); return i < 0 ? STORY.length : i }
 
@@ -47,8 +49,12 @@ export function LadderCharts({ scenario, seed, step }: { scenario: string; seed:
     <Paper withBorder radius="lg" p="xl">
       <Stack align="center" gap="xs">
         <ThemeIcon size={48} radius="xl" variant="light" color="gray"><IconStairsUp size={28} /></ThemeIcon>
-        <Text fw={600}>No ladder on disk</Text>
-        <Text size="sm" c="dimmed">Run <Code>freshroute ladder --scenario data/scenarios/{scenario} --seed {seed}</Code> ({error})</Text>
+        <Text fw={600}>No comparison saved yet</Text>
+        <Text size="sm" c="dimmed">
+          The rule-by-rule comparison has not been run for this scenario.{' '}
+          <Explain note={`For developers: freshroute ladder --scenario data/scenarios/${scenario} --seed ${seed} (${error})`}>
+            How to create it</Explain>
+        </Text>
       </Stack>
     </Paper>
   )
@@ -73,8 +79,8 @@ export function LadderCharts({ scenario, seed, step }: { scenario: string; seed:
 function Ladder({ ladder, step }: { ladder: LadderData['ladder']; step?: number }) {
   const reduce = useReducedMotion()
   const rows: (LadderEntry & { group: string })[] = [
-    ...(ladder.official_baseline ? [{ ...ladder.official_baseline, group: 'official baseline' }] : []),
-    ...ladder.ladder.map(e => ({ ...e, group: 'ladder' })),
+    ...(ladder.official_baseline ? [{ ...ladder.official_baseline, group: 'baseline' }] : []),
+    ...ladder.ladder.map(e => ({ ...e, group: 'compared' })),
     ...ladder.extras.map(e => ({ ...e, group: 'extra' })),
   ]
   // story mode: story order left to right; bar i shows once step >= i + 2; policies outside STORY show at step 7
@@ -87,17 +93,20 @@ function Ladder({ ladder, step }: { ladder: LadderData['ladder']; step?: number 
     c.policy === OURS ? C.good : c.net_inr >= 0 ? 'var(--mantine-color-gray-5)' : C.bad
   return (
     <Paper withBorder radius="lg" p="lg">
-      <Title order={3}>Attribution ladder</Title>
+      <Title order={3}>Every rule vs FreshRoute, scored the same way</Title>
       <Text size="sm" c="dimmed" mb="sm">
-        Net ₹ per policy, all scored by the same simulator · scenario {ladder.scenario} · seed {ladder.seed} · realization {ladder.realization}
+        How to read this: each bar is one way of planning, and taller means more profit after all costs. Green is
+        FreshRoute; red bars lose money. Every plan faces the same days and is scored by{' '}
+        <Explain term="simulator">the same simulator</Explain>.{' '}
+        <Explain note={`scenario ${ladder.scenario} · seed ${ladder.seed} · realization ${ladder.realization}`}>Details</Explain>
       </Text>
       <ResponsiveContainer width="100%" height={260}>
         <BarChart data={chart} margin={{ top: 8, right: 16, left: 16, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={C.grid} />
-          <XAxis dataKey="policy" tick={{ fontSize: 13, fill: C.axis }} />
+          <XAxis dataKey="policy" tickFormatter={policyName} tick={{ fontSize: 13, fill: C.axis }} />
           <YAxis tickFormatter={v => `₹${fmt(v)}`} width={100} tick={{ fontSize: 13, fill: C.axis }} />
           <ReferenceLine y={0} stroke={C.axis} />
-          <Tooltip {...tooltipStyle} formatter={v => [`₹${fmt(Number(v))}`, 'net']} />
+          <Tooltip {...tooltipStyle} formatter={v => [`₹${fmt(Number(v))}`, 'profit']} labelFormatter={l => policyName(String(l))} />
           {step == null
             ? <Bar dataKey="net_inr" radius={[6, 6, 0, 0]} isAnimationActive={!reduce} animationDuration={900}
               animationEasing="ease-out">
@@ -116,7 +125,7 @@ function Ladder({ ladder, step }: { ladder: LadderData['ladder']; step?: number 
           <AnimatePresence mode="wait">
             {newest && <m.span key={newest} style={{ display: 'inline-block' }} initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={spring.snappy}>
-              {newest}: {CAPTION[newest]}
+              {policyName(newest)}: {CAPTION[newest]}
             </m.span>}
           </AnimatePresence>
         </Text>
@@ -125,10 +134,10 @@ function Ladder({ ladder, step }: { ladder: LadderData['ladder']; step?: number 
         <Table striped highlightOnHover verticalSpacing="sm" fz="md">
           <Table.Thead>
             <Table.Tr>
-              <Table.Th>policy</Table.Th><Table.Th>role</Table.Th><Table.Th ta="right">spoilage kg</Table.Th>
-              <Table.Th ta="right">spoilage %</Table.Th><Table.Th ta="right">fill %</Table.Th>
-              <Table.Th ta="right">min dest fill %</Table.Th><Table.Th ta="right">net ₹</Table.Th>
-              <Table.Th ta="right">violations</Table.Th>
+              <Table.Th>Plan</Table.Th><Table.Th>Type</Table.Th><Table.Th ta="right">Spoiled kg</Table.Th>
+              <Table.Th ta="right">Spoiled %</Table.Th><Table.Th ta="right">Orders filled %</Table.Th>
+              <Table.Th ta="right">Worst market filled %</Table.Th><Table.Th ta="right">Profit ₹</Table.Th>
+              <Table.Th ta="right">Rule breaks</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody className="num">
@@ -137,7 +146,7 @@ function Ladder({ ladder, step }: { ladder: LadderData['ladder']; step?: number 
               return (
                 <Table.Tr key={r.policy} bg={ours ? 'var(--mantine-color-green-0)' : undefined} fw={ours ? 700 : undefined}
                   className={step == null ? undefined : 'story-row'} data-hidden={!shown(r.policy) || undefined}>
-                  <Table.Td>{r.policy} {ours && <Badge size="sm" ml={6}>ours</Badge>}</Table.Td>
+                  <Table.Td>{policyName(r.policy)} {ours && <Badge size="sm" ml={6}>ours</Badge>}</Table.Td>
                   <Table.Td c="dimmed">{r.group}</Table.Td>
                   <Table.Td ta="right">{fmt(r.kpis.spoilage_kg)}</Table.Td>
                   <Table.Td ta="right">{fmt(r.kpis.spoilage_pct, 1)}</Table.Td>

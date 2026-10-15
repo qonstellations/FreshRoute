@@ -8,10 +8,12 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Bar, BarChart, CartesianGrid, Cell, ReferenceDot, ResponsiveContainer, XAxis, YAxis } from 'recharts'
 import { api, notOnDisk, waitDone } from '../api/client'
 import { ExampleBanner } from '../components/Banners'
+import { Explain } from '../components/Explain'
 import { Odometer } from '../components/KpiTile'
 import { Reveal } from '../components/score/Reveal'
 import { C } from '../components/Waterfall'
 import { dotsWon, fmt, fmtShare } from '../lib/delta'
+import { policyName, type Term } from '../lib/words'
 import type { TabProps } from '../lib/story'
 import { spring } from '../theme'
 import type { Band, SensitivityResponse, SensitivityRow, StressKpi, StressResponse } from '../types'
@@ -52,7 +54,7 @@ export function Robustness({ run, step }: TabProps) {
   return (
     <Stack gap="lg">
       <ExampleBanner show={!!(s?.example || sens.data?.example)} what="stress / sensitivity" />
-      {stress.error && <Alert color="red" icon={<IconAlertTriangle />} title="Cannot load stress test">{stress.error}</Alert>}
+      {stress.error && <Alert color="red" icon={<IconAlertTriangle />} title="Couldn’t load the stress test">{stress.error}</Alert>}
       {s === undefined && !stress.error && <><Skeleton h={220} radius="lg" /><Skeleton h={300} radius="lg" /></>}
       {s === null && <StressEmpty scenario={run.scenario} policy={run.policy} seed={run.seed} onDone={stress.reload} />}
       {s && <>
@@ -76,7 +78,7 @@ function Hint({ icon, title, cmd, children }: { icon: ReactNode; title: string; 
       <Stack align="center" gap="xs">
         <ThemeIcon size={48} radius="xl" variant="light" color="gray">{icon}</ThemeIcon>
         <Text fw={600}>{title}</Text>
-        <Text size="sm" c="dimmed" ta="center">Run <Code>{cmd}</Code></Text>
+        <Text size="xs" c="dimmed" ta="center">For developers, the same from the command line: <Code fz="xs">{cmd}</Code></Text>
         {children}
       </Stack>
     </Paper>
@@ -95,10 +97,10 @@ function StressEmpty({ scenario, policy, seed, onDone }: { scenario: string; pol
     } catch (e) { setError(e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
   }
   return (
-    <Hint icon={<IconChartDots3 size={28} />} title="No stress test on disk for this scenario and seed"
+    <Hint icon={<IconChartDots3 size={28} />} title="The stress test hasn’t been run for this plan yet"
       cmd={`freshroute stress --scenario ${scenarioDir(scenario)} --policy ${policy} --n ${STRESS_N} --seed ${seed}`}>
       <Button mt="xs" radius="xl" leftSection={<IconPlayerPlayFilled size={16} />} loading={busy} onClick={start}>
-        Run stress test</Button>
+        Run the stress test ({STRESS_N} futures, ~1 min)</Button>
       {error && <Text c="red" size="sm">{error}</Text>}
     </Hint>
   )
@@ -118,11 +120,13 @@ function Hero({ s }: { s: StressResponse }) {
         <ThemeIcon size={64} radius="xl" variant="white" color="green"><IconShieldCheck size={38} /></ThemeIcon>
         <div>
           <Text fz={40} fw={800} lh={1.1} c="white">
-            {plan} beats {baseline} in <Odometer text={fmtShare(share.net_inr)} /> of {fmt(n)} futures
+            {policyName(plan)} beats {policyName(baseline)} on profit in <Odometer text={fmtShare(share.net_inr)} /> of{' '}
+            {fmt(n)} simulated <Explain term="future">futures</Explain>
           </Text>
           <Text fz="lg" c="white" opacity={0.85} mt={6}>
-            on net ₹ · on spoilage in {fmtShare(share.spoilage_kg)} · paired futures (same sampled demand, travel time
-            and shelf life for both), seeds {base_seed}+i
+            Food spoiled is lower in {fmtShare(share.spoilage_kg)} of them. Both plans face{' '}
+            <Explain note={`Same random demand, travel time and shelf life for both plans in each future (random seeds ${base_seed}+i).`}>
+              the exact same random futures</Explain>.
           </Text>
         </div>
       </Group>
@@ -131,8 +135,8 @@ function Hero({ s }: { s: StressResponse }) {
         {Array.from({ length: n }, (_, i) => <m.span key={i} className="future" data-won={i < won || undefined} variants={dot} />)}
       </m.div>
       <Group gap="lg" mt="xs">
-        <Text size="sm" c="white"><span className="future" data-won /> {plan} ahead on net ₹</Text>
-        <Text size="sm" c="white"><span className="future" /> {baseline} ahead or tied</Text>
+        <Text size="sm" c="white"><span className="future" data-won /> {policyName(plan)} earns more</Text>
+        <Text size="sm" c="white"><span className="future" /> {policyName(baseline)} earns more or ties</Text>
       </Group>
     </Paper>
   )
@@ -140,9 +144,9 @@ function Hero({ s }: { s: StressResponse }) {
 
 // ---------- P10–P50–P90 bands ----------
 const BAND_META: Record<StressKpi, { title: string; unit: (v: number) => string }> = {
-  net_inr: { title: 'Net ₹', unit: v => `₹${fmt(v)}` },
-  spoilage_kg: { title: 'Spoilage', unit: v => `${fmt(v)} kg` },
-  demand_fulfillment_pct: { title: 'Demand fulfilment', unit: v => `${fmt(v, 1)}%` },
+  net_inr: { title: 'Profit', unit: v => `₹${fmt(v)}` },
+  spoilage_kg: { title: 'Food spoiled', unit: v => `${fmt(v)} kg` },
+  demand_fulfillment_pct: { title: 'Orders filled', unit: v => `${fmt(v, 1)}%` },
 }
 
 function MedianTick(p: { cx?: number; cy?: number; fill?: string }) {
@@ -154,14 +158,15 @@ function BandChart({ kpi, s, height }: { kpi: StressKpi; s: StressResponse; heig
   const { plan, baseline, bands } = s.summary
   const meta = BAND_META[kpi]
   const rows: { name: string; band: Band; colour: string }[] = [
-    { name: baseline, band: bands[kpi].baseline, colour: 'var(--mantine-color-gray-6)' },
-    { name: plan, band: bands[kpi].plan, colour: C.good },
+    { name: policyName(baseline), band: bands[kpi].baseline, colour: 'var(--mantine-color-gray-6)' },
+    { name: policyName(plan), band: bands[kpi].plan, colour: C.good },
   ]
   const data = rows.map(r => ({ name: r.name, range: [r.band.p10, r.band.p90] }))
   return (
     <Paper withBorder radius="lg" p="lg">
       <Title order={4}>{meta.title}</Title>
-      <Text size="sm" c="dimmed">P10 to P90 band, bar = P50, over {fmt(s.summary.n)} paired futures</Text>
+      <Text size="sm" c="dimmed"><Explain term="bands">Bar = range in 8 of 10 futures (P10–P90), tick = middle result (P50)</Explain>,
+        over {fmt(s.summary.n)} futures</Text>
       <ResponsiveContainer width="100%" height={height}>
         <BarChart data={data} layout="vertical" margin={{ top: 8, right: 24, left: 8, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--mantine-color-default-border)" />
@@ -176,11 +181,11 @@ function BandChart({ kpi, s, height }: { kpi: StressKpi; s: StressResponse; heig
         </BarChart>
       </ResponsiveContainer>
       <Table fz="sm" verticalSpacing={4} mt={4} className="num">
-        <Table.Thead><Table.Tr><Table.Th /><Table.Th ta="right">P10</Table.Th><Table.Th ta="right">P50</Table.Th>
-          <Table.Th ta="right">P90</Table.Th></Table.Tr></Table.Thead>
+        <Table.Thead><Table.Tr><Table.Th /><Table.Th ta="right">Low (P10)</Table.Th><Table.Th ta="right">Middle (P50)</Table.Th>
+          <Table.Th ta="right">High (P90)</Table.Th></Table.Tr></Table.Thead>
         <Table.Tbody>
           {[...rows].reverse().map(r => (
-            <Table.Tr key={r.name} fw={r.name === plan ? 700 : undefined}>
+            <Table.Tr key={r.name} fw={r.name === policyName(plan) ? 700 : undefined}>
               <Table.Td>{r.name}</Table.Td><Table.Td ta="right">{meta.unit(r.band.p10)}</Table.Td>
               <Table.Td ta="right">{meta.unit(r.band.p50)}</Table.Td><Table.Td ta="right">{meta.unit(r.band.p90)}</Table.Td>
             </Table.Tr>))}
@@ -204,16 +209,19 @@ function Bands({ s }: { s: StressResponse }) {
 
 // ---------- sensitivity ----------
 const PARAM_LABEL: Record<string, string> = {
-  q10: 'Q10 (spoilage vs temperature)', elasticity_multiplier: 'ε multiplier (price elasticity)',
-  overship_slack: 'overship slack', demand_multiplier: 'demand multiplier',
+  q10: 'How fast heat speeds up spoilage (Q10)', elasticity_multiplier: 'How much discounts boost sales (elasticity ×)',
+  overship_slack: 'Allowed overshipping', demand_multiplier: 'Demand level (×)',
 }
+const PARAM_TERM: Record<string, Term> = { q10: 'q10', elasticity_multiplier: 'elasticity' }
+const paramLabel = (p: string) => (PARAM_TERM[p]
+  ? <Explain term={PARAM_TERM[p]}>{PARAM_LABEL[p] ?? p}</Explain> : PARAM_LABEL[p] ?? p)
 const SLIDERS = ['q10', 'elasticity_multiplier'] // the two the pitch moves; the table shows every served row
 
 function Sensitivity({ load, error, scenario, seed }: { load: Load<SensitivityResponse>; error: string; scenario: string; seed: number }) {
   const [pick, setPick] = useState<Record<string, number>>({}) // parameter -> row index within that parameter
-  if (error) return <Alert color="red" icon={<IconAlertTriangle />} title="Cannot load sensitivity">{error}</Alert>
+  if (error) return <Alert color="red" icon={<IconAlertTriangle />} title="Couldn’t load the assumption test">{error}</Alert>
   if (load === undefined) return <Skeleton h={320} radius="lg" />
-  if (load === null) return <Hint icon={<IconChartDots3 size={28} />} title="No sensitivity.csv for this scenario and seed"
+  if (load === null) return <Hint icon={<IconChartDots3 size={28} />} title="The assumption test hasn’t been run for this plan yet"
     cmd={`freshroute sensitivity --scenario ${scenarioDir(scenario)} --seed ${seed}`} />
   const recs = load.records
   const params = [...new Set(recs.map(r => r.parameter))]
@@ -222,27 +230,27 @@ function Sensitivity({ load, error, scenario, seed }: { load: Load<SensitivityRe
 
   return (
     <Paper withBorder radius="lg" p="lg">
-      <Title order={3}>Sensitivity</Title>
+      <Title order={3}>What if our assumptions are wrong?</Title>
       <Text size="sm" c="dimmed" mb="md">
-        One parameter moved at a time, {recs[0]?.policy ?? 'plan'} re-run for each value (sensitivity.csv). The sliders
-        only pick among the served rows; they never interpolate.
+        We change <Explain term="sensitivity">one assumption at a time</Explain> and re-run the plan for each value.
+        Move a slider to pick one of the tested values; nothing in between is guessed.
       </Text>
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg" mb="lg">
         {SLIDERS.map(p => {
           const rs = rowsOf(p), r = picked(p)
-          if (!rs.length) return <Text key={p} c="dimmed" size="sm">{PARAM_LABEL[p]}: not in sensitivity.csv.</Text>
+          if (!rs.length) return <Text key={p} c="dimmed" size="sm">{PARAM_LABEL[p]}: not tested yet.</Text>
           return (
             <Paper key={p} radius="md" p="md" className="sens-card">
-              <Text fw={700} mb={4}>{PARAM_LABEL[p]}</Text>
+              <Text fw={700} mb={4}>{paramLabel(p)}</Text>
               <Slider min={0} max={rs.length - 1} step={1} value={pick[p] ?? 0} restrictToMarks
                 onChange={i => setPick(v => ({ ...v, [p]: i }))} label={i => String(rs[i]?.value)} mb="xl" mx="xs"
                 marks={rs.map((x, i) => ({ value: i, label: String(x.value) }))} aria-label={PARAM_LABEL[p]} />
               {r && <Group gap="lg" mt="lg" className="num">
-                <div><Text size="xs" c="dimmed" tt="uppercase" fw={600}>net</Text>
+                <div><Text size="xs" c="dimmed" tt="uppercase" fw={600}>profit</Text>
                   <Text fz={22} fw={800}>{`₹${fmt(r.net_inr)}`}</Text></div>
-                <div><Text size="xs" c="dimmed" tt="uppercase" fw={600}>spoilage</Text>
+                <div><Text size="xs" c="dimmed" tt="uppercase" fw={600}>food spoiled</Text>
                   <Text fz={22} fw={800}>{`${fmt(r.spoilage_kg)} kg`}</Text></div>
-                <div><Text size="xs" c="dimmed" tt="uppercase" fw={600}>fulfilment</Text>
+                <div><Text size="xs" c="dimmed" tt="uppercase" fw={600}>orders filled</Text>
                   <Text fz={22} fw={800}>{`${fmt(r.demand_fulfillment_pct, 1)}%`}</Text></div>
               </Group>}
             </Paper>
@@ -252,15 +260,15 @@ function Sensitivity({ load, error, scenario, seed }: { load: Load<SensitivityRe
       <Table.ScrollContainer minWidth={620}>
         <Table striped highlightOnHover verticalSpacing="xs" fz="md">
           <Table.Thead><Table.Tr>
-            <Table.Th>parameter</Table.Th><Table.Th ta="right">value</Table.Th><Table.Th ta="right">net ₹</Table.Th>
-            <Table.Th ta="right">spoilage kg</Table.Th><Table.Th ta="right">fulfilment %</Table.Th>
+            <Table.Th>Assumption</Table.Th><Table.Th ta="right">Tested value</Table.Th><Table.Th ta="right">Profit (₹)</Table.Th>
+            <Table.Th ta="right">Food spoiled (kg)</Table.Th><Table.Th ta="right">Orders filled (%)</Table.Th>
           </Table.Tr></Table.Thead>
           <Table.Tbody className="num">
             {params.flatMap(p => rowsOf(p).map((r, i) => {
               const on = SLIDERS.includes(p) && (pick[p] ?? 0) === i
               return (
                 <Table.Tr key={`${p}-${i}`} bg={on ? 'var(--mantine-primary-color-light)' : undefined} fw={on ? 700 : undefined}>
-                  <Table.Td>{i === 0 ? PARAM_LABEL[p] ?? p : ''}</Table.Td>
+                  <Table.Td>{i === 0 ? paramLabel(p) : ''}</Table.Td>
                   <Table.Td ta="right">{r.value} {on && <Badge size="xs" ml={4}>selected</Badge>}</Table.Td>
                   <Table.Td ta="right">{fmt(r.net_inr)}</Table.Td><Table.Td ta="right">{fmt(r.spoilage_kg)}</Table.Td>
                   <Table.Td ta="right">{fmt(r.demand_fulfillment_pct, 1)}</Table.Td>

@@ -4,6 +4,8 @@ import { IconAdjustments, IconAlertTriangle, IconBook2, IconFileOff, IconFingerp
 import { m } from 'motion/react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { api } from '../api/client'
+import { Explain } from '../components/Explain'
+import { policyName } from '../lib/words'
 import { spring } from '../theme'
 import type { ConfigConstants, RunDetail } from '../types'
 
@@ -27,10 +29,12 @@ function Section({ icon, title, sub, children }: { icon: ReactNode; title: React
   )
 }
 
-const KV = ({ rows }: { rows: [string, ReactNode][] }) => (
+// [plain label, value, original manifest key shown small for auditors]
+const KV = ({ rows }: { rows: [string, ReactNode, string][] }) => (
   <Table fz="md" verticalSpacing="xs" withRowBorders>
     <Table.Tbody>
-      {rows.map(([k, v]) => <Table.Tr key={k}><Table.Th w={200} c="dimmed" fw={500}>{k}</Table.Th><Table.Td>{v}</Table.Td></Table.Tr>)}
+      {rows.map(([k, v, key]) => <Table.Tr key={k}><Table.Th w={200} c="dimmed" fw={500}>{k}{' '}
+        <Text span size="xs" c="dimmed" ff="monospace">({key})</Text></Table.Th><Table.Td>{v}</Table.Td></Table.Tr>)}
     </Table.Tbody>
   </Table>
 )
@@ -48,29 +52,34 @@ export function Trust({ run }: { run: RunDetail }) {
 
   return (
     <Stack gap="lg">
-      <Section icon={<IconFingerprint size={26} />} title="Run manifest"
-        sub="run_manifest.json: everything needed to reproduce this run bit for bit.">
+      <Section icon={<IconFingerprint size={26} />} title="Reproduce this exact result"
+        sub={<>Everything needed to get exactly the same numbers again (the{' '}
+          <Explain term="manifest">run manifest</Explain>, <Code fz="xs">run_manifest.json</Code>).</>}>
         {!m_ ? (
           <Stack align="center" gap="xs" py="lg">
             <ThemeIcon size={48} radius="xl" variant="light" color="gray"><IconFileOff size={28} /></ThemeIcon>
-            <Text fw={600}>No run_manifest.json for this run</Text>
+            <Text fw={600}>This result has no reproduction record (run_manifest.json is missing)</Text>
           </Stack>
         ) : <>
           <Group gap="sm" mb="md">
-            <Badge size="lg" variant="light" color="blue">solver status {s?.status ?? 'n/a (no solver)'}</Badge>
-            <Badge size="lg" variant="light" color="grape">MIP gap {s ? show(s.mip_gap) : 'n/a'}</Badge>
-            <Badge size="lg" variant="light" color="gray">solve {s ? `${show(s.solve_seconds)} s` : 'n/a'}</Badge>
+            <Badge size="lg" variant="light" color="blue">Solver result: {s?.status ?? 'none (rule-based plan)'}</Badge>
+            <Badge size="lg" variant="light" color="grape" tt="none">
+              <Explain term="mipGap">Distance from proven best</Explain>: {s ? show(s.mip_gap) : 'n/a'}</Badge>
+            <Badge size="lg" variant="light" color="gray" tt="none">Solve time {s ? `${show(s.solve_seconds)} s` : 'n/a'}</Badge>
             {s && <Badge size="lg" variant={s.fallback_used ? 'filled' : 'light'} color={s.fallback_used ? 'orange' : 'green'}>
-              {s.fallback_used ? 'FEFO fallback used' : 'no fallback'}</Badge>}
+              <Explain term="fallback">{s.fallback_used ? 'Backup plan used' : 'No backup plan needed'}</Explain></Badge>}
           </Group>
           <KV rows={[
-            ['run_id', <Code fz="sm">{m_.run_id}</Code>], ['policy', m_.policy], ['seed', show(m_.seed)],
-            ['realization', m_.realization], ['flags', <Code fz="sm">{show(m_.flags)}</Code>],
-            ['git SHA', <Code fz="sm">{m_.git_sha}</Code>], ['scenario', <Code fz="sm">{m_.scenario}</Code>],
-            ['scenario sha256', <Code fz="sm">{m_.scenario_sha256}</Code>], ['timestamp (UTC)', m_.timestamp_utc],
-            ['slack usage', <Code fz="sm">{s ? show(s.slack_usage) : 'n/a'}</Code>],
+            ['Result ID', <Code fz="sm">{m_.run_id}</Code>, 'run_id'], ['Plan type', policyName(m_.policy), 'policy'],
+            ['Random seed', show(m_.seed), 'seed'], ['Data draw', m_.realization, 'realization'],
+            ['Options turned on', <Code fz="sm">{show(m_.flags)}</Code>, 'flags'],
+            ['Code version (git)', <Code fz="sm">{m_.git_sha}</Code>, 'git_sha'],
+            ['Scenario folder', <Code fz="sm">{m_.scenario}</Code>, 'scenario'],
+            ['Fingerprint of input data (sha256)', <Code fz="sm">{m_.scenario_sha256}</Code>, 'scenario_sha256'],
+            ['Created (UTC)', m_.timestamp_utc, 'timestamp_utc'],
+            ['Soft-rule slack used', <Code fz="sm">{s ? show(s.slack_usage) : 'n/a'}</Code>, 'slack_usage'],
           ]} />
-          <Text fw={600} mt="md" mb={6}>Package versions</Text>
+          <Text fw={600} mt="md" mb={6}>Software versions</Text>
           <Group gap="xs">
             {Object.entries(m_.package_versions ?? {}).map(([k, v]) =>
               <Badge key={k} variant="outline" color="gray" size="lg" tt="none">{k} {v}</Badge>)}
@@ -78,28 +87,31 @@ export function Trust({ run }: { run: RunDetail }) {
         </>}
       </Section>
 
-      <Section icon={<IconAdjustments size={26} />} title={<>Coefficients (<Code fz="inherit">config.py</Code>)</>}
-        sub="Served verbatim by GET /api/config. Per-commodity prices, costs and shelf lives come from the scenario tables, not from code.">
-        {error ? <Alert color="red" icon={<IconAlertTriangle />} title="Cannot load config">{error}</Alert>
+      <Section icon={<IconAdjustments size={26} />} title="Every number the model uses"
+        sub={<>The constants FreshRoute uses (from <Code fz="xs">config.py</Code>). Prices, costs and shelf lives come from the
+          scenario data, not from code.</>}>
+        {error ? <Alert color="red" icon={<IconAlertTriangle />} title="Couldn’t load the constants">{error}</Alert>
           : !config ? <Stack gap={8}>{[0, 1, 2, 3, 4].map(i => <Skeleton key={i} h={28} />)}</Stack>
           : <>
-            <TextInput placeholder="Filter constants…" leftSection={<IconSearch size={18} />} value={q}
+            <TextInput placeholder="Search the numbers…" leftSection={<IconSearch size={18} />} value={q}
               onChange={e => setQ(e.currentTarget.value)} mb="sm" maw={360} size="md" />
             <Table striped highlightOnHover fz="md">
-              <Table.Thead><Table.Tr><Table.Th>constant</Table.Th><Table.Th>value</Table.Th></Table.Tr></Table.Thead>
+              <Table.Thead><Table.Tr><Table.Th>Name</Table.Th><Table.Th>Value</Table.Th></Table.Tr></Table.Thead>
               <Table.Tbody>
                 {entries.map(([k, v]) =>
                   <Table.Tr key={k}><Table.Td><Code fz="sm">{k}</Code></Table.Td><Table.Td>{show(v)}</Table.Td></Table.Tr>)}
               </Table.Tbody>
             </Table>
-            {!entries.length && <Text c="dimmed" ta="center" py="md">No constant matches “{q}”.</Text>}
+            {!entries.length && <Text c="dimmed" ta="center" py="md">Nothing matches “{q}”.</Text>}
           </>}
       </Section>
 
-      <Section icon={<IconBook2 size={26} />} title="Assumptions">
-        <Text>Every modelling assumption (A-01, A-02, …) and its status (confirm / team) is logged in{' '}
-          <Code>docs/ARCHITECTURE.md §20</Code> (Assumption log). Team-chosen constants above are tagged there and in{' '}
-          <Code>§19</Code>.</Text>
+      <Section icon={<IconBook2 size={26} />} title="Our assumptions">
+        <Text>Where the data leaves a gap, we made an assumption. Each one is written down with a number
+          (A-01, A-02, …) and marked as either confirmed or chosen by our team. Team-chosen constants in the list above
+          are marked the same way.</Text>
+        <Text size="xs" c="dimmed" mt={6}>Full list: <Code fz="xs">docs/ARCHITECTURE.md §20</Code> (assumption log) and{' '}
+          <Code fz="xs">§19</Code>.</Text>
       </Section>
     </Stack>
   )
