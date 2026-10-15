@@ -1,22 +1,19 @@
 // Robustness tab (ARCHITECTURE §14.1, §16; DATABASE §5.12): stress bands plan vs baseline, the served share of
 // futures where the plan beats the baseline, and the sensitivity table. Every number is a served field, only rounded.
-// `step` (story mode): 0 hero + futures matrix · 1 + bands · 2 + sensitivity. undefined = everything.
 import { Alert, Badge, Button, Code, Group, Paper, SimpleGrid, Skeleton, Slider, Stack, Table, Text, ThemeIcon, Title } from '@mantine/core'
 import { IconAlertTriangle, IconChartDots3, IconPlayerPlayFilled, IconShieldCheck } from '@tabler/icons-react'
 import { m, useReducedMotion, type Variants } from 'motion/react'
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { Bar, BarChart, CartesianGrid, Cell, ReferenceDot, ResponsiveContainer, XAxis, YAxis } from 'recharts'
 import { api, notOnDisk, waitDone } from '../api/client'
 import { ExampleBanner } from '../components/Banners'
 import { Explain } from '../components/Explain'
 import { Odometer } from '../components/KpiTile'
-import { Reveal } from '../components/score/Reveal'
 import { C } from '../components/Waterfall'
 import { dotsWon, fmt, fmtShare } from '../lib/delta'
 import { policyName, type Term } from '../lib/words'
-import type { TabProps } from '../lib/story'
 import { spring } from '../theme'
-import type { Band, SensitivityResponse, SensitivityRow, StressKpi, StressResponse } from '../types'
+import type { Band, SensitivityResponse, SensitivityRow, StressKpi, StressResponse, TabProps } from '../types'
 
 // ponytail: N of ARCHITECTURE §14.1, sent with POST /api/stress; the CLI owns the real default
 const STRESS_N = 200
@@ -36,19 +33,9 @@ function useServed<T>(fetcher: () => Promise<T>, deps: unknown[]) {
   return { data, error, reload: load }
 }
 
-export function Robustness({ run, step }: TabProps) {
-  const at = (s: number) => step == null || step >= s
+export function Robustness({ run }: TabProps) {
   const stress = useServed(() => api.stress(run.scenario, run.seed), [run.scenario, run.seed])
   const sens = useServed(() => api.sensitivity(run.scenario, run.seed), [run.scenario, run.seed])
-  const reduce = useReducedMotion()
-  const bandsRef = useRef<HTMLDivElement>(null), sensRef = useRef<HTMLDivElement>(null)
-  useEffect(() => { // keep the current beat on the projector
-    if (step == null) return
-    const behavior = reduce ? 'auto' : 'smooth'
-    if (step === 0) { window.scrollTo({ top: 0, behavior }); return } // never return it: Chromium's scrollTo returns a Promise
-    const t = setTimeout(() => (step === 1 ? bandsRef : sensRef).current?.scrollIntoView({ block: 'start', behavior }), 250)
-    return () => clearTimeout(t)
-  }, [step, reduce])
 
   const s = stress.data
   return (
@@ -59,15 +46,9 @@ export function Robustness({ run, step }: TabProps) {
       {s === null && <StressEmpty scenario={run.scenario} policy={run.policy} seed={run.seed} onDone={stress.reload} />}
       {s && <>
         <Hero s={s} />
-        <div ref={bandsRef} className="story-anchor">
-          <Reveal show={at(1)} collapse={step != null}><Bands s={s} /></Reveal>
-        </div>
+        <Bands s={s} />
       </>}
-      <div ref={sensRef} className="story-anchor">
-        <Reveal show={at(2)} collapse={step != null}>
           <Sensitivity load={sens.data} error={sens.error} scenario={run.scenario} seed={run.seed} />
-        </Reveal>
-      </div>
     </Stack>
   )
 }

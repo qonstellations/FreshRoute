@@ -167,3 +167,6 @@ export interface ReplanResult extends Example {
   diff: Diff; narration: string
   trips?: { origin: string; dest_id: string; trip_id: string; dispatch_h: number }[] // replanned trips.csv records
 }
+
+/** Props every dashboard tab receives. */
+export type TabProps = { run: RunDetail; runId: string }

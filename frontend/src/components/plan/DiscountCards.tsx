@@ -6,10 +6,11 @@ import { spring } from '../../theme'
 import type { ReasonCard } from '../../types'
 import { cappedText, num } from './format'
 import { Explain } from '../Explain'
+import { placeName, type Names } from '../../lib/words'
 
 export const cardLayoutId = (c: ReasonCard) => `disc-${c.shipment_id}`
 
-export function DiscountCards({ cards, onOpen }: { cards: ReasonCard[]; onOpen: (c: ReasonCard) => void }) {
+export function DiscountCards({ cards, onOpen, names }: { cards: ReasonCard[]; onOpen: (c: ReasonCard) => void; names?: Names }) {
   const list = cards.filter(c => c.discount)
   return (
     <Stack gap="sm">
@@ -32,7 +33,7 @@ export function DiscountCards({ cards, onOpen }: { cards: ReasonCard[]; onOpen: 
                   <Text fw={800} fz={26} lh={1}>{num(c.discount.tier_pct)} %<Text span fz="sm" fw={500}> off</Text></Text>
                   <Badge variant="light" color="yellow" tt="none">from day {c.discount.day}</Badge>
                 </Group>
-                <Text fw={600} mt="sm">{c.batch_id} {c.commodity} → {c.chosen.dest_id}</Text>
+                <Text fw={600} mt="sm">{c.batch_id} {c.commodity} → {placeName(names, c.chosen.dest_id)}</Text>
                 <Text size="sm" c="dimmed">Risk of not selling: {c.discount.risk.toFixed(2)}
                   {c.discount.capped_by !== 'none' && ` · ${cappedText(c.discount.capped_by)}`}</Text>
               </Card>

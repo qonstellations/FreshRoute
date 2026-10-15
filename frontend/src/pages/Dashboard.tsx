@@ -19,12 +19,12 @@ import { policyName, scenarioName } from '../lib/words'
 import type { Progress, RunDetail, RunsList, ScenarioInfo } from '../types'
 
 interface DashboardProps {
-  onBackToStory: () => void
+  onBackToOverview: () => void
 }
 
 const FIXTURE_RUN_ID = 'EXAMPLE-SYNTHETIC'
 
-export function Dashboard({ onBackToStory }: DashboardProps) {
+export function Dashboard({ onBackToOverview }: DashboardProps) {
   const [scenarios, setScenarios] = useState<ScenarioInfo[]>([])
   const [runs, setRuns] = useState<RunsList>({ runs: [], fixture: false })
   const [runId, setRunId] = useState<string | null>(null)
@@ -134,13 +134,13 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
               </ActionIcon>
             </Tooltip>
 
-            {/* Return to Product Story */}
+            {/* Back to the overview page */}
             <Tooltip label="Back to the overview page">
               <Button
                 variant="subtle"
                 color="gray"
                 size="sm"
-                onClick={onBackToStory}
+                onClick={onBackToOverview}
                 visibleFrom="md"
               >
                 Back to overview

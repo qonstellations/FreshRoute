@@ -1,23 +1,20 @@
 // Replan tab (ARCHITECTURE §14.2, §16; DATABASE §5.13, §6): pick one of the 5 canned events, Apply (POST /api/replan,
 // poll), then show diff.json as served: frozen count, moved batches (flying old → new destination), discount changes,
 // ΔKPIs (served delta_kpis) and the server's narration. The engine re-solves; nothing here is computed.
-// `step` (story mode): 0 event form · 1 apply + batches fly · 2 + ΔKPIs and narration. undefined = everything.
 import {
   Alert, Badge, Blockquote, Button, Group, NumberInput, Paper, Select, SimpleGrid, Stack, Table, Text, TextInput, ThemeIcon, Title,
 } from '@mantine/core'
 import { IconAlertTriangle, IconArrowRight, IconBolt, IconMessage2, IconRefresh, IconSnowflake, IconTruck } from '@tabler/icons-react'
-import { LayoutGroup, m, useReducedMotion } from 'motion/react'
-import { useEffect, useRef, useState } from 'react'
+import { LayoutGroup, m } from 'motion/react'
+import { useEffect, useState } from 'react'
 import { api, waitReplan } from '../api/client'
 import { ExampleBanner } from '../components/Banners'
 import { Explain } from '../components/Explain'
 import { KpiTile, toneOf } from '../components/KpiTile'
 import { ShelfLifeMap } from '../components/plan/ShelfLifeMap'
-import { Reveal } from '../components/score/Reveal'
 import { fmt, fmtSigned } from '../lib/delta'
-import type { TabProps } from '../lib/story'
 import { spring } from '../theme'
-import type { Diff, DispatchRow, EventType, ReplanEvent, ReplanKpis, ReplanResult } from '../types'
+import type { Diff, DispatchRow, EventType, ReplanEvent, ReplanKpis, ReplanResult, TabProps } from '../types'
 
 // The 5 canned events of DATABASE §6; magnitudes are the documented demo defaults (editable inputs, not coefficients).
 type Ids = { dest: string; commodity: string; vehicle: string }
@@ -53,8 +50,7 @@ type Form = Omit<ReplanEvent, 'event_id'>
 const formFor = (type: EventType, ids: Ids): Form =>
   ({ type, target: CANNED[type].target(ids), magnitude: CANNED[type].magnitude, at_h: AT_H, note: CANNED[type].note })
 
-export function Replan({ run, runId, step }: TabProps) {
-  const at = (s: number) => step == null || step >= s
+export function Replan({ run, runId }: TabProps) {
   const [ids, setIds] = useState<Ids>({
     dest: run.per_destination[0]?.dest_id ?? '*', commodity: run.per_commodity[0]?.commodity ?? '*', vehicle: '',
   })
@@ -62,12 +58,11 @@ export function Replan({ run, runId, step }: TabProps) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState<ReplanResult | null>(null)
-  const started = useRef(false)
   const [rows, setRows] = useState<DispatchRow[]>([])
 
   // a vehicle id for the reefer-breakdown default, from the run's own dispatch sheet
   useEffect(() => {
-    started.current = false; setResult(null); setError(''); setRows([])
+    setResult(null); setError(''); setRows([])
     api.dispatchSheet(runId).then(s => {
       setRows(s?.csv ?? [])
       const v = s?.csv[0]?.vehicle_id
@@ -79,7 +74,6 @@ export function Replan({ run, runId, step }: TabProps) {
 
   async function apply(f: Form = form) {
     if (busy) return
-    started.current = true
     setBusy(true); setError(''); setResult(null)
     // ponytail: time-based id, unique per click; the engine keys replan/<event_id>/ by it
     const event: ReplanEvent = { ...f, event_id: `E-${Date.now().toString(36).toUpperCase()}` }
@@ -90,8 +84,6 @@ export function Replan({ run, runId, step }: TabProps) {
       setError(e instanceof Error ? e.message : String(e))
     } finally { setBusy(false) }
   }
-  // story beat 1 presses Apply once if nothing is on screen yet
-  useEffect(() => { if (step != null && step >= 1 && !started.current) apply() }, [step])
 
   // Break it live: a road click closes that road and replans at once; a destination click only fills the form.
   function closeRoad(o: string, d: string) {
@@ -143,7 +135,7 @@ export function Replan({ run, runId, step }: TabProps) {
         </Group>
       </Paper>
       {error && <Alert color="red" icon={<IconAlertTriangle />} title="Re-plan failed">{error}</Alert>}
-      {result && <DiffView r={result} step={step} at={at} />}
+      {result && <DiffView r={result} />}
     </Stack>
   )
 }
@@ -160,19 +152,10 @@ const destOf = (x: Spot) => x.dest_id ?? 'not shipped'
 const dayOf = (x: Spot) => (x.dispatch_day === null ? '' : ` · day ${x.dispatch_day}`)
 const where = (x: Spot) => `${destOf(x)}${dayOf(x)}`
 
-function DiffView({ r, step, at }: { r: ReplanResult; step?: number; at: (s: number) => boolean }) {
+function DiffView({ r }: { r: ReplanResult }) {
   const d = r.diff
-  const kpiRef = useRef<HTMLDivElement>(null), flightRef = useRef<HTMLDivElement>(null)
-  const reduce = useReducedMotion()
-  useEffect(() => {
-    if (step == null || step < 1) return
-    const t = setTimeout(() => (step >= 2 ? kpiRef : flightRef).current?.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' }), 250)
-    return () => clearTimeout(t)
-  }, [step, reduce])
   return (
     <Stack gap="lg">
-      <div ref={flightRef} className="story-anchor">
-        <Reveal show={at(1)} collapse={step != null}>
           <Paper withBorder radius="lg" p="lg">
             <Group justify="space-between" mb="sm">
               <div>
@@ -218,10 +201,6 @@ function DiffView({ r, step, at }: { r: ReplanResult; step?: number; at: (s: num
               </div>
             </SimpleGrid>
           </Paper>
-        </Reveal>
-      </div>
-      <div ref={kpiRef} className="story-anchor">
-        <Reveal show={at(2)} collapse={step != null}>
           <Stack gap="md">
             <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
               {KPI_TILES.map(t => {
@@ -237,8 +216,6 @@ function DiffView({ r, step, at }: { r: ReplanResult; step?: number; at: (s: num
               <Text fz="lg">{r.narration}</Text>
             </Blockquote>
           </Stack>
-        </Reveal>
-      </div>
     </Stack>
   )
 }

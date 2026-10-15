@@ -19,6 +19,12 @@ export const reasonText = named({
   LOWER_MARGIN: 'Earns less per kg',
 })
 
+export const modeName = named({ ambient: 'normal truck', reefer: 'refrigerated truck', rail: 'train' })
+
+/** Market id → display name ("KR Market mandi, Bengaluru" → "KR Market mandi"); unknown ids stay as they are. */
+export type Names = Record<string, string>
+export const placeName = (names: Names | undefined, id: string) => names?.[id] ?? id
+
 export const ruleText = named({
   UNKNOWN_ID: 'Plan names a batch, truck or market that does not exist',
   NEGATIVE_QTY: 'Ships zero or negative kg',

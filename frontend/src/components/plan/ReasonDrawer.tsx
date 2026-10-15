@@ -9,7 +9,7 @@ import { spring } from '../../theme'
 import type { ReasonCard } from '../../types'
 import { Fuse } from './Fuse'
 import { band, cappedText, num, REASON_COLOUR, signed } from './format'
-import { reasonText } from '../../lib/words'
+import { modeName, placeName, reasonText, type Names } from '../../lib/words'
 import { Explain } from '../Explain'
 
 /** What the drawer shows: the card (null = none found) and the element it morphs out of. */
@@ -24,7 +24,8 @@ function Kv({ k, v }: { k: ReactNode; v: ReactNode }) {
   return <div><Text size="xs" c="dimmed" tt="uppercase" fw={600}>{k}</Text><Text fw={500}>{v}</Text></div>
 }
 
-function Body({ open }: { open: DrawerOpen }) {
+function Body({ open, names }: { open: DrawerOpen; names?: Names }) {
+  const place = (id: string) => placeName(names, id)
   const { card } = open
   const c = card?.chosen
   const rankBadge = (rank: number | string) => (
@@ -48,21 +49,21 @@ function Body({ open }: { open: DrawerOpen }) {
               {rankBadge(card.priority.rank)}
               <div style={{ minWidth: 0 }}>
                 <Title order={3} lh={1.2}>{card.batch_id} {card.commodity}</Title>
-                <Text size="sm" c="dimmed">Batch {card.batch_id} ({card.commodity}) → market {c.dest_id} by truck {c.vehicle_id} ({c.mode})</Text>
+                <Text size="sm" c="dimmed">Batch {card.batch_id} ({card.commodity}) → {place(c.dest_id)} by {modeName(c.mode)} {c.vehicle_id}</Text>
               </div>
             </Group>
           </Paper>
         </m.div>
 
         <m.div variants={item}>
-          <Paper p="sm" radius="md" bg="var(--mantine-color-blue-light)"><Text size="sm">{card.text}</Text></Paper>
+          <Paper p="sm" radius="md" bg="var(--mantine-color-blue-light)"><Text size="sm">{card.text.replace(/\b[A-Z]+\d+\b/g, place)}</Text></Paper>
         </m.div>
 
         <m.div variants={item}>
           <SimpleGrid cols={2} spacing="sm">
             <Card withBorder radius="md" padding="sm">
               <Group justify="space-between" mb={6}>
-                <Text fw={700}>FreshRoute's choice</Text><Badge color="green" variant="light">{c.dest_id}</Badge>
+                <Text fw={700}>FreshRoute's choice</Text><Badge color="green" variant="light" tt="none">{place(c.dest_id)}</Badge>
               </Group>
               <Stack gap={6}>
                 <Kv k="Leaves → arrives (hour)" v={`${num(c.dispatch_h)} h → ${num(c.arrival_h)} h`} />
@@ -77,7 +78,7 @@ function Body({ open }: { open: DrawerOpen }) {
             <Card withBorder radius="md" padding="sm">
               <Group justify="space-between" mb={6}>
                 <Text fw={700}>Next-best option</Text>
-                {card.runner_up && <Badge color="gray" variant="light">{card.runner_up.dest_id}</Badge>}
+                {card.runner_up && <Badge color="gray" variant="light" tt="none">{place(card.runner_up.dest_id)}</Badge>}
               </Group>
               {card.runner_up ? <Stack gap={6}>
                 <Kv k="Why not chosen" v={<Badge color={REASON_COLOUR[card.runner_up.reason_code]} variant="light" tt="none">
@@ -116,7 +117,7 @@ function Body({ open }: { open: DrawerOpen }) {
               <Table.Tbody>{card.alternatives.map(a => (
                 <Table.Tr key={`${a.dest_id}|${a.mode}|${a.dispatch_day}`} c={a.feasible ? undefined : 'dimmed'}
                   title={a.feasible ? undefined : `Not possible: ${a.reject_reason || reasonText(a.reason_code)}`}>
-                  <Table.Td>{a.dest_id}</Table.Td><Table.Td>{a.mode}</Table.Td><Table.Td ta="right">{a.dispatch_day}</Table.Td>
+                  <Table.Td>{place(a.dest_id)}</Table.Td><Table.Td>{modeName(a.mode)}</Table.Td><Table.Td ta="right">{a.dispatch_day}</Table.Td>
                   <Table.Td><Badge size="sm" variant={a.feasible ? 'light' : 'outline'} color={REASON_COLOUR[a.reason_code]} tt="none">
                     {reasonText(a.reason_code)}</Badge></Table.Td>
                   <Table.Td ta="right" className="n">{num(a.slack_h)}</Table.Td>
@@ -132,7 +133,7 @@ function Body({ open }: { open: DrawerOpen }) {
   )
 }
 
-export function ReasonDrawer({ open, onClose }: { open: DrawerOpen | undefined; onClose: () => void }) {
+export function ReasonDrawer({ open, onClose, names }: { open: DrawerOpen | undefined; onClose: () => void; names?: Names }) {
   useHotkeys([['Escape', onClose]], [])
   useFocusReturn({ opened: !!open })
   return (
@@ -147,7 +148,7 @@ export function ReasonDrawer({ open, onClose }: { open: DrawerOpen | undefined; 
               <Text fw={700} c="dimmed" tt="uppercase" size="sm">Why this shipment?</Text>
               <CloseButton size="lg" onClick={onClose} aria-label="Close explanation" />
             </Group>
-            <Body open={open} />
+            <Body open={open} names={names} />
           </m.aside>
         </FocusTrap>
       </Portal>}

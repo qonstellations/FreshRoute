@@ -1,14 +1,10 @@
 // Scoreboard tab (ARCHITECTURE §16; port of C-12). Shows stored KPIs; deltas via lib/delta.ts only.
-// `step` (presenter story mode): 0 tiles, 1 hero + spoilage melt, 2..6 ladder bars, 7 validator + waterfall.
-// undefined = everything shown. Later beats stay mounted but hidden so the layout never jumps.
 import { Group, Paper, SimpleGrid, Stack, Text, ThemeIcon } from '@mantine/core'
 import { IconTrendingDown, IconTrendingUp } from '@tabler/icons-react'
-import { m, useReducedMotion } from 'motion/react'
-import { useEffect, useRef } from 'react'
+import { m } from 'motion/react'
 import { Explain } from '../components/Explain'
 import { KpiTile, Odometer, toneOf } from '../components/KpiTile'
 import { LadderCharts } from '../components/Ladder'
-import { Reveal } from '../components/score/Reveal'
 import { SpoilageMelt } from '../components/score/SpoilageMelt'
 import { ValidatorPanel } from '../components/ValidatorPanel'
 import { delta, fmt, fmtSigned } from '../lib/delta'
@@ -19,16 +15,7 @@ import type { Kpis, RunDetail } from '../types'
 const lower = (s: string) => /^[A-Z][a-z]/.test(s) ? s[0].toLowerCase() + s.slice(1) : s // 'Expiry-first…' mid-sentence
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } }
 
-export function Scoreboard({ run, step }: { run: RunDetail; step?: number }) {
-  const at = (s: number) => step == null || step >= s
-  const reduce = useReducedMotion()
-  const ladderRef = useRef<HTMLDivElement>(null)
-  useEffect(() => { // keep the current beat on the projector; step 7 scrolls itself (LadderCharts)
-    if (step == null || step >= 7) return
-    const behavior = reduce ? 'auto' : 'smooth'
-    if (step < 2) window.scrollTo({ top: 0, behavior })
-    else ladderRef.current?.scrollIntoView({ block: 'start', behavior })
-  }, [step, reduce])
+export function Scoreboard({ run }: { run: RunDetail }) {
   const k = run.kpis
   const base = run.fixture ? null : run.baseline
   const bk = base?.kpis
@@ -41,7 +28,7 @@ export function Scoreboard({ run, step }: { run: RunDetail; step?: number }) {
   return (
     <Stack gap="lg">
       {base && dNet != null && base.policy !== run.policy && (
-        <Reveal show={at(1)}><m.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={spring.soft}>
+        <m.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={spring.soft}>
           <Paper radius="lg" p="xl" className="band">
             <Group gap="lg" wrap="nowrap">
               <ThemeIcon size={64} radius="xl" variant="white" color={dNet >= 0 ? 'green' : 'red'}>
@@ -59,7 +46,7 @@ export function Scoreboard({ run, step }: { run: RunDetail; step?: number }) {
             </Group>
             <SpoilageMelt ours={k.spoilage_kg} base={bk!.spoilage_kg} oursName={policyName(run.policy)} baseName={policyName(base.policy)} />
           </Paper>
-        </m.div></Reveal>
+        </m.div>
       )}
 
       <m.div variants={stagger} initial="hidden" animate="show">
@@ -82,10 +69,8 @@ export function Scoreboard({ run, step }: { run: RunDetail; step?: number }) {
         </Explain>
       </Text>
 
-      <div ref={ladderRef} className="story-anchor">
-        <Reveal show={at(2)}><LadderCharts scenario={run.scenario} seed={run.seed} step={step} /></Reveal>
-      </div>
-      <Reveal show={at(7)}><ValidatorPanel validation={run.validation} /></Reveal>
+      <LadderCharts scenario={run.scenario} seed={run.seed} />
+      <ValidatorPanel validation={run.validation} />
     </Stack>
   )
 }

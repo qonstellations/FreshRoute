@@ -11,7 +11,7 @@ const N = 24 // crates for the baseline's spoilage
 export function SpoilageMelt({ ours, base, oursName, baseName }: {
   ours: number; base: number; oursName: string; baseName: string
 }) {
-  const [melted, setMelted] = useState(false) // plays once per mount (Reveal remounts it per story beat)
+  const [melted, setMelted] = useState(false) // plays once per mount
   useEffect(() => { const id = setTimeout(() => setMelted(true), 700); return () => clearTimeout(id) }, [])
   const r = ratio(ours, base)
   if (r == null) return null

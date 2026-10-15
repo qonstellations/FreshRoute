@@ -151,7 +151,7 @@ export default function App() {
           {view === 'landing' ? (
             <LandingPage onLaunch={() => switchView('dashboard')} />
           ) : (
-            <Dashboard onBackToStory={() => switchView('landing')} />
+            <Dashboard onBackToOverview={() => switchView('landing')} />
           )}
         </AppShell.Main>
       </AppShell>
