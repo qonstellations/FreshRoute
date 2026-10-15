@@ -19,9 +19,9 @@ ABLATION_DELTAS = ("net_inr", "spoilage_kg", "spoilage_pct", "demand_fulfillment
 def waterfall(base: dict, plan: dict) -> list[dict]:
     """Steps from two economics_inr dicts (ARCH section 12); deltas sum to net_P - net_B."""
     def d(k: str) -> float:
-        return plan[k] - base[k]
+        return float(plan.get(k, 0.0)) - float(base.get(k, 0.0))
     return [
-        {"label": "Baseline net", "value": base["net"], "type": "total"},
+        {"label": "Baseline net", "value": float(base.get("net", 0.0)), "type": "total"},
         {"label": "Spoilage cost avoided", "value": 0.0 - d("spoilage_cost"), "type": "delta"},
         {"label": "Extra sales (list price)", "value": d("gross_revenue_at_list"), "type": "delta"},
         {"label": "Cost of extra goods sold", "value": 0.0 - d("cost_of_goods_sold"),
@@ -29,7 +29,7 @@ def waterfall(base: dict, plan: dict) -> list[dict]:
         {"label": "Extra transport", "value": 0.0 - d("transport"), "type": "delta"},
         {"label": "Extra handling", "value": 0.0 - d("handling"), "type": "delta"},
         {"label": "Discounts given", "value": 0.0 - d("discount_cost"), "type": "delta"},
-        {"label": "FreshRoute net", "value": plan["net"], "type": "total"},
+        {"label": "FreshRoute net", "value": float(plan.get("net", 0.0)), "type": "total"},
     ]
 
 
@@ -84,12 +84,20 @@ def refresh_ladder(out_dir: Path, name: str, policy: str, seed: int) -> None:
         return
     root = out_dir.parent
     lad = root / naming.run_id(name, "ladder", seed) / "ladder.json"
-    if not lad.is_file() or not all(
-            (root / naming.run_id(name, p, seed) / "metrics.json").is_file()
-            for p in LADDER + EXTRAS):
+    if not lad.is_file():
         return
-    old = json.loads(lad.read_text(encoding="utf-8")).get("ablation") or [{}]
-    write_ladder(root, name, seed, old[0].get("run_id"))
+    runs_dirs = [root / naming.run_id(name, p, seed) for p in LADDER + EXTRAS]
+    if not all((d / "metrics.json").is_file() for d in runs_dirs):
+        return
+    try:
+        versions = {_metrics(d).get("schema_version") for d in runs_dirs}
+        if len(versions) != 1:
+            return  # skip refresh if on-disk ladder runs have mismatched schema versions
+        old = json.loads(lad.read_text(encoding="utf-8")).get("ablation") or [{}]
+        write_ladder(root, name, seed, old[0].get("run_id"))
+    except Exception:
+        # A ladder refresh issue must never fail the underlying run (Non-negotiable 6)
+        pass
 
 
 def format_ladder(out_dir: Path) -> str:
