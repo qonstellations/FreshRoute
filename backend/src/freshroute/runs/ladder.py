@@ -10,7 +10,7 @@ from freshroute.data.io import load_scenario
 from freshroute.runs import naming
 from freshroute.runs.runner import run
 
-LADDER = ("fifo", "fefo", "milp", "milp_markdown")
+LADDER = ("fifo", "fefo", "milp")
 EXTRAS = ("last_day_50",)
 TOLERANCE_INR = 0.01
 ABLATION_DELTAS = ("net_inr", "spoilage_kg", "spoilage_pct", "demand_fulfillment_pct")

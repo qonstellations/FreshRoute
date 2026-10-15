@@ -42,7 +42,7 @@ def test_config_verbatim(client):
     from freshroute import config
     body = client.get("/api/config").json()
     assert body["LAMBDA_SPOIL"] == config.LAMBDA_SPOIL
-    assert body["DISCOUNT_TIERS_PCT"] == list(config.DISCOUNT_TIERS_PCT)
+    assert body["MC_NAMED"] == {k: list(v) for k, v in config.MC_NAMED.items()}
     assert body["API_VERSION"] == 1 and all(k.isupper() for k in body)
 
 
@@ -127,6 +127,17 @@ def test_post_run_202_then_done(client, tmp_path):
     assert s["state"] == "done", s
     assert (tmp_path / RUN / "metrics.json").is_file()
     assert json.loads((tmp_path / ".api" / "jobs" / f"{RUN}.json").read_text())["state"] == "done"
+
+
+def test_milp_run_reports_progress(client, tmp_path):
+    """A MILP run publishes plans while it solves; the last status carries the final version."""
+    req = {"scenario": "backend/tests/fixtures/tiny_3batch", "policy": "milp", "seed": 42}
+    rid = client.post("/api/runs", json=req).json()["run_id"]
+    s = _wait(client, rid)
+    p = s["progress"]
+    assert s["state"] == "done" and p["final"] and p["version"] >= 1
+    m = json.loads((tmp_path / rid / "metrics.json").read_text(encoding="utf-8"))
+    assert p["net_inr"] == m["kpis"]["net_inr"]  # copied from the run, never computed by the API
 
 
 def test_run_listed_by_directory_name(client, tmp_path):

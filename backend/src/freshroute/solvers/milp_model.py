@@ -8,6 +8,7 @@ from __future__ import annotations
 import math
 import time
 
+import highspy
 import pandas as pd
 import pulp
 
@@ -27,6 +28,7 @@ from freshroute.domain.shelflife import decay
 from freshroute.policies.base import PLAN_COLUMNS, TRIP_COLUMNS, Plan
 from freshroute.solvers.greedy import classes, fefo_greedy, lookups
 
+_IMPROVING = highspy.cb.HighsCallbackType.kCallbackMipImprovingSolution
 _OK = (pulp.LpSolveStatus.Optimal, pulp.LpSolveStatus.TimeLimit, pulp.LpSolveStatus.GapLimit)
 
 
@@ -57,12 +59,15 @@ def model_data(sc: Scenario):
 
 
 def solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None,
-           overship=OVERSHIP_SLACK, used=None, warm=None, fleet=None):
+           overship=OVERSHIP_SLACK, used=None, warm=None, fleet=None, on_incumbent=None):
     """Returns ((x, n) | None, info); None when there is no usable incumbent. `used` (replan,
     section 14.2): {"trips": {(v, day): n}, "recv": {(d, day): kg}} already taken by frozen
     shipments, subtracted from C3 and C4, plus "fill": {d: kg} counted in C6; `warm`: old plan
     rows offered as the warm start. n is keyed by (trip class, dest, day); C2 caps an arc
-    vehicle's kg by the trips of all its classes (`fleet`, section 9.5; identity otherwise)."""
+    vehicle's kg by the trips of all its classes (`fleet`, section 9.5; identity otherwise).
+    `on_incumbent(x, n, profit)` is called with the starting plan and again for every better
+    incumbent HiGHS finds (from its thread: copy and return fast), so a caller can show
+    progress; profit is the model objective, never a reported KPI."""
     veh, lanes, dest, target = lookups(sc, override)
     f, cls = classes(veh, fleet)
     trips_used, recv_used = (used or {}).get("trips", {}), (used or {}).get("recv", {})
@@ -98,10 +103,10 @@ def solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None,
     tot = {d: v + fill_used.get(d, 0.0) for d, v in sorted(tot.items())}
     tot = {d: v for d, v in tot.items() if v > FLOAT_TOL}
     by_d = arcs.groupby("dest_id").groups
-    xd = {d: pulp.lpSum(x[i] for i in by_d[d]) for d in tot}
-    for d in sorted(set(fill_used) & set(xd)):
-        xd[d] += fill_used[d]
-    avg = prob.add_variable("avg_fill", 0, None, cat="Continuous")  # one row, keeps C6 sparse
+    xd = {d: prob.add_variable(f"f_{d}", 0, None, cat="Continuous") for d in tot}  # kg to d
+    for d in tot:  # one short row per destination keeps the average-fill row sparse
+        prob += xd[d] == pulp.lpSum(x[i] for i in by_d[d]) + fill_used.get(d, 0.0)
+    avg = prob.add_variable("avg_fill", 0, None, cat="Continuous")
     prob += avg == pulp.lpSum((1 / (len(tot) * tot[d])) * xd[d] for d in tot)
     slack = {d: prob.add_variable(f"s_{d}", 0, None, cat="Continuous") for d in tot}
     for d in tot:  # C6 soft fill balance, times T_d
@@ -121,6 +126,8 @@ def solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None,
         gxd = {d: sum(gx[i] for i in by_d[d]) + fill_used.get(d, 0.0) for d in tot}
         g_avg = sum(gxd[d] / (len(tot) * tot[d]) for d in tot)
         avg.setInitialValue(g_avg)
+        for d, var in xd.items():
+            var.setInitialValue(gxd[d])
         for d, var in slack.items():
             var.setInitialValue(max(0.0, PHI_BALANCE * g_avg - gxd[d] / tot[d]))
         return warm is None or prob.valid(FLOAT_TOL)  # plain runs never pay for the check
@@ -130,9 +137,33 @@ def solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None,
     # (section 14.2) starts from the old plan's undispatched rows instead while they still
     # satisfy every constraint: fewest moves, and the old plan was itself optimized.
     if warm is None or not start(*warm_plan(arcs, warm, veh)):
-        start(*fefo_greedy(sc, arcs, batches, override, overship, used, fleet))
+        gx, gn = fefo_greedy(sc, arcs, batches, override, overship, used, fleet)
+        start(gx, gn)
+        if warm is None:  # FEFO ignores C6, so the rounded LP is usually the better start
+            gobj = pulp.value(prob.objective)
+            lp = _lp_start(prob)
+            if lp is not None and lp[1] > gobj:
+                for var, val in zip(prob.exported_variables(), lp[0], strict=True):
+                    var.setInitialValue(val)
+    cols = {v.name: j for j, v in enumerate(prob.exported_variables())}
+    xi, nj = [cols[v.name] for v in x], {k: cols[v.name] for k, v in n.items()}
+
+    def snapshot(vals):
+        return ([max(0.0, vals[j]) for j in xi], {k: round(vals[j]) for k, j in nj.items()})
+
+    hs = {}
+    if on_incumbent:
+        on_incumbent(*snapshot([v.varValue for v in prob.exported_variables()]),
+                     pulp.value(prob.objective))
+
+        def cb(cb_type, message, data_out, data_in, user_data):
+            sol = data_out.mip_solution
+            if sol is not None and len(sol) == len(cols):
+                on_incumbent(*snapshot(sol), -data_out.objective_function_value)
+        hs = {"callbackTuple": (cb, None), "callbacksToActivate": [_IMPROVING]}
     t0 = time.perf_counter()
-    stats = prob.solve(pulp.HiGHS(msg=False, timeLimit=time_limit_s, gapRel=gap, warmStart=True))
+    stats = prob.solve(pulp.HiGHS(msg=False, timeLimit=time_limit_s, gapRel=gap, warmStart=True,
+                                  **hs))
     info = {"status": str(stats.status), "solve_seconds": time.perf_counter() - t0,
             "size": {"vars": prob.numVariables(), "constraints": prob.numConstraints()}}
     try:  # HiGHS's own gap; pulp's stats.gap_rel is None for HiGHS
@@ -172,6 +203,53 @@ def solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None,
             info.update(objective_inr=g_obj, incumbent="greedy")
             return (gx, gn), info
     return (xv, nv), info
+
+
+def _lp_start(prob):
+    """Rounded-LP start (section 9.6): relax the trip integers, dive by rounding the most
+    fractional third (or half) of them up and re-solving the LP (about 0.03 s each), keep the
+    better dive. Returns (values in prob.exported_variables() order, profit) or None."""
+    s = pulp.HiGHS(msg=False)
+    s.createAndConfigureSolver(prob)
+    s.buildSolverModel(prob)
+    h = prob.solverModel
+    cols = prob.exported_variables()
+    integ = [j for j, v in enumerate(cols) if v.cat == pulp.LpInteger]
+    for j in integ:
+        h.changeColIntegrality(j, highspy.HighsVarType.kContinuous)
+    best = None
+    for share in (1 / 3, 1 / 2):
+        for j in integ:
+            h.changeColBounds(j, 0.0, highspy.kHighsInf)
+        h.run()
+        free = set(integ)
+        while free and h.getModelStatus() == highspy.HighsModelStatus.kOptimal:
+            sol = h.getSolution().col_value
+            frac = {j: sol[j] - math.floor(sol[j] + FLOAT_TOL) for j in free}
+            for j in [j for j in free if frac[j] < FLOAT_TOL]:
+                free.discard(j)
+                h.changeColBounds(j, round(sol[j]), round(sol[j]))
+            if not free:
+                break
+            pick = sorted(free, key=lambda j: -frac[j])
+            pick = pick[:max(1, int(len(pick) * share))]
+            for j in pick:
+                h.changeColBounds(j, math.ceil(sol[j] - FLOAT_TOL), math.ceil(sol[j] - FLOAT_TOL))
+            h.run()
+            if h.getModelStatus() != highspy.HighsModelStatus.kOptimal:  # C3 broke: round down
+                for j in pick:
+                    h.changeColBounds(j, math.floor(sol[j] + FLOAT_TOL),
+                                      math.floor(sol[j] + FLOAT_TOL))
+                h.run()
+            free.difference_update(pick)
+        if h.getModelStatus() == highspy.HighsModelStatus.kOptimal:
+            obj = -h.getInfo().objective_function_value
+            if best is None or obj > best[1]:
+                vals = list(h.getSolution().col_value)
+                for j in integ:
+                    vals[j] = float(round(vals[j]))
+                best = ([max(0.0, v) for v in vals], obj)
+    return best
 
 
 def warm_plan(arcs, warm: pd.DataFrame, veh):

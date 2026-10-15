@@ -25,7 +25,7 @@ EVENTS = {
 
 @pytest.fixture(scope="module")
 def base(tmp_path_factory) -> Path:
-    return run(TINY, "milp_markdown", 42, str(tmp_path_factory.mktemp("run") / "r"))
+    return run(TINY, "milp", 42, str(tmp_path_factory.mktemp("run") / "r"))
 
 
 def _event(tmp: Path, eid: str, typ: str, at_h: float, **kw) -> Path:

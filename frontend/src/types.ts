@@ -115,8 +115,11 @@ export interface Flags { markdown: boolean; newsvendor: boolean }
 export interface PostRunRequest { scenario: string; policy: string; seed: number; flags: Flags }
 export interface PostRunResponse { run_id: string; status: 'running' }
 
+/** Live solve progress (DATABASE §11.3): each version is a complete run directory on disk. */
+export interface Progress { version: number; net_inr: number; final: boolean; elapsed_s: number }
 export interface StatusResponse {
   state: 'running' | 'done' | 'error'
+  progress?: Progress | null
   started_utc: string | null; finished_utc: string | null; error: string | null
 }
 

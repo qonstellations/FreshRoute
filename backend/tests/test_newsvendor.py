@@ -53,9 +53,9 @@ def test_flag_off_override_is_identity():
 
 
 def test_flag_off_run_unchanged(tmp_path):
-    out = cli.run(TINY, "milp_markdown", 42, str(tmp_path / "off"))
+    out = cli.run(TINY, "milp", 42, str(tmp_path / "off"))
     man = _load(out / "run_manifest.json")
-    assert man["run_id"] == "tiny_3batch__milp_markdown__s42"
+    assert man["run_id"] == "tiny_3batch__milp__s42"
     assert man["flags"]["newsvendor"] is False
     assert not (out / "demand_target.csv").exists()
 
@@ -63,15 +63,15 @@ def test_flag_off_run_unchanged(tmp_path):
 @pytest.fixture(scope="module")
 def nv_runs(tmp_path_factory):
     root = tmp_path_factory.mktemp("nv")
-    return [cli.run(TINY, "milp_markdown", 42, str(root / f"r{i}"), newsvendor=True)
+    return [cli.run(TINY, "milp", 42, str(root / f"r{i}"), newsvendor=True)
             for i in range(2)]
 
 
 def test_newsvendor_run_valid_and_deterministic(nv_runs):
     a, b = nv_runs
     man = _load(a / "run_manifest.json")
-    assert man["run_id"] == "tiny_3batch__milp_markdown__s42__nv"
-    assert man["flags"] == {"markdown": True, "newsvendor": True}
+    assert man["run_id"] == "tiny_3batch__milp__s42__nv"
+    assert man["flags"] == {"markdown": False, "newsvendor": True}
     assert _load(a / "validation.json")["violation_total"] == 0
     assert _load(a / "metrics.json")["kpis"]["violations"] == 0
     assert (a / "metrics.json").read_bytes() == (b / "metrics.json").read_bytes()

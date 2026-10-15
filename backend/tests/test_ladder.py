@@ -33,10 +33,10 @@ def test_waterfall_reconciles(tiny_ladder):
 
 def test_ladder_structure(tiny_ladder):
     out, lad, wf, load = tiny_ladder
-    assert [e["policy"] for e in lad["ladder"]] == ["fifo", "fefo", "milp", "milp_markdown"]
+    assert [e["policy"] for e in lad["ladder"]] == ["fifo", "fefo", "milp"]
     assert [e["policy"] for e in lad["extras"]] == ["last_day_50"]
     assert lad["official_baseline"] is None
-    assert (wf["baseline"], wf["plan"]) == ("fefo", "milp_markdown")
+    assert (wf["baseline"], wf["plan"]) == ("fefo", "milp")
     keys = load(out / "tiny_3batch__fifo__s42" / "metrics.json")["kpis"].keys()
     assert all(e["kpis"].keys() == keys for e in lad["ladder"] + lad["extras"])
 
@@ -49,14 +49,14 @@ def _g2_kpis(seed, tmp_path, monkeypatch):
     sc = generator.generate("g2", seed, 60, 5, 3, 3, tmp_path / "sc")
     return {p: json.loads((cli.run(str(sc), p, seed, str(tmp_path / p)) / "metrics.json")
                           .read_text(encoding="utf-8"))["kpis"]
-            for p in ("fefo", "milp", "milp_markdown")}
+            for p in ("fefo", "milp")}
 
 
 @pytest.mark.parametrize("seed", [1, 2, 3])
 def test_g2_net_and_violations(seed, tmp_path, monkeypatch):
     k = _g2_kpis(seed, tmp_path, monkeypatch)
     assert k["milp"]["net_inr"] > k["fefo"]["net_inr"]
-    assert k["milp"]["violations"] == 0 and k["milp_markdown"]["violations"] == 0
+    assert k["milp"]["violations"] == 0
 
 
 def test_demo_writes_pitch_files(tmp_path, capsys):
@@ -68,4 +68,4 @@ def test_demo_writes_pitch_files(tmp_path, capsys):
     assert (tmp_path / "tiny_3batch__ladder__s42" / "ladder.json").is_file()
     assert (tmp_path / "tiny_3batch__ladder__s42" / "waterfall.json").is_file()
     out = capsys.readouterr().out
-    assert "milp_markdown validation: 0 violation(s)" in out and "s wall" in out
+    assert "milp validation: 0 violation(s)" in out and "s wall" in out

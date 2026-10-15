@@ -18,8 +18,6 @@ AGG_RSL_BUCKET_H = 6  # [team]
 # finds no incumbent in 30 s
 AGG_ARC_THRESHOLD = 20_000
 PENALTY_MULT = 10  # [team] x max price
-DISCOUNT_RISK_BREAKS = (0.10, 0.30, 0.50)  # [doc]
-DISCOUNT_TIERS_PCT = (0, 10, 20, 35)  # [doc]
 DISCOUNT_TIME_TRIGGER_H = 24  # [doc]
 LAST_DAY_DISCOUNT_PCT = 50  # [doc] last_day_50 baseline, ARCH 12
 MC_N = 200  # [doc]
@@ -37,7 +35,7 @@ DEFAULT_SEED = 42  # [doc]
 DEMO_SCENARIO = "data/scenarios/practice"  # [team] the pitch scenario
 DEMO_SEED = 42  # [team]
 # ponytail: fefo stands in for organizer_baseline until the organizers publish their baseline.
-BASELINE, PLAN = "fefo", "milp_markdown"  # attribution ladder / waterfall endpoints
+BASELINE, PLAN = "fefo", "milp"  # attribution ladder / waterfall endpoints
 FLOAT_TOL = 1e-6  # [team] kg and h comparisons
 HOURS_PER_DAY = 24
 SCHEMA_VERSION = 2  # DATABASE.md section 1; 2 = cost_of_goods_sold in net (D-28)

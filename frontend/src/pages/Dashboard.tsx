@@ -14,7 +14,7 @@ import { Replan } from '../tabs/Replan'
 import { Robustness } from '../tabs/Robustness'
 import { Scoreboard } from '../tabs/Scoreboard'
 import { Trust } from '../tabs/Trust'
-import type { RunDetail, RunsList, ScenarioInfo } from '../types'
+import type { Progress, RunDetail, RunsList, ScenarioInfo } from '../types'
 
 interface DashboardProps {
   onBackToStory: () => void
@@ -28,23 +28,24 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
   const [runId, setRunId] = useState<string | null>(null)
   const [run, setRun] = useState<RunDetail | null>(null)
   const [error, setError] = useState('')
+  const [live, setLive] = useState<Progress | null>(null) // solver still improving the shown plan
+  const [reload, setReload] = useState(0) // bumped per published plan: re-fetch the same run id
   const [activeTab, setActiveTab] = useState<string>('overview')
 
   // Developer settings (tucked in drawer)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [scenario, setScenario] = useState('practice')
-  const [policy, setPolicy] = useState('milp_markdown')
+  const [policy, setPolicy] = useState('milp')
   const [seed, setSeed] = useState(42)
-  const [markdown, setMarkdown] = useState(true)
   const [newsvendor, setNewsvendor] = useState(false)
 
   const loadRuns = useCallback(async (select?: string) => {
     try {
       const r = await api.runs()
       setRuns(r)
-      // prefer the demo run (practice / milp_markdown), else the newest listing
+      // prefer the demo run (practice / milp), else the newest listing
       const demo = r.runs.find(
-        (x) => x.scenario.split('/').pop() === 'practice' && x.policy === 'milp_markdown'
+        (x) => x.scenario.split('/').pop() === 'practice' && x.policy === 'milp'
       )
       setRunId(select ?? demo?.run_id ?? r.runs[0]?.run_id ?? (r.fixture ? FIXTURE_RUN_ID : null))
     } catch (e) {
@@ -72,7 +73,10 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
         setError('')
       })
       .catch((e) => setError(`Cannot load run ${runId}: ${e.message}`))
-  }, [runId])
+  }, [runId, reload])
+
+  const onProgress = (id: string, p: Progress) => { setLive(p); loadRuns(id); setReload((n) => n + 1) }
+  const onDone = (id: string) => { setLive(null); loadRuns(id); setReload((n) => n + 1) }
 
   const ready = run && runId
   const scenarioDisplayName = scenario === 'practice' ? 'Bangalore Central Hub (200 Batches · 8 Mandis)' : scenario
@@ -103,11 +107,10 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
                 scenario: scenario && `data/scenarios/${scenario}`,
                 policy,
                 seed,
-                flags: { markdown, newsvendor },
+                flags: { markdown: false, newsvendor },
               }}
-              onDone={(id) => {
-                loadRuns(id)
-              }}
+              onProgress={onProgress}
+              onDone={onDone}
               onError={setError}
             />
 
@@ -138,6 +141,12 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
             </Tooltip>
           </Group>
         </Group>
+
+        {live && (
+          <Alert color="green" variant="light" mt="sm" title="Showing the best plan found so far">
+            Still searching for a better one. Plan v{live.version} · net ₹{Math.round(live.net_inr).toLocaleString('en-IN')} · {live.elapsed_s} s
+          </Alert>
+        )}
 
         {error && (
           <Alert color="red" icon={<IconAlertTriangle />} title="System Alert" mt="sm">
@@ -182,9 +191,10 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
                 scenario: scenario && `data/scenarios/${scenario}`,
                 policy,
                 seed,
-                flags: { markdown, newsvendor },
+                flags: { markdown: false, newsvendor },
               }}
-              onDone={(id) => loadRuns(id)}
+              onProgress={onProgress}
+              onDone={onDone}
               onError={setError}
             />
           </Paper>
@@ -258,8 +268,7 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
             value={policy}
             onChange={(v) => v && setPolicy(v)}
             data={[
-              { value: 'milp_markdown', label: 'FreshRoute MILP + Markdown (Recommended)' },
-              { value: 'milp', label: 'Pure MILP (No Pre-Expiry Markdown)' },
+              { value: 'milp', label: 'FreshRoute MILP (Recommended)' },
               { value: 'fefo', label: 'FEFO-Greedy Baseline (Warehouse Rule)' },
               { value: 'fifo', label: 'Naive FIFO Baseline' },
               { value: 'last_day_50', label: 'Naive FIFO + Flat 50% Cut' },
@@ -273,13 +282,6 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
             value={seed}
             onChange={(v) => setSeed(Number(v))}
             allowDecimal={false}
-          />
-
-          <Switch
-            label="Pre-Expiry Markdown Engine"
-            description="Applies tiered discounts (10%, 20%, 35%) to at-risk stock"
-            checked={markdown}
-            onChange={(e) => setMarkdown(e.currentTarget.checked)}
           />
 
           <Switch

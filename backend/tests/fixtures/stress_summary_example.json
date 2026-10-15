@@ -1,5 +1,5 @@
 {"_note": "Format example per DATABASE.md 5.12; numbers are made up, not a measured stress run.",
- "n": 200, "base_seed": 42, "plan": "milp_markdown", "baseline": "fefo",
+ "n": 200, "base_seed": 42, "plan": "milp", "baseline": "fefo",
  "bands": {
   "net_inr": {"plan": {"p10": 1480000.0, "p50": 1650000.0, "p90": 1790000.0},
               "baseline": {"p10": 1290000.0, "p50": 1410000.0, "p90": 1530000.0}},

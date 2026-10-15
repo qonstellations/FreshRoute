@@ -17,7 +17,7 @@ FILES = ("metrics.json", "plan.csv", "trips.csv", "discounts.csv", "sim_ledger.c
          "sim_lots.csv", "reason_cards.json", "dispatch_sheet.csv", "dispatch_sheet.txt",
          "validation.json")
 # milp on practice hits its time limit, so it is not byte-reproducible and is not locked here
-CASES = [(TINY, p) for p in ("fifo", "fefo", "last_day_50", "milp", "milp_markdown")] + \
+CASES = [(TINY, p) for p in ("fifo", "fefo", "last_day_50", "milp")] + \
         [(PRACTICE, p) for p in ("fifo", "fefo", "last_day_50")]
 
 

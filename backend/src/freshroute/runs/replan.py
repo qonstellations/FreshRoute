@@ -19,7 +19,6 @@ from freshroute.config import FLOAT_TOL, OVERSHIP_SLACK, REPLAN_TIME_LIMIT_S
 from freshroute.data.events import Event, apply_event, lane_mask, load_event
 from freshroute.data.io import Scenario, load_scenario
 from freshroute.domain.discount import COLUMNS as DISCOUNT_COLUMNS
-from freshroute.domain.discount import build_discounts
 from freshroute.domain.shelflife import usable_life_at_arrival
 from freshroute.engine import metrics as M
 from freshroute.engine.simulator import simulate
@@ -189,8 +188,7 @@ def _cat(a: pd.DataFrame, b: pd.DataFrame, cols) -> pd.DataFrame:
 
 
 def replan(world0: Scenario, old_plan: pd.DataFrame, old_trips: pd.DataFrame,
-           old_disc: pd.DataFrame, ev: Event, *, markdown: bool, run_id: str,
-           seed: int) -> dict:
+           old_disc: pd.DataFrame, ev: Event, *, run_id: str, seed: int) -> dict:
     """Return {"world", "plan", "trips", "discounts", "metrics", "validation", "diff"}."""
     t0 = time.perf_counter()
     world = apply_event(world0, ev)
@@ -198,7 +196,7 @@ def replan(world0: Scenario, old_plan: pd.DataFrame, old_trips: pd.DataFrame,
     is_frozen = old.is_frozen.astype(bool) | (old.dispatch_h <= ev.at_h + FLOAT_TOL)
     frozen = old[is_frozen].assign(is_frozen=True)
     sc, ctx = residual(world, frozen, ev.at_h)
-    policy = "milp_markdown" if markdown else "milp"
+    policy = "milp"
     if sc.tables["batches"].empty:
         new = pd.DataFrame(columns=list(PLAN_COLUMNS))
         new_trips, solver = pd.DataFrame(columns=list(TRIP_COLUMNS)), None
@@ -209,8 +207,7 @@ def replan(world0: Scenario, old_plan: pd.DataFrame, old_trips: pd.DataFrame,
         new, new_trips = _renumber(new, new_trips, old_plan, frozen)
     plan = _cat(frozen, new, PLAN_COLUMNS)
     trips = _cat(_frozen_trips(old_trips, frozen), new_trips, TRIP_COLUMNS)
-    disc = (build_discounts(world, plan) if markdown
-            else pd.DataFrame(columns=list(DISCOUNT_COLUMNS)))
+    disc = pd.DataFrame(columns=list(DISCOUNT_COLUMNS))  # the replan is a plain MILP plan
     solve_s = time.perf_counter() - t0
 
     rid = f"{run_id}__{ev.event_id}"
@@ -256,7 +253,7 @@ def replan_run(run_dir: str | Path, event: str | Path | Event, out: str | Path |
     m = json.loads((run_dir / "metrics.json").read_text(encoding="utf-8"))
     r = replan(world0, pd.read_csv(run_dir / "plan.csv"), pd.read_csv(run_dir / "trips.csv"),
                _read_csv(run_dir / "discounts.csv", DISCOUNT_COLUMNS), ev,
-               markdown=bool(man["flags"]["markdown"]), run_id=m["run_id"], seed=m["seed"])
+               run_id=m["run_id"], seed=m["seed"])
     out_dir = Path(out) if out else run_dir / "replan" / ev.event_id
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "event.json").write_text(ev.model_dump_json(indent=2) + "\n", encoding="utf-8")

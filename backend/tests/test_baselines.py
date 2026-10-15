@@ -22,7 +22,7 @@ def test_organizer_baseline_policy_names_its_blocker():
         cli._policy("organizer_baseline")
     msg = str(e.value)
     assert "organizers" in msg and "baseline procedure" in msg
-    assert "fifo" in msg and "milp_markdown" in msg  # still lists what does work
+    assert "fifo" in msg and "milp" in msg  # still lists what does work
 
 
 def test_unknown_policy_lists_available():

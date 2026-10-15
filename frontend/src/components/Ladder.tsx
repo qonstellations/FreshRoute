@@ -11,12 +11,12 @@ import { spring } from '../theme'
 import { Reveal } from './score/Reveal'
 import { C, tooltipStyle, Waterfall } from './Waterfall'
 
-const OURS = 'milp_markdown' // highlighted by name, not by comparing numbers
+const OURS = 'milp' // highlighted by name, not by comparing numbers
 // Story order (Scoreboard steps 2..6 reveal one each); captions are static copy, never numbers.
-const STORY = ['fifo', 'fefo', 'last_day_50', 'milp', 'milp_markdown']
+const STORY = ['fifo', 'fefo', 'last_day_50', 'milp']
 const CAPTION: Record<string, string> = {
   fifo: 'first in, first out', fefo: 'first expiry first out (baseline)', last_day_50: '50 % off on the last day',
-  milp: '+ optimisation (HiGHS MILP)', milp_markdown: '+ markdown pricing',
+  milp: '+ optimisation (HiGHS MILP)',
 }
 const storyIdx = (p: string) => { const i = STORY.indexOf(p); return i < 0 ? STORY.length : i }
 

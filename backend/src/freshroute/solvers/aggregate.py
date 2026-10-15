@@ -101,39 +101,53 @@ def plan_aggregated(sc: Scenario, ctx: dict, policy: str, time_limit_s: float, g
         if vid in cls_of:
             tc[(cls_of[vid], day)] = tc.get((cls_of[vid], day), 0) + k
     used_c = {**used, "trips": tc} if used else None
+    keys = ["batch_id", "dest_id", "vehicle_id", "dispatch_day"]
+    t, va = sc.tables, agg.tables["vehicles"]
+
+    def assemble(x, n, info):
+        """Pseudo-batch (x, n) -> concrete Plan and its validator violation count."""
+        lines = []
+        for a, kg in zip(arcs[keys].itertuples(index=False), x, strict=True):
+            if kg > FLOAT_TOL:
+                g = members[a.batch_id]
+                lines += [(bid, a.dest_id, a.vehicle_id, a.dispatch_day, kg * q / g.qty_kg.sum())
+                          for bid, q in zip(g.batch_id, g.qty_kg, strict=True)]
+        lines = pd.DataFrame(lines, columns=[*keys, "kg"])
+        # Batch-level feasibility re-check, only for the batches and dests in use; members of a
+        # lane class share every arc attribute, so the lane-class row stands in for them.
+        sub = replace(sc, tables={
+            **t, "batches": t["batches"][t["batches"].batch_id.isin(lines.batch_id)],
+            "destinations": t["destinations"][t["destinations"].dest_id.isin(lines.dest_id)],
+            "vehicles": va[va.vehicle_id.isin(lines.vehicle_id)]})
+        full, _, _ = milp_model.model_data(sub) if len(lines) else (arcs.iloc[:0], None, None)
+        full = full.merge(lines, on=keys, how="inner")  # infeasible batch-level arcs drop out
+        n_drop = len(lines) - len(full)
+        split, n = split_fleet(full, n, fleet, vmem, frozen)
+        plan = milp_model.build_plan(sc, split.drop(columns="kg"), list(split.kg), n, info,
+                                     policy)
+        viol = validate(sc, plan.plan).violation_total
+        info["aggregation"] = {"batches": len(t["batches"]), "groups": len(members),
+                               "vehicle_classes": len(fleet), "agg_arcs": len(arcs),
+                               "dropped_lines": n_drop,
+                               "unassigned_kg": float(full.kg.sum() - split.kg.sum()),
+                               "validator_violations": viol}
+        return plan, viol
+
+    on_plan, inc = ctx.get("on_plan"), None
+    if on_plan:  # progressive run: offer every incumbent as a plan (None when it violates)
+        def inc(x, n, profit):
+            def make():
+                plan, viol = assemble(x, n, {"status": "incumbent"})
+                return None if viol else plan
+            on_plan(make, profit)
     sol, info = milp_model.solve(agg, arcs, batches, unship, time_limit_s, gap,
-                                 override=ov, overship=slack,
-                       used=used_c, fleet=fleet)
+                                 override=ov, overship=slack, used=used_c, fleet=fleet,
+                                 on_incumbent=inc)
     info["fallback_used"] = sol is None
     if sol is None:
         info.update(slack_usage={}, mip_gap=None)
     x, n = fefo_greedy(agg, arcs, batches, ov, slack, used_c, fleet) if sol is None else sol
-    keys = ["batch_id", "dest_id", "vehicle_id", "dispatch_day"]
-    lines = []
-    for a, kg in zip(arcs[keys].itertuples(index=False), x, strict=True):
-        if kg > FLOAT_TOL:
-            g = members[a.batch_id]
-            lines += [(bid, a.dest_id, a.vehicle_id, a.dispatch_day, kg * q / g.qty_kg.sum())
-                      for bid, q in zip(g.batch_id, g.qty_kg, strict=True)]
-    lines = pd.DataFrame(lines, columns=[*keys, "kg"])
-    # Batch-level feasibility re-check, only for the batches and dests in use; members of a
-    # lane class share every arc attribute, so the lane-class row stands in for them.
-    t, va = sc.tables, agg.tables["vehicles"]
-    sub = replace(sc, tables={
-        **t, "batches": t["batches"][t["batches"].batch_id.isin(lines.batch_id)],
-        "destinations": t["destinations"][t["destinations"].dest_id.isin(lines.dest_id)],
-        "vehicles": va[va.vehicle_id.isin(lines.vehicle_id)]})
-    full, _, _ = milp_model.model_data(sub) if len(lines) else (arcs.iloc[:0], None, None)
-    full = full.merge(lines, on=keys, how="inner")  # infeasible batch-level arcs drop out
-    n_drop = len(lines) - len(full)
-    split, n = split_fleet(full, n, fleet, vmem, frozen)
-    plan = milp_model.build_plan(sc, split.drop(columns="kg"), list(split.kg), n, info, policy)
-    viol = validate(sc, plan.plan).violation_total
-    info["aggregation"] = {"batches": len(t["batches"]), "groups": len(members),
-                           "vehicle_classes": len(fleet), "agg_arcs": len(arcs),
-                           "dropped_lines": n_drop,
-                           "unassigned_kg": float(full.kg.sum() - split.kg.sum()),
-                           "validator_violations": viol}
+    plan, viol = assemble(x, n, info)
     if viol:  # AGENTS.md rule 6: never ship a violating plan
         arcs, batches, _ = milp_model.model_data(sc)
         info.update(fallback_used=True, slack_usage={}, mip_gap=None)

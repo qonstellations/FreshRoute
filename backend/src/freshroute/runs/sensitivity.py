@@ -1,6 +1,6 @@
 """One-at-a-time sensitivity harness (ARCHITECTURE.md section 14; DATABASE.md section 5.12).
 
-Re-plans and re-simulates `milp_markdown` with one parameter moved at a time; everything else
+Re-plans and re-simulates `milp` with one parameter moved at a time; everything else
 stays at its scenario/config value. Perturbations are applied to an in-memory copy of the
 scenario tables (q10, price_elasticity, demand) or passed as policy ctx (overship_slack);
 values live in config.py. Rows at the base value reuse the base run.
@@ -22,19 +22,21 @@ from freshroute.config import (
     SENS_Q10,
 )
 from freshroute.data.io import Scenario, load_scenario
+from freshroute.domain.discount import COLUMNS as DISCOUNT_COLUMNS
 from freshroute.engine import metrics as M
 from freshroute.engine.simulator import simulate
-from freshroute.policies.milp import MilpMarkdownPolicy
+from freshroute.policies.milp import MilpPolicy
 from freshroute.runs import naming
 
-POLICY = "milp_markdown"
+POLICY = "milp"
+NO_DISCOUNTS = pd.DataFrame(columns=list(DISCOUNT_COLUMNS))
 COLUMNS = ("parameter", "value", "policy", "net_inr", "spoilage_kg", "demand_fulfillment_pct")
 DEMAND_COLS = ["demand_kg_p10", "demand_kg_p50", "demand_kg_p90"]
 
 
 def _kpis(sc: Scenario, ctx: dict) -> dict:
-    res = MilpMarkdownPolicy().plan(sc, ctx)
-    return M.compute(sc, res.plan, res.discounts, simulate(sc, res.plan, res.discounts))["kpis"]
+    res = MilpPolicy().plan(sc, ctx)
+    return M.compute(sc, res.plan, NO_DISCOUNTS, simulate(sc, res.plan, NO_DISCOUNTS))["kpis"]
 
 
 def _with(sc: Scenario, table: str, cols: list[str], fn) -> Scenario:

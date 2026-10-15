@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "run_id": "practice__milp__s42",
-  "git_sha": "bd598018d4f7bf9b143e56f7a7322be1eb36d5ba",
+  "git_sha": "355fb79b02517b386d5c850a30e11a707628481c",
   "scenario": "data/scenarios/practice",
   "scenario_sha256": "213c6b296c0614a0bcf9d49e7fa86bfc8c5a98e7001a724ca738a6325e96d09b",
   "policy": "milp",
@@ -20,14 +20,14 @@
   },
   "solver": {
     "status": "-4",
-    "solve_seconds": 30.310139700000036,
+    "solve_seconds": 30.08285479999995,
     "size": {
-      "vars": 5002,
-      "constraints": 465
+      "vars": 5010,
+      "constraints": 473
     },
-    "mip_gap": 0.20014345264493139,
+    "mip_gap": 0.04250419813626642,
     "slack_usage": {},
-    "objective_inr": 407154.33710580005,
+    "objective_inr": 457835.5962983502,
     "fallback_used": false,
     "aggregation": {
       "batches": 200,
@@ -35,9 +35,9 @@
       "vehicle_classes": 8,
       "agg_arcs": 4679,
       "dropped_lines": 0,
-      "unassigned_kg": -7.275957614183426e-12,
+      "unassigned_kg": 0.0,
       "validator_violations": 0
     }
   },
-  "timestamp_utc": "2026-10-14T17:52:24+00:00"
+  "timestamp_utc": "2026-10-15T07:17:50+00:00"
 }

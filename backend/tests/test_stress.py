@@ -30,7 +30,7 @@ def test_deterministic_schema_and_bands(tmp_path):
     ex.pop("_note")
     assert s.keys() == ex.keys() and s["bands"].keys() == ex["bands"].keys()
     assert s["share_plan_beats_baseline"].keys() == ex["share_plan_beats_baseline"].keys()
-    assert s["n"] == 12 and (s["plan"], s["baseline"]) == ("milp_markdown", "fefo")
+    assert s["n"] == 12 and (s["plan"], s["baseline"]) == ("milp", "fefo")
     for kpi in s["bands"].values():
         for band in kpi.values():
             assert band.keys() == {"p10", "p50", "p90"}
@@ -72,7 +72,7 @@ def test_p50_realization_reproduces_base():
     """Sampling at u = 0.5 everywhere is the base realization: the stressed simulator path
     (re-timed lots, sampled RSL) must give the base metrics."""
     sc = load_scenario(SCENARIO)
-    plan, disc = stress._solve(sc, "milp_markdown", 42)
+    plan, disc = stress._solve(sc, "milp", 42)
     real = stress.realization(sc, *stress.draws(sc, 1, 42, named=True)[1])
     a, b = simulate(sc, plan, disc), simulate(sc, plan, disc, real)
     pd.testing.assert_frame_equal(a["ledger"], b["ledger"], check_exact=False, atol=1e-9)

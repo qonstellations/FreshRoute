@@ -46,7 +46,7 @@ def job_status(run_id: str) -> dict:
         job = {"state": "done", "started_utc": None, "finished_utc": None, "error": None}
     elif job["state"] == "running" and jobs.queue.live_job(o, run_id) is None:  # stale repair
         job = {**job, "state": "error", "error": "stale job: the server restarted; submit again"}
-    return {k: job.get(k) for k in ("state", "started_utc", "finished_utc", "error")}
+    return {k: job.get(k) for k in ("state", "started_utc", "finished_utc", "error", "progress")}
 
 
 def loaded_scenario(scenario: str) -> tuple[str, str]:
@@ -72,6 +72,8 @@ def start_run(req: RunRequest) -> dict:
     run_dir = deps.outputs() / run_id
     job = jobs.queue.submit_if_idle(
         deps.outputs(), run_id,
-        lambda: runner.run(scen, req.policy, req.seed, str(run_dir), newsvendor=nv),
+        lambda: runner.run(
+            scen, req.policy, req.seed, str(run_dir), newsvendor=nv,
+            on_progress=lambda p: jobs.queue.update(deps.outputs(), run_id, progress=p)),
         run_dir / "metrics.json", scenario=scen, policy=req.policy, seed=req.seed)
     return {"run_id": run_id, "status": job["state"]}

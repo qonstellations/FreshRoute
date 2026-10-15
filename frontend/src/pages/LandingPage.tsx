@@ -197,7 +197,7 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
           <Group gap="xs" className="landing-hero-fade">
             <span className="sec-tag">[PRODUCE LOGISTICS ENGINE]</span>
             <Badge color="green" variant="light" size="sm">
-              SOLVER SPINE · FEASIBILITY FILTER · DYNAMIC MARKDOWNS
+              SOLVER SPINE · FEASIBILITY FILTER · LIVE PLAN UPDATES
             </Badge>
           </Group>
 
@@ -442,7 +442,7 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
               </div>
               <Group gap="xs" mt="lg" c="var(--ink)">
                 <IconCheck size={20} stroke={2.5} />
-                <Text size="sm" fw={700}>Proven optimal under 30s limit</Text>
+                <Text size="sm" fw={700}>Best plan found within the 30s limit</Text>
               </Group>
             </div>
 
@@ -453,25 +453,25 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
                   <Badge color="green" size="lg">STAGE 03</Badge>
                   <IconTag size={24} color="var(--ink)" />
                 </Group>
-                <Title order={3} mb="xs" fz="1.35rem">Tiered Pre-Expiry Markdowns</Title>
+                <Title order={3} mb="xs" fz="1.35rem">Live Plan Updates</Title>
                 <Text size="xs" fw={700} c="var(--muted)" mb="md" className="mono">
-                  discount.py · Worth-it Test
+                  runs/progress.py · Rounded-LP Start
                 </Text>
                 <Stack gap="xs" mb="md">
                   <Text fz="1.05rem" lh={1.5} c="var(--text)">
-                    • <strong>Risk Ladder:</strong> Discloses structured 4-tier discounts (0%, 10%, 20%, 35%).
+                    • <strong>Fast First Plan:</strong> A rounded-LP start puts a feasible plan on screen in about a second.
                   </Text>
                   <Text fz="1.05rem" lh={1.5} c="var(--text)">
-                    • <strong>Worth-It Test:</strong> Applies price cuts only when net revenue exceeds dumping loss.
+                    • <strong>Keeps Improving:</strong> Each better plan HiGHS finds replaces it, once the simulator confirms the gain.
                   </Text>
                   <Text fz="1.05rem" lh={1.5} c="var(--text)">
-                    • <strong>Salvage Floors:</strong> Protects grower margins with commodity-specific price floors.
+                    • <strong>Final Result:</strong> The last version is the solver's own plan, scored and validated like every other.
                   </Text>
                 </Stack>
               </div>
               <Group gap="xs" mt="lg" c="var(--ink)">
                 <IconCheck size={20} stroke={2.5} />
-                <Text size="sm" fw={700}>Zero arbitrary pricing · zero cannibalization</Text>
+                <Text size="sm" fw={700}>Best plan so far, always simulated</Text>
               </Group>
             </div>
 
@@ -680,7 +680,7 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
               <Text className="wordmark-sm" fz={24}>FRESHROUTE</Text>
             </Group>
             <Text size="sm" c="var(--muted)" maw={420}>
-              Shelf-life sensing, integer programming dispatch, and dynamic markdowns for perishable produce distribution.
+              Shelf-life sensing, integer programming dispatch, and plans that improve while you watch for perishable produce distribution.
             </Text>
           </div>
           <Stack gap={6} align="flex-end">

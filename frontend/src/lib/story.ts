@@ -15,7 +15,7 @@ export const BEATS: Beat[] = [
   { tab: 'Scoreboard', step: 3, title: 'Ladder: fefo' },
   { tab: 'Scoreboard', step: 4, title: 'Ladder: last_day_50' },
   { tab: 'Scoreboard', step: 5, title: 'Ladder: milp' },
-  { tab: 'Scoreboard', step: 6, title: 'Ladder: milp_markdown' },
+  { tab: 'Scoreboard', step: 6, title: 'Ladder: milp' },
   { tab: 'Scoreboard', step: 7, title: 'Independent validator' },
   { tab: 'Plan', step: 0, title: 'Routes draw on the map' },
   { tab: 'Plan', step: 1, title: 'Dispatch sheet' },

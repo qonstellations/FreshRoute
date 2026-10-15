@@ -1,6 +1,6 @@
 {
   "baseline": "fefo",
-  "plan": "milp_markdown",
+  "plan": "milp",
   "tolerance_inr": 0.01,
   "steps": [
     {
@@ -10,27 +10,27 @@
     },
     {
       "label": "Spoilage cost avoided",
-      "value": 1858.4772699999903,
+      "value": 1357.091224999962,
       "type": "delta"
     },
     {
       "label": "Extra sales (list price)",
-      "value": 176583.2411797,
+      "value": 321101.00857299985,
       "type": "delta"
     },
     {
       "label": "Cost of extra goods sold",
-      "value": -122539.07808999997,
+      "value": -186364.03991000005,
       "type": "delta"
     },
     {
       "label": "Extra transport",
-      "value": 70886.14730500002,
+      "value": 45542.724344999966,
       "type": "delta"
     },
     {
       "label": "Extra handling",
-      "value": -2471.891009999992,
+      "value": -10449.900395000004,
       "type": "delta"
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "label": "FreshRoute net",
-      "value": 395344.13243070006,
+      "value": 442214.11961399973,
       "type": "total"
     }
   ]

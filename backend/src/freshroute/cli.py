@@ -33,7 +33,7 @@ def format_kpis(m: dict) -> str:
 def demo(scenario: str, seed: int, out: str | None = None, with_sensitivity: bool = False) -> int:
     """`freshroute demo`: the ladder (every policy + ladder.json/waterfall.json) for the demo
     scenario, optionally sensitivity; prints the scoreboard and wall time. Returns the
-    milp_markdown plan's validator violation count (non-zero exit when > 0)."""
+    milp plan's validator violation count (non-zero exit when > 0)."""
     from freshroute.runs.ladder import format_ladder, run_ladder
     t0 = time.perf_counter()
     lad_dir = run_ladder(scenario, seed, out)
@@ -61,7 +61,7 @@ def main(argv: list[str] | None = None) -> None:
     r.add_argument("--out")
     r.add_argument("--newsvendor", action="store_true", help="MILP demand cap = newsvendor target")
     r.add_argument("--fail-on-violations", action="store_true", help="exit 1 if violations > 0")
-    lad = sub.add_parser("ladder", help="fifo -> fefo -> milp -> milp_markdown + waterfall")
+    lad = sub.add_parser("ladder", help="fifo -> fefo -> milp + waterfall")
     lad.add_argument("--scenario", required=True)
     lad.add_argument("--seed", type=int, default=DEFAULT_SEED)
     lad.add_argument("--out")
@@ -72,7 +72,7 @@ def main(argv: list[str] | None = None) -> None:
     sen.add_argument("--out")
     st = sub.add_parser("stress", help="Monte Carlo bands -> stress.csv, stress_summary.json")
     st.add_argument("--scenario", required=True)
-    st.add_argument("--policy", default="milp_markdown", choices=POLICY_CHOICES)
+    st.add_argument("--policy", default="milp", choices=POLICY_CHOICES)
     st.add_argument("--n", type=int, default=MC_N, help=f"realizations (fallback {MC_N_FALLBACK})")
     st.add_argument("--seed", type=int, default=DEFAULT_SEED)
     st.add_argument("--named", action="store_true",

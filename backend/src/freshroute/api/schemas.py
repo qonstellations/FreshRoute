@@ -18,7 +18,7 @@ class RunRequest(BaseModel):
 
 class StressRequest(BaseModel):
     scenario: str
-    policy: str = "milp_markdown"
+    policy: str = "milp"
     seed: int = DEFAULT_SEED
     n: int = Field(MC_N, ge=1, le=2000)
 
@@ -43,8 +43,16 @@ class ReplanSubmitResponse(SubmitResponse):
     event_id: str
 
 
+class Progress(BaseModel):
+    version: int  # published plans so far; the run directory holds the latest
+    net_inr: float
+    final: bool
+    elapsed_s: float
+
+
 class StatusResponse(BaseModel):
     state: str
+    progress: Progress | None = None
     started_utc: str | None
     finished_utc: str | None
     error: str | None

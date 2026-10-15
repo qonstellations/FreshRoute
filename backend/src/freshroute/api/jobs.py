@@ -66,6 +66,13 @@ class JobQueue:
             self._executor.submit(self._work, outputs, dict(job), fn, done_file)
             return job
 
+    def update(self, outputs: Path, job_id: str, **fields) -> None:
+        """Merge fields (e.g. `progress`) into a live job's record."""
+        with self._lock:
+            job = read_job(outputs, job_id)
+            if job and job["state"] == "running":
+                _write(outputs, {**job, **fields})
+
     def _work(self, outputs: Path, job: dict, fn, done_file: Path) -> None:
         try:
             fn()
@@ -76,6 +83,9 @@ class JobQueue:
             log.exception("job %s failed", job["run_id"])
             job.update(state="error", error=str(e) or type(e).__name__,
                        traceback=traceback.format_exc())
+        cur = read_job(outputs, job["run_id"]) or {}
+        if cur.get("progress"):  # keep the last progress the run reported
+            job["progress"] = cur["progress"]
         job["finished_utc"] = _now()
         _write(outputs, job)
         with self._lock:

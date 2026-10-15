@@ -29,22 +29,11 @@
     {
       "policy": "milp",
       "kpis": {
-        "spoilage_kg": 835.0025450000012,
-        "spoilage_pct": 1.5449923435223594,
-        "demand_fulfillment_pct": 75.19586697346132,
-        "min_dest_fill_pct": 32.323689049274144,
-        "net_inr": 395344.13243070006,
-        "violations": 0
-      }
-    },
-    {
-      "policy": "milp_markdown",
-      "kpis": {
-        "spoilage_kg": 835.0025450000012,
-        "spoilage_pct": 1.5449923435223594,
-        "demand_fulfillment_pct": 75.19586697346132,
-        "min_dest_fill_pct": 32.323689049274144,
-        "net_inr": 395344.13243070006,
+        "spoilage_kg": 854.0684700000023,
+        "spoilage_pct": 1.5802697307872964,
+        "demand_fulfillment_pct": 83.00915860253403,
+        "min_dest_fill_pct": 52.76377697408504,
+        "net_inr": 442214.11961399973,
         "violations": 0
       }
     }

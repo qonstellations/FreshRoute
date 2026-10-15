@@ -82,17 +82,5 @@
   "sim_lots.csv": "a5768beef119560af3c3c30d3fa1cf7215c9b2302b1191bc846d10b0d2762a29",
   "trips.csv": "6d3846e90eb2feeddfccf03b19b6ce99b6e9208d5e1bdb5cf7441663114809c6",
   "validation.json": "cdb7b5174bf767ad7701e8326737327e845d721376d52d79f0255b56d9d16f81"
- },
- "tiny_3batch/milp_markdown": {
-  "discounts.csv": "6d010a5dff85509ecf8d8062d18014b5354488fb9132b549c376967fabcb6836",
-  "dispatch_sheet.csv": "186daf74d7f596e96dc7ee7c99c66d45ddf5e5a02cbfcc724daf906465bb64e4",
-  "dispatch_sheet.txt": "d4cfd74c3c927b7bdd32964bb7cd68f0689df1d1b5aea2996c23ad5900bd23bc",
-  "metrics.json": "1675aae8cf7c62301d902004f8b5367aef2257fd01bf652c1670578554340559",
-  "plan.csv": "1c3f5939942965ae9e1d0e6476e89947a39b6cf1c3574d70689bbcacf8a6132b",
-  "reason_cards.json": "0dc2ff86260d6e46ee7dffd5bb998e25312ea0addc447b6bc1d5833bcab5546e",
-  "sim_ledger.csv": "8f3a17452ca646ef2e2c68b89601ae5828bc29f6395f4ca657de02759a61783e",
-  "sim_lots.csv": "a5768beef119560af3c3c30d3fa1cf7215c9b2302b1191bc846d10b0d2762a29",
-  "trips.csv": "6d3846e90eb2feeddfccf03b19b6ce99b6e9208d5e1bdb5cf7441663114809c6",
-  "validation.json": "cdb7b5174bf767ad7701e8326737327e845d721376d52d79f0255b56d9d16f81"
  }
 }

@@ -6,7 +6,7 @@ import { AnimatePresence, m } from 'motion/react'
 import { useState } from 'react'
 import { api } from '../api/client'
 import { spring } from '../theme'
-import type { PostRunRequest } from '../types'
+import type { PostRunRequest, Progress } from '../types'
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 // ponytail: decorative burst only (produce colours, fixed geometry), carries no data
@@ -16,12 +16,14 @@ const BURST = Array.from({ length: 10 }, (_, i) => {
   return { x: Math.cos(a) * 70, y: Math.sin(a) * 34, color: PRODUCE[i % PRODUCE.length] }
 })
 
-export function RunButton({ request, onDone, onError }: {
+export function RunButton({ request, onDone, onProgress, onError }: {
   request: PostRunRequest
   onDone: (runId: string) => void
+  onProgress?: (runId: string, p: Progress) => void // a better plan is on disk; the run keeps improving
   onError: (msg: string) => void
 }) {
   const [busy, setBusy] = useState<string | null>(null)
+  const [improving, setImproving] = useState(false) // a first plan is already on screen
   const [done, setDone] = useState<number | null>(null) // set per success: re-keys the burst + check
 
   function fail(msg: string) {
@@ -35,9 +37,11 @@ export function RunButton({ request, onDone, onError }: {
     try {
       const { run_id } = await api.postRun(request)
       setBusy(run_id)
+      let seen = 0
       for (;;) {
         await sleep(1000)
         const s = await api.status(run_id)
+        if (s.progress && s.progress.version > seen) { seen = s.progress.version; setImproving(true); onProgress?.(run_id, s.progress) }
         if (s.state === 'done') {
           setDone(Date.now())
           setTimeout(() => setDone(null), 1800) // back to the idle label
@@ -50,6 +54,7 @@ export function RunButton({ request, onDone, onError }: {
       fail(String(err instanceof Error ? err.message : err))
     } finally {
       setBusy(null)
+      setImproving(false)
     }
   }
 
@@ -65,7 +70,7 @@ export function RunButton({ request, onDone, onError }: {
           <m.span key={state} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, position: 'relative' }}
             initial={{ opacity: 0, y: 14, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -14, scale: 0.9 }} transition={spring.snappy}>
-            {state === 'busy' && <><Loader size={16} color="white" type="dots" /> Planning…</>}
+            {state === 'busy' && <><Loader size={16} color="white" type="dots" /> {improving ? 'Improving…' : 'Planning…'}</>}
             {state === 'done' && <>
               <m.span style={{ display: 'inline-flex' }} initial={{ scale: 0, rotate: -45 }}
                 animate={{ scale: 1, rotate: 0 }} transition={spring.bouncy}><IconCheck size={18} stroke={3} /></m.span>

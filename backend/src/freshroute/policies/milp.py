@@ -35,10 +35,15 @@ class MilpPolicy(Policy):
         ov = ctx.get("demand_cap_override")
         slack = ctx.get("overship_slack", OVERSHIP_SLACK)  # sensitivity
         used = ctx.get("residual_use")  # replan: frozen trips and arrivals
+        on_plan, inc = ctx.get("on_plan"), None
+        if on_plan:  # progressive run: offer every incumbent as a plan
+            def inc(x, n, profit):
+                on_plan(lambda: milp_model.build_plan(scenario, arcs, x, n, {"status": "incumbent"},
+                                                      self.name), profit)
         sol, info = milp_model.solve(scenario, arcs, batches, unship,
                            ctx.get("time_limit_s", MILP_TIME_LIMIT_S), ctx.get("gap", MIP_REL_GAP),
                            override=ov, overship=slack, used=used,
-                           warm=ctx.get("warm_start"))
+                           warm=ctx.get("warm_start"), on_incumbent=inc)
         info["fallback_used"] = sol is None
         if sol is None:
             info.update(slack_usage={}, mip_gap=None)
@@ -46,16 +51,3 @@ class MilpPolicy(Policy):
         x, n = fefo_greedy(scenario, arcs, batches, ov, slack, used) if sol is None else sol
         return milp_model.build_plan(scenario, arcs, x, n, info, self.name)
 
-
-class MilpMarkdownPolicy(MilpPolicy):
-    """milp_markdown (ARCHITECTURE.md sections 10, 12): MILP plan + tiered markdown."""
-
-    name = "milp_markdown"
-
-    def plan(self, scenario: Scenario, ctx: dict | None = None) -> Plan:
-        from freshroute.domain.discount import build_discounts
-
-        p = super().plan(scenario, ctx)
-        p.plan["policy"] = self.name
-        p.discounts = build_discounts(scenario, p.plan)
-        return p
