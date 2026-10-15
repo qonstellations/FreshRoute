@@ -22,7 +22,9 @@ CASES = [(TINY, p) for p in ("fifo", "fefo", "last_day_50", "milp", "milp_markdo
 
 
 def _hashes(d: Path) -> dict:
-    return {f: hashlib.sha256((d / f).read_bytes()).hexdigest() for f in FILES}
+    # normalise line endings so hashes match on Windows (CRLF) and Unix (LF)
+    return {f: hashlib.sha256((d / f).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+            for f in FILES}
 
 
 @pytest.mark.parametrize("scenario,policy", CASES, ids=[f"{Path(s).name}-{p}" for s, p in CASES])
