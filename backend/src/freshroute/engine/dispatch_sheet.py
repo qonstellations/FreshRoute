@@ -51,7 +51,7 @@ def build(scenario: Scenario, plan: pd.DataFrame, trips: pd.DataFrame) -> tuple[
         rows = df[df.trip_id == trip_id]
         first = rows.iloc[0]
         last = p.loc[p.trip_id == trip_id].sort_values("arrival_h").iloc[-1]
-        load = " | ".join(f"{r.batch_id} {r.commodity} {_n(r.kg)} kg (slack {_n(r.slack_h)} h)"
+        load = " | ".join(f"{r.batch_id} {r.commodity} {_n(r.kg)} kg ({_n(r.slack_h)} h to spare)"
                           for r in rows.itertuples())
         blocks.append(
             f"Vehicle {first.vehicle_id} | Trip {trip_id} | Depart {first.depart_clock} "

@@ -236,7 +236,7 @@
       "slack_delta_h": 2.8167813455202833
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 124.96 h at arrival, slack 100.96 h, margin \u20b917.96/kg. Dispatch priority #1."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 124.96 h of shelf life left on arrival, 100.96 h to spare, earns ₹17.96/kg. Loading priority #1."
   },
   {
     "shipment_id": "S0002",
@@ -475,7 +475,7 @@
       "slack_delta_h": 53.04123232674094
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 104.881 h at arrival, slack 80.8811 h, margin \u20b914.96/kg. Dispatch priority #2."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 104.881 h of shelf life left on arrival, 80.8811 h to spare, earns ₹14.96/kg. Loading priority #2."
   },
   {
     "shipment_id": "S0003",
@@ -719,7 +719,7 @@
       "tier_pct": 40.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 28.5403 h at arrival, slack 16.5403 h, margin \u20b919.03/kg. Dispatch priority #3. 40.0 % off from day 1: unsold-risk 0.00 -> tier 40.0 %, capped by max_discount."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 28.5403 h of shelf life left on arrival, 16.5403 h to spare, earns ₹19.03/kg. Loading priority #3. Price cut: 40.0 % off from day 1 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0004",
@@ -963,7 +963,7 @@
       "tier_pct": 40.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D3, not D8: D8 demand is already covered; usable life 29.4282 h at arrival, slack 17.4282 h, margin \u20b923.99/kg. Dispatch priority #4. 40.0 % off from day 1: unsold-risk 0.00 -> tier 40.0 %, capped by max_discount."
+    "text": "Sent to D3, not D8: D8 is already fully supplied; 29.4282 h of shelf life left on arrival, 17.4282 h to spare, earns ₹23.99/kg. Loading priority #4. Price cut: 40.0 % off from day 1 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0005",
@@ -1207,7 +1207,7 @@
       "tier_pct": 40.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 22.8621 h at arrival, slack 10.8621 h, margin \u20b921.76/kg. Dispatch priority #5. 40.0 % off from day 0: unsold-risk 0.00 -> tier 40.0 %, capped by max_discount."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 22.8621 h of shelf life left on arrival, 10.8621 h to spare, earns ₹21.76/kg. Loading priority #5. Price cut: 40.0 % off from day 0 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0006",
@@ -1446,7 +1446,7 @@
       "slack_delta_h": 2.412608953222417
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 86.5166 h at arrival, slack 62.5166 h, margin \u20b917.90/kg. Dispatch priority #6."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 86.5166 h of shelf life left on arrival, 62.5166 h to spare, earns ₹17.90/kg. Loading priority #6."
   },
   {
     "shipment_id": "S0007",
@@ -1685,7 +1685,7 @@
       "slack_delta_h": 4.368919259358563
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b920.41/kg); usable life 87.3729 h at arrival, slack 63.3729 h, margin \u20b922.50/kg. Dispatch priority #7."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹20.41/kg); 87.3729 h of shelf life left on arrival, 63.3729 h to spare, earns ₹22.50/kg. Loading priority #7."
   },
   {
     "shipment_id": "S0008",
@@ -1924,7 +1924,7 @@
       "slack_delta_h": 32.39295883214403
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 125.87 h at arrival, slack 101.87 h, margin \u20b915.02/kg. Dispatch priority #8."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 125.87 h of shelf life left on arrival, 101.87 h to spare, earns ₹15.02/kg. Loading priority #8."
   },
   {
     "shipment_id": "S0009",
@@ -2163,7 +2163,7 @@
       "slack_delta_h": 34.40460590912255
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b917.50/kg); usable life 126.707 h at arrival, slack 102.707 h, margin \u20b918.92/kg. Dispatch priority #9."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹17.50/kg); 126.707 h of shelf life left on arrival, 102.707 h to spare, earns ₹18.92/kg. Loading priority #9."
   },
   {
     "shipment_id": "S0010",
@@ -2402,7 +2402,7 @@
       "slack_delta_h": 1.0678109645323275
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 1243.35 h at arrival, slack 1195.35 h, margin \u20b99.40/kg. Dispatch priority #10."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 1243.35 h of shelf life left on arrival, 1195.35 h to spare, earns ₹9.40/kg. Loading priority #10."
   },
   {
     "shipment_id": "S0011",
@@ -2641,7 +2641,7 @@
       "slack_delta_h": 45.275572950544195
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 73.5281 h at arrival, slack 49.5281 h, margin \u20b99.62/kg. Dispatch priority #11."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 73.5281 h of shelf life left on arrival, 49.5281 h to spare, earns ₹9.62/kg. Loading priority #11."
   },
   {
     "shipment_id": "S0012",
@@ -2880,7 +2880,7 @@
       "slack_delta_h": 50.17900383770089
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b917.27/kg); usable life 78.2057 h at arrival, slack 54.2057 h, margin \u20b918.92/kg. Dispatch priority #12."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹17.27/kg); 78.2057 h of shelf life left on arrival, 54.2057 h to spare, earns ₹18.92/kg. Loading priority #12."
   },
   {
     "shipment_id": "S0013",
@@ -3119,7 +3119,7 @@
       "slack_delta_h": 1.0678109645323275
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 1511.32 h at arrival, slack 1463.32 h, margin \u20b99.40/kg. Dispatch priority #13."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 1511.32 h of shelf life left on arrival, 1463.32 h to spare, earns ₹9.40/kg. Loading priority #13."
   },
   {
     "shipment_id": "S0014",
@@ -3358,7 +3358,7 @@
       "slack_delta_h": 52.432069595181154
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 86.7994 h at arrival, slack 62.7994 h, margin \u20b926.58/kg. Dispatch priority #14."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 86.7994 h of shelf life left on arrival, 62.7994 h to spare, earns ₹26.58/kg. Loading priority #14."
   },
   {
     "shipment_id": "S0015",
@@ -3597,7 +3597,7 @@
       "slack_delta_h": 54.49376938047573
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 88.8611 h at arrival, slack 64.8611 h, margin \u20b940.78/kg. Dispatch priority #15."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 88.8611 h of shelf life left on arrival, 64.8611 h to spare, earns ₹40.78/kg. Loading priority #15."
   },
   {
     "shipment_id": "S0016",
@@ -3836,7 +3836,7 @@
       "slack_delta_h": 1.0678109645322138
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 956.143 h at arrival, slack 908.143 h, margin \u20b99.40/kg. Dispatch priority #16."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 956.143 h of shelf life left on arrival, 908.143 h to spare, earns ₹9.40/kg. Loading priority #16."
   },
   {
     "shipment_id": "S0017",
@@ -4075,7 +4075,7 @@
       "slack_delta_h": -0.5438421325900435
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 954.531 h at arrival, slack 906.531 h, margin \u20b99.51/kg. Dispatch priority #17."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 954.531 h of shelf life left on arrival, 906.531 h to spare, earns ₹9.51/kg. Loading priority #17."
   },
   {
     "shipment_id": "S0018",
@@ -4314,7 +4314,7 @@
       "slack_delta_h": -0.5438421325900435
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 1211.25 h at arrival, slack 1163.25 h, margin \u20b99.51/kg. Dispatch priority #18."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 1211.25 h of shelf life left on arrival, 1163.25 h to spare, earns ₹9.51/kg. Loading priority #18."
   },
   {
     "shipment_id": "S0019",
@@ -4553,7 +4553,7 @@
       "slack_delta_h": 2.540029730376091
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b910.66/kg); usable life 1213.7 h at arrival, slack 1165.7 h, margin \u20b911.81/kg. Dispatch priority #19."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹10.66/kg); 1213.7 h of shelf life left on arrival, 1165.7 h to spare, earns ₹11.81/kg. Loading priority #19."
   },
   {
     "shipment_id": "S0020",
@@ -4792,7 +4792,7 @@
       "slack_delta_h": 49.67819244411239
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 101.078 h at arrival, slack 77.0781 h, margin \u20b99.62/kg. Dispatch priority #20."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 101.078 h of shelf life left on arrival, 77.0781 h to spare, earns ₹9.62/kg. Loading priority #20."
   },
   {
     "shipment_id": "S0021",
@@ -5031,7 +5031,7 @@
       "slack_delta_h": 52.08676006446874
     },
     "discount": null,
-    "text": "Sent to D4, not D3: D3 demand is already covered; usable life 103.487 h at arrival, slack 79.4867 h, margin \u20b92.41/kg. Dispatch priority #21."
+    "text": "Sent to D4, not D3: D3 is already fully supplied; 103.487 h of shelf life left on arrival, 79.4867 h to spare, earns ₹2.41/kg. Loading priority #21."
   },
   {
     "shipment_id": "S0022",
@@ -5270,7 +5270,7 @@
       "slack_delta_h": 54.13000054409206
     },
     "discount": null,
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 105.53 h at arrival, slack 81.5299 h, margin \u20b916.91/kg. Dispatch priority #22."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 105.53 h of shelf life left on arrival, 81.5299 h to spare, earns ₹16.91/kg. Loading priority #22."
   },
   {
     "shipment_id": "S0023",
@@ -5509,7 +5509,7 @@
       "slack_delta_h": 52.432069595181154
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 91.6994 h at arrival, slack 67.6994 h, margin \u20b926.58/kg. Dispatch priority #23."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 91.6994 h of shelf life left on arrival, 67.6994 h to spare, earns ₹26.58/kg. Loading priority #23."
   },
   {
     "shipment_id": "S0024",
@@ -5748,7 +5748,7 @@
       "slack_delta_h": 74.97760332259229
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 116.688 h at arrival, slack 92.6882 h, margin \u20b926.61/kg. Dispatch priority #24."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 116.688 h of shelf life left on arrival, 92.6882 h to spare, earns ₹26.61/kg. Loading priority #24."
   },
   {
     "shipment_id": "S0025",
@@ -5987,7 +5987,7 @@
       "slack_delta_h": 75.72050949005147
     },
     "discount": null,
-    "text": "Sent to D4, not D3: D3 demand is already covered; usable life 117.431 h at arrival, slack 93.4311 h, margin \u20b98.03/kg. Dispatch priority #25."
+    "text": "Sent to D4, not D3: D3 is already fully supplied; 117.431 h of shelf life left on arrival, 93.4311 h to spare, earns ₹8.03/kg. Loading priority #25."
   },
   {
     "shipment_id": "S0026",
@@ -6226,7 +6226,7 @@
       "slack_delta_h": 75.99731527117986
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 117.708 h at arrival, slack 93.7079 h, margin \u20b938.43/kg. Dispatch priority #26."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 117.708 h of shelf life left on arrival, 93.7079 h to spare, earns ₹38.43/kg. Loading priority #26."
   },
   {
     "shipment_id": "S0027",
@@ -6465,7 +6465,7 @@
       "slack_delta_h": -1.2760000000000105
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 99.9314 h at arrival, slack 75.9314 h, margin \u20b911.68/kg. Dispatch priority #27."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 99.9314 h of shelf life left on arrival, 75.9314 h to spare, earns ₹11.68/kg. Loading priority #27."
   },
   {
     "shipment_id": "S0028",
@@ -6704,7 +6704,7 @@
       "slack_delta_h": 4.368919259358563
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b920.41/kg); usable life 104.476 h at arrival, slack 80.4764 h, margin \u20b922.50/kg. Dispatch priority #28."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹20.41/kg); 104.476 h of shelf life left on arrival, 80.4764 h to spare, earns ₹22.50/kg. Loading priority #28."
   },
   {
     "shipment_id": "S0029",
@@ -6943,7 +6943,7 @@
       "slack_delta_h": -1.1000000000000085
     },
     "discount": null,
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 100.107 h at arrival, slack 76.1074 h, margin \u20b920.41/kg. Dispatch priority #29."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 100.107 h of shelf life left on arrival, 76.1074 h to spare, earns ₹20.41/kg. Loading priority #29."
   },
   {
     "shipment_id": "S0030",
@@ -7182,7 +7182,7 @@
       "slack_delta_h": -0.14758048651492572
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 1242.3 h at arrival, slack 1194.3 h, margin \u20b96.01/kg. Dispatch priority #30."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 1242.3 h of shelf life left on arrival, 1194.3 h to spare, earns ₹6.01/kg. Loading priority #30."
   },
   {
     "shipment_id": "S0031",
@@ -7421,7 +7421,7 @@
       "slack_delta_h": 2.540029730376091
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b910.66/kg); usable life 1244.35 h at arrival, slack 1196.35 h, margin \u20b911.81/kg. Dispatch priority #31."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹10.66/kg); 1244.35 h of shelf life left on arrival, 1196.35 h to spare, earns ₹11.81/kg. Loading priority #31."
   },
   {
     "shipment_id": "S0032",
@@ -7660,7 +7660,7 @@
       "slack_delta_h": 1.6905596495701047
     },
     "discount": null,
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 1244.14 h at arrival, slack 1196.14 h, margin \u20b910.43/kg. Dispatch priority #32."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 1244.14 h of shelf life left on arrival, 1196.14 h to spare, earns ₹10.43/kg. Loading priority #32."
   },
   {
     "shipment_id": "S0033",
@@ -7899,7 +7899,7 @@
       "slack_delta_h": -1.275999999999982
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 144.331 h at arrival, slack 120.331 h, margin \u20b911.68/kg. Dispatch priority #33."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 144.331 h of shelf life left on arrival, 120.331 h to spare, earns ₹11.68/kg. Loading priority #33."
   },
   {
     "shipment_id": "S0034",
@@ -8138,7 +8138,7 @@
       "slack_delta_h": -0.7781516561699391
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 1626.13 h at arrival, slack 1578.13 h, margin \u20b96.04/kg. Dispatch priority #34."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 1626.13 h of shelf life left on arrival, 1578.13 h to spare, earns ₹6.04/kg. Loading priority #34."
   },
   {
     "shipment_id": "S0035",
@@ -8377,7 +8377,7 @@
       "slack_delta_h": -0.6708203932500965
     },
     "discount": null,
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 1626.23 h at arrival, slack 1578.23 h, margin \u20b910.61/kg. Dispatch priority #35."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 1626.23 h of shelf life left on arrival, 1578.23 h to spare, earns ₹10.61/kg. Loading priority #35."
   },
   {
     "shipment_id": "S0036",
@@ -8616,7 +8616,7 @@
       "slack_delta_h": -0.7781516561699391
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 1539.2 h at arrival, slack 1491.2 h, margin \u20b96.04/kg. Dispatch priority #36."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 1539.2 h of shelf life left on arrival, 1491.2 h to spare, earns ₹6.04/kg. Loading priority #36."
   },
   {
     "shipment_id": "S0037",
@@ -8855,7 +8855,7 @@
       "slack_delta_h": 50.840107892759505
     },
     "discount": null,
-    "text": "Sent to D4, not D3: D3 demand is already covered; usable life 93.13 h at arrival, slack 69.13 h, margin \u20b92.22/kg. Dispatch priority #37."
+    "text": "Sent to D4, not D3: D3 is already fully supplied; 93.13 h of shelf life left on arrival, 69.13 h to spare, earns ₹2.22/kg. Loading priority #37."
   },
   {
     "shipment_id": "S0038",
@@ -9094,7 +9094,7 @@
       "slack_delta_h": 29.713901864201475
     },
     "discount": null,
-    "text": "Sent to D4, not D3: D3 demand is already covered; usable life 81.3713 h at arrival, slack 57.3713 h, margin \u20b92.22/kg. Dispatch priority #38."
+    "text": "Sent to D4, not D3: D3 is already fully supplied; 81.3713 h of shelf life left on arrival, 57.3713 h to spare, earns ₹2.22/kg. Loading priority #38."
   },
   {
     "shipment_id": "S0039",
@@ -9333,7 +9333,7 @@
       "slack_delta_h": 29.570431403051145
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 81.2278 h at arrival, slack 57.2278 h, margin \u20b913.58/kg. Dispatch priority #39."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 81.2278 h of shelf life left on arrival, 57.2278 h to spare, earns ₹13.58/kg. Loading priority #39."
   },
   {
     "shipment_id": "S0040",
@@ -9572,7 +9572,7 @@
       "slack_delta_h": 52.70864629362916
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 84.8638 h at arrival, slack 60.8638 h, margin \u20b938.43/kg. Dispatch priority #40."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 84.8638 h of shelf life left on arrival, 60.8638 h to spare, earns ₹38.43/kg. Loading priority #40."
   },
   {
     "shipment_id": "S0041",
@@ -9811,7 +9811,7 @@
       "slack_delta_h": -0.7781516561699391
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 1207.6 h at arrival, slack 1159.6 h, margin \u20b96.04/kg. Dispatch priority #41."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 1207.6 h of shelf life left on arrival, 1159.6 h to spare, earns ₹6.04/kg. Loading priority #41."
   },
   {
     "shipment_id": "S0042",
@@ -10055,7 +10055,7 @@
       "tier_pct": 35.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 43.6965 h at arrival, slack 19.6965 h, margin \u20b913.58/kg. Dispatch priority #42. 35.0 % off from day 2: unsold-risk 0.00 -> tier 35.0 %, capped by max_discount."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 43.6965 h of shelf life left on arrival, 19.6965 h to spare, earns ₹13.58/kg. Loading priority #42. Price cut: 35.0 % off from day 2 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0043",
@@ -10294,7 +10294,7 @@
       "slack_delta_h": -1.2760000000000105
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 121.238 h at arrival, slack 97.238 h, margin \u20b911.68/kg. Dispatch priority #43."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 121.238 h of shelf life left on arrival, 97.238 h to spare, earns ₹11.68/kg. Loading priority #43."
   },
   {
     "shipment_id": "S0044",
@@ -10533,7 +10533,7 @@
       "slack_delta_h": -0.18444921735425623
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 122.33 h at arrival, slack 98.3295 h, margin \u20b916.41/kg. Dispatch priority #44."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 122.33 h of shelf life left on arrival, 98.3295 h to spare, earns ₹16.41/kg. Loading priority #44."
   },
   {
     "shipment_id": "S0045",
@@ -10772,7 +10772,7 @@
       "slack_delta_h": -0.7781516561699391
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 823.072 h at arrival, slack 775.072 h, margin \u20b96.04/kg. Dispatch priority #45."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 823.072 h of shelf life left on arrival, 775.072 h to spare, earns ₹6.04/kg. Loading priority #45."
   },
   {
     "shipment_id": "S0046",
@@ -11011,7 +11011,7 @@
       "slack_delta_h": 0.8425113461248657
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 903.588 h at arrival, slack 855.588 h, margin \u20b912.53/kg. Dispatch priority #46."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 903.588 h of shelf life left on arrival, 855.588 h to spare, earns ₹12.53/kg. Loading priority #46."
   },
   {
     "shipment_id": "S0047",
@@ -11250,7 +11250,7 @@
       "slack_delta_h": 2.3875813010540696
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b914.34/kg); usable life 904.462 h at arrival, slack 856.462 h, margin \u20b915.92/kg. Dispatch priority #47."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹14.34/kg); 904.462 h of shelf life left on arrival, 856.462 h to spare, earns ₹15.92/kg. Loading priority #47."
   },
   {
     "shipment_id": "S0048",
@@ -11489,7 +11489,7 @@
       "slack_delta_h": 2.3875813010540696
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b914.34/kg); usable life 1105.96 h at arrival, slack 1057.96 h, margin \u20b915.92/kg. Dispatch priority #48."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹14.34/kg); 1105.96 h of shelf life left on arrival, 1057.96 h to spare, earns ₹15.92/kg. Loading priority #48."
   },
   {
     "shipment_id": "S0049",
@@ -11728,7 +11728,7 @@
       "slack_delta_h": -0.6708203932500965
     },
     "discount": null,
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 1103.58 h at arrival, slack 1055.58 h, margin \u20b914.34/kg. Dispatch priority #49."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 1103.58 h of shelf life left on arrival, 1055.58 h to spare, earns ₹14.34/kg. Loading priority #49."
   },
   {
     "shipment_id": "S0050",
@@ -11967,7 +11967,7 @@
       "slack_delta_h": -0.18444921735424202
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 107.82 h at arrival, slack 83.8195 h, margin \u20b916.41/kg. Dispatch priority #50."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 107.82 h of shelf life left on arrival, 83.8195 h to spare, earns ₹16.41/kg. Loading priority #50."
   },
   {
     "shipment_id": "S0051",
@@ -12206,7 +12206,7 @@
       "slack_delta_h": -0.7781516561699391
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 1259.66 h at arrival, slack 1211.66 h, margin \u20b96.04/kg. Dispatch priority #51."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 1259.66 h of shelf life left on arrival, 1211.66 h to spare, earns ₹6.04/kg. Loading priority #51."
   },
   {
     "shipment_id": "S0052",
@@ -12445,7 +12445,7 @@
       "slack_delta_h": -1.4303113909311378
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 1259.01 h at arrival, slack 1211.01 h, margin \u20b98.16/kg. Dispatch priority #52."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 1259.01 h of shelf life left on arrival, 1211.01 h to spare, earns ₹8.16/kg. Loading priority #52."
   },
   {
     "shipment_id": "S0053",
@@ -12684,7 +12684,7 @@
       "slack_delta_h": 1.6905596495701047
     },
     "discount": null,
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 751.021 h at arrival, slack 703.021 h, margin \u20b914.16/kg. Dispatch priority #53."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 751.021 h of shelf life left on arrival, 703.021 h to spare, earns ₹14.16/kg. Loading priority #53."
   },
   {
     "shipment_id": "S0054",
@@ -12923,7 +12923,7 @@
       "slack_delta_h": 29.570431403051145
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 65.4878 h at arrival, slack 41.4878 h, margin \u20b913.58/kg. Dispatch priority #54."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 65.4878 h of shelf life left on arrival, 41.4878 h to spare, earns ₹13.58/kg. Loading priority #54."
   },
   {
     "shipment_id": "S0055",
@@ -13167,7 +13167,7 @@
       "tier_pct": 40.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 27.8921 h at arrival, slack 15.8921 h, margin \u20b912.33/kg. Dispatch priority #55. 40.0 % off from day 1: unsold-risk 0.00 -> tier 40.0 %, capped by max_discount."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 27.8921 h of shelf life left on arrival, 15.8921 h to spare, earns ₹12.33/kg. Loading priority #55. Price cut: 40.0 % off from day 1 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0056",
@@ -13411,7 +13411,7 @@
       "tier_pct": 40.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 31.7839 h at arrival, slack 19.7839 h, margin \u20b917.51/kg. Dispatch priority #56. 40.0 % off from day 1: unsold-risk 0.00 -> tier 40.0 %, capped by max_discount."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 31.7839 h of shelf life left on arrival, 19.7839 h to spare, earns ₹17.51/kg. Loading priority #56. Price cut: 40.0 % off from day 1 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0057",
@@ -13655,7 +13655,7 @@
       "tier_pct": 40.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 28.1321 h at arrival, slack 16.1321 h, margin \u20b921.76/kg. Dispatch priority #57. 40.0 % off from day 1: unsold-risk 0.00 -> tier 40.0 %, capped by max_discount."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 28.1321 h of shelf life left on arrival, 16.1321 h to spare, earns ₹21.76/kg. Loading priority #57. Price cut: 40.0 % off from day 1 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0058",
@@ -13894,7 +13894,7 @@
       "slack_delta_h": -0.7781516561699391
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 941.928 h at arrival, slack 893.928 h, margin \u20b97.95/kg. Dispatch priority #58."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 941.928 h of shelf life left on arrival, 893.928 h to spare, earns ₹7.95/kg. Loading priority #58."
   },
   {
     "shipment_id": "S0059",
@@ -14133,7 +14133,7 @@
       "slack_delta_h": -1.4303113909311378
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 1553.27 h at arrival, slack 1505.27 h, margin \u20b98.16/kg. Dispatch priority #59."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 1553.27 h of shelf life left on arrival, 1505.27 h to spare, earns ₹8.16/kg. Loading priority #59."
   },
   {
     "shipment_id": "S0060",
@@ -14372,7 +14372,7 @@
       "slack_delta_h": -0.7781516561699391
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 1019.22 h at arrival, slack 971.218 h, margin \u20b97.95/kg. Dispatch priority #60."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 1019.22 h of shelf life left on arrival, 971.218 h to spare, earns ₹7.95/kg. Loading priority #60."
   },
   {
     "shipment_id": "S0061",
@@ -14611,7 +14611,7 @@
       "slack_delta_h": -1.430311390931024
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 1018.57 h at arrival, slack 970.566 h, margin \u20b911.22/kg. Dispatch priority #61."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 1018.57 h of shelf life left on arrival, 970.566 h to spare, earns ₹11.22/kg. Loading priority #61."
   },
   {
     "shipment_id": "S0062",
@@ -14850,7 +14850,7 @@
       "slack_delta_h": -1.430311390931024
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 899.055 h at arrival, slack 851.055 h, margin \u20b98.16/kg. Dispatch priority #62."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 899.055 h of shelf life left on arrival, 851.055 h to spare, earns ₹8.16/kg. Loading priority #62."
   },
   {
     "shipment_id": "S0063",
@@ -15089,7 +15089,7 @@
       "slack_delta_h": -1.430311390931024
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 923.535 h at arrival, slack 875.535 h, margin \u20b911.22/kg. Dispatch priority #63."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 923.535 h of shelf life left on arrival, 875.535 h to spare, earns ₹11.22/kg. Loading priority #63."
   },
   {
     "shipment_id": "S0064",
@@ -15333,7 +15333,7 @@
       "tier_pct": 40.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 12.8132 h at arrival, slack 0.813195 h, margin \u20b917.51/kg. Dispatch priority #64. 40.0 % off from day 0: unsold-risk 0.00 -> tier 40.0 %, capped by max_discount."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 12.8132 h of shelf life left on arrival, 0.813195 h to spare, earns ₹17.51/kg. Loading priority #64. Price cut: 40.0 % off from day 0 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0065",
@@ -15572,7 +15572,7 @@
       "slack_delta_h": -1.4303113909311378
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 1256.88 h at arrival, slack 1208.88 h, margin \u20b98.16/kg. Dispatch priority #65."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 1256.88 h of shelf life left on arrival, 1208.88 h to spare, earns ₹8.16/kg. Loading priority #65."
   },
   {
     "shipment_id": "S0066",
@@ -15798,7 +15798,7 @@
       "slack_delta_h": -16.592069364126246
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 1239.9 h at arrival, slack 1191.9 h, margin \u20b93.87/kg. Dispatch priority #66."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 1239.9 h of shelf life left on arrival, 1191.9 h to spare, earns ₹3.87/kg. Loading priority #66."
   },
   {
     "shipment_id": "S0067",
@@ -16024,7 +16024,7 @@
       "slack_delta_h": 25.700475044566787
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 57.8557 h at arrival, slack 33.8557 h, margin \u20b927.26/kg. Dispatch priority #67."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 57.8557 h of shelf life left on arrival, 33.8557 h to spare, earns ₹27.26/kg. Loading priority #67."
   },
   {
     "shipment_id": "S0068",
@@ -16250,7 +16250,7 @@
       "slack_delta_h": -16.592069364126132
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 967.618 h at arrival, slack 919.618 h, margin \u20b93.87/kg. Dispatch priority #68."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 967.618 h of shelf life left on arrival, 919.618 h to spare, earns ₹3.87/kg. Loading priority #68."
   },
   {
     "shipment_id": "S0069",
@@ -16476,7 +16476,7 @@
       "slack_delta_h": -33.400682434071314
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 74.6033 h at arrival, slack 50.6033 h, margin \u20b911.17/kg. Dispatch priority #69."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 74.6033 h of shelf life left on arrival, 50.6033 h to spare, earns ₹11.17/kg. Loading priority #69."
   },
   {
     "shipment_id": "S0070",
@@ -16702,7 +16702,7 @@
       "slack_delta_h": -31.092130921483374
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 101.791 h at arrival, slack 77.7913 h, margin \u20b911.08/kg. Dispatch priority #70."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 101.791 h of shelf life left on arrival, 77.7913 h to spare, earns ₹11.08/kg. Loading priority #70."
   },
   {
     "shipment_id": "S0071",
@@ -16928,7 +16928,7 @@
       "slack_delta_h": -32.42583503135006
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 716.904 h at arrival, slack 668.904 h, margin \u20b94.68/kg. Dispatch priority #71."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 716.904 h of shelf life left on arrival, 668.904 h to spare, earns ₹4.68/kg. Loading priority #71."
   },
   {
     "shipment_id": "S0072",
@@ -17159,7 +17159,7 @@
       "tier_pct": 35.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 29.1156 h at arrival, slack 5.11561 h, margin \u20b99.66/kg. Dispatch priority #72. 35.0 % off from day 2: unsold-risk 0.00 -> tier 35.0 %, capped by max_discount."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 29.1156 h of shelf life left on arrival, 5.11561 h to spare, earns ₹9.66/kg. Loading priority #72. Price cut: 35.0 % off from day 2 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0073",
@@ -17385,7 +17385,7 @@
       "slack_delta_h": -31.09213092148336
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 59.1213 h at arrival, slack 35.1213 h, margin \u20b911.08/kg. Dispatch priority #73."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 59.1213 h of shelf life left on arrival, 35.1213 h to spare, earns ₹11.08/kg. Loading priority #73."
   },
   {
     "shipment_id": "S0074",
@@ -17611,7 +17611,7 @@
       "slack_delta_h": -25.808766653317775
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 946.246 h at arrival, slack 898.246 h, margin \u20b93.87/kg. Dispatch priority #74."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 946.246 h of shelf life left on arrival, 898.246 h to spare, earns ₹3.87/kg. Loading priority #74."
   },
   {
     "shipment_id": "S0075",
@@ -17837,7 +17837,7 @@
       "slack_delta_h": -25.80876665331789
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 1413.85 h at arrival, slack 1365.85 h, margin \u20b93.87/kg. Dispatch priority #75."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 1413.85 h of shelf life left on arrival, 1365.85 h to spare, earns ₹3.87/kg. Loading priority #75."
   },
   {
     "shipment_id": "S0076",
@@ -18063,7 +18063,7 @@
       "slack_delta_h": 0.8917711894747526
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 65.9417 h at arrival, slack 41.9417 h, margin \u20b99.57/kg. Dispatch priority #76."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 65.9417 h of shelf life left on arrival, 41.9417 h to spare, earns ₹9.57/kg. Loading priority #76."
   },
   {
     "shipment_id": "S0077",
@@ -18289,7 +18289,7 @@
       "slack_delta_h": -32.42583503135006
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 898.664 h at arrival, slack 850.664 h, margin \u20b94.68/kg. Dispatch priority #77."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 898.664 h of shelf life left on arrival, 850.664 h to spare, earns ₹4.68/kg. Loading priority #77."
   },
   {
     "shipment_id": "S0078",
@@ -18515,7 +18515,7 @@
       "slack_delta_h": -25.80876665331789
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 1474.5 h at arrival, slack 1426.5 h, margin \u20b93.87/kg. Dispatch priority #78."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 1474.5 h of shelf life left on arrival, 1426.5 h to spare, earns ₹3.87/kg. Loading priority #78."
   },
   {
     "shipment_id": "S0079",
@@ -18741,7 +18741,7 @@
       "slack_delta_h": -32.42583503135029
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 1049.17 h at arrival, slack 1001.17 h, margin \u20b94.68/kg. Dispatch priority #79."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 1049.17 h of shelf life left on arrival, 1001.17 h to spare, earns ₹4.68/kg. Loading priority #79."
   },
   {
     "shipment_id": "S0080",
@@ -18967,7 +18967,7 @@
       "slack_delta_h": -29.28369093401939
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 89.2437 h at arrival, slack 65.2437 h, margin \u20b911.17/kg. Dispatch priority #80."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 89.2437 h of shelf life left on arrival, 65.2437 h to spare, earns ₹11.17/kg. Loading priority #80."
   },
   {
     "shipment_id": "S0081",
@@ -19193,7 +19193,7 @@
       "slack_delta_h": -31.265732687259288
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 893.7 h at arrival, slack 845.7 h, margin \u20b94.77/kg. Dispatch priority #81."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 893.7 h of shelf life left on arrival, 845.7 h to spare, earns ₹4.77/kg. Loading priority #81."
   },
   {
     "shipment_id": "S0082",
@@ -19419,7 +19419,7 @@
       "slack_delta_h": -25.80876665331789
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 1303.87 h at arrival, slack 1255.87 h, margin \u20b93.87/kg. Dispatch priority #82."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 1303.87 h of shelf life left on arrival, 1255.87 h to spare, earns ₹3.87/kg. Loading priority #82."
   },
   {
     "shipment_id": "S0083",
@@ -19645,7 +19645,7 @@
       "slack_delta_h": -28.315670852145786
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 1260.96 h at arrival, slack 1212.96 h, margin \u20b94.68/kg. Dispatch priority #83."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 1260.96 h of shelf life left on arrival, 1212.96 h to spare, earns ₹4.68/kg. Loading priority #83."
   },
   {
     "shipment_id": "S0084",
@@ -19871,7 +19871,7 @@
       "slack_delta_h": -29.283690934019376
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 120.254 h at arrival, slack 96.2537 h, margin \u20b911.17/kg. Dispatch priority #84."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 120.254 h of shelf life left on arrival, 96.2537 h to spare, earns ₹11.17/kg. Loading priority #84."
   },
   {
     "shipment_id": "S0085",
@@ -20097,7 +20097,7 @@
       "slack_delta_h": 40.17833577672481
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 65.5724 h at arrival, slack 41.5724 h, margin \u20b927.26/kg. Dispatch priority #85."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 65.5724 h of shelf life left on arrival, 41.5724 h to spare, earns ₹27.26/kg. Loading priority #85."
   },
   {
     "shipment_id": "S0086",
@@ -20328,7 +20328,7 @@
       "tier_pct": 30.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 41.2757 h at arrival, slack 17.2757 h, margin \u20b927.26/kg. Dispatch priority #86. 30.0 % off from day 2: unsold-risk 0.00 -> tier 30.0 %, capped by max_discount."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 41.2757 h of shelf life left on arrival, 17.2757 h to spare, earns ₹27.26/kg. Loading priority #86. Price cut: 30.0 % off from day 2 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0087",
@@ -20567,7 +20567,7 @@
       "slack_delta_h": 8.84278575138751
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 886.728 h at arrival, slack 838.728 h, margin \u20b94.23/kg. Dispatch priority #87."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 886.728 h of shelf life left on arrival, 838.728 h to spare, earns ₹4.23/kg. Loading priority #87."
   },
   {
     "shipment_id": "S0088",
@@ -20806,7 +20806,7 @@
       "slack_delta_h": 29.695941793137536
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 1105.76 h at arrival, slack 1057.76 h, margin \u20b99.14/kg. Dispatch priority #88."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 1105.76 h of shelf life left on arrival, 1057.76 h to spare, earns ₹9.14/kg. Loading priority #88."
   },
   {
     "shipment_id": "S0089",
@@ -21045,7 +21045,7 @@
       "slack_delta_h": 29.054033544502687
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 99.7044 h at arrival, slack 75.7044 h, margin \u20b926.81/kg. Dispatch priority #89."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 99.7044 h of shelf life left on arrival, 75.7044 h to spare, earns ₹26.81/kg. Loading priority #89."
   },
   {
     "shipment_id": "S0090",
@@ -21284,7 +21284,7 @@
       "slack_delta_h": 28.190771947230516
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 98.8411 h at arrival, slack 74.8411 h, margin \u20b941.21/kg. Dispatch priority #90."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 98.8411 h of shelf life left on arrival, 74.8411 h to spare, earns ₹41.21/kg. Loading priority #90."
   },
   {
     "shipment_id": "S0091",
@@ -21523,7 +21523,7 @@
       "slack_delta_h": 25.84058463547383
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 96.4909 h at arrival, slack 72.4909 h, margin \u20b941.32/kg. Dispatch priority #91."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 96.4909 h of shelf life left on arrival, 72.4909 h to spare, earns ₹41.32/kg. Loading priority #91."
   },
   {
     "shipment_id": "S0092",
@@ -21762,7 +21762,7 @@
       "slack_delta_h": 3.5772985224137983
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 144.231 h at arrival, slack 120.231 h, margin \u20b911.23/kg. Dispatch priority #92."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 144.231 h of shelf life left on arrival, 120.231 h to spare, earns ₹11.23/kg. Loading priority #92."
   },
   {
     "shipment_id": "S0093",
@@ -22001,7 +22001,7 @@
       "slack_delta_h": -0.25200000000000955
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 140.401 h at arrival, slack 116.401 h, margin \u20b917.71/kg. Dispatch priority #93."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 140.401 h of shelf life left on arrival, 116.401 h to spare, earns ₹17.71/kg. Loading priority #93."
   },
   {
     "shipment_id": "S0094",
@@ -22240,7 +22240,7 @@
       "slack_delta_h": 1.0340000000000202
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b920.08/kg); usable life 140.653 h at arrival, slack 116.653 h, margin \u20b922.26/kg. Dispatch priority #94."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹20.08/kg); 140.653 h of shelf life left on arrival, 116.653 h to spare, earns ₹22.26/kg. Loading priority #94."
   },
   {
     "shipment_id": "S0095",
@@ -22479,7 +22479,7 @@
       "slack_delta_h": 28.084288696015165
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 950.797 h at arrival, slack 902.797 h, margin \u20b99.25/kg. Dispatch priority #95."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 950.797 h of shelf life left on arrival, 902.797 h to spare, earns ₹9.25/kg. Loading priority #95."
   },
   {
     "shipment_id": "S0096",
@@ -22718,7 +22718,7 @@
       "slack_delta_h": 38.07435313703195
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 1230.52 h at arrival, slack 1182.52 h, margin \u20b94.97/kg. Dispatch priority #96."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 1230.52 h of shelf life left on arrival, 1182.52 h to spare, earns ₹4.97/kg. Loading priority #96."
   },
   {
     "shipment_id": "S0097",
@@ -22957,7 +22957,7 @@
       "slack_delta_h": 35.67228410377743
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 1228.12 h at arrival, slack 1180.12 h, margin \u20b99.25/kg. Dispatch priority #97."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 1228.12 h of shelf life left on arrival, 1180.12 h to spare, earns ₹9.25/kg. Loading priority #97."
   },
   {
     "shipment_id": "S0098",
@@ -23196,7 +23196,7 @@
       "slack_delta_h": 36.846697406022486
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 demand is already covered; usable life 1228.66 h at arrival, slack 1180.66 h, margin \u20b912.18/kg. Dispatch priority #98."
+    "text": "Sent to D3, not D8: D8 is already fully supplied; 1228.66 h of shelf life left on arrival, 1180.66 h to spare, earns ₹12.18/kg. Loading priority #98."
   },
   {
     "shipment_id": "S0099",
@@ -23435,7 +23435,7 @@
       "slack_delta_h": 25.385936911796378
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 100.714 h at arrival, slack 76.7141 h, margin \u20b926.96/kg. Dispatch priority #99."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 100.714 h of shelf life left on arrival, 76.7141 h to spare, earns ₹26.96/kg. Loading priority #99."
   },
   {
     "shipment_id": "S0100",
@@ -23674,7 +23674,7 @@
       "slack_delta_h": 3.088039882628564
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 71.6224 h at arrival, slack 47.6224 h, margin \u20b915.30/kg. Dispatch priority #100."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 71.6224 h of shelf life left on arrival, 47.6224 h to spare, earns ₹15.30/kg. Loading priority #100."
   },
   {
     "shipment_id": "S0101",
@@ -23913,7 +23913,7 @@
       "slack_delta_h": 8.84278575138751
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 1608.23 h at arrival, slack 1560.23 h, margin \u20b94.23/kg. Dispatch priority #101."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 1608.23 h of shelf life left on arrival, 1560.23 h to spare, earns ₹4.23/kg. Loading priority #101."
   },
   {
     "shipment_id": "S0102",
@@ -24152,7 +24152,7 @@
       "slack_delta_h": 8.84278575138751
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 1576.16 h at arrival, slack 1528.16 h, margin \u20b94.23/kg. Dispatch priority #102."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 1576.16 h of shelf life left on arrival, 1528.16 h to spare, earns ₹4.23/kg. Loading priority #102."
   },
   {
     "shipment_id": "S0103",
@@ -24391,7 +24391,7 @@
       "slack_delta_h": 29.054033544502694
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 70.8044 h at arrival, slack 46.8044 h, margin \u20b926.81/kg. Dispatch priority #103."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 70.8044 h of shelf life left on arrival, 46.8044 h to spare, earns ₹26.81/kg. Loading priority #103."
   },
   {
     "shipment_id": "S0104",
@@ -24630,7 +24630,7 @@
       "slack_delta_h": 29.054033544502694
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 70.8044 h at arrival, slack 46.8044 h, margin \u20b926.81/kg. Dispatch priority #104."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 70.8044 h of shelf life left on arrival, 46.8044 h to spare, earns ₹26.81/kg. Loading priority #104."
   },
   {
     "shipment_id": "S0105",
@@ -24869,7 +24869,7 @@
       "slack_delta_h": 26.917295141774865
     },
     "discount": null,
-    "text": "Sent to D4, not D3: D3 demand is already covered; usable life 68.6676 h at arrival, slack 44.6676 h, margin \u20b98.47/kg. Dispatch priority #105."
+    "text": "Sent to D4, not D3: D3 is already fully supplied; 68.6676 h of shelf life left on arrival, 44.6676 h to spare, earns ₹8.47/kg. Loading priority #105."
   },
   {
     "shipment_id": "S0106",
@@ -25108,7 +25108,7 @@
       "slack_delta_h": 35.437974580197306
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 866.547 h at arrival, slack 818.547 h, margin \u20b95.12/kg. Dispatch priority #106."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 866.547 h of shelf life left on arrival, 818.547 h to spare, earns ₹5.12/kg. Loading priority #106."
   },
   {
     "shipment_id": "S0107",
@@ -25347,7 +25347,7 @@
       "slack_delta_h": 35.545305843117376
     },
     "discount": null,
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 866.655 h at arrival, slack 818.655 h, margin \u20b910.63/kg. Dispatch priority #107."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 866.655 h of shelf life left on arrival, 818.655 h to spare, earns ₹10.63/kg. Loading priority #107."
   },
   {
     "shipment_id": "S0108",
@@ -25586,7 +25586,7 @@
       "slack_delta_h": 23.329179606749904
     },
     "discount": null,
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 1486.88 h at arrival, slack 1438.88 h, margin \u20b98.42/kg. Dispatch priority #108."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 1486.88 h of shelf life left on arrival, 1438.88 h to spare, earns ₹8.42/kg. Loading priority #108."
   },
   {
     "shipment_id": "S0109",
@@ -25825,7 +25825,7 @@
       "slack_delta_h": 38.0499833491593
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 62.7779 h at arrival, slack 38.7779 h, margin \u20b938.85/kg. Dispatch priority #109."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 62.7779 h of shelf life left on arrival, 38.7779 h to spare, earns ₹38.85/kg. Loading priority #109."
   },
   {
     "shipment_id": "S0110",
@@ -26064,7 +26064,7 @@
       "slack_delta_h": 6.206407194553094
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 1514.99 h at arrival, slack 1466.99 h, margin \u20b94.38/kg. Dispatch priority #110."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 1514.99 h of shelf life left on arrival, 1466.99 h to spare, earns ₹4.38/kg. Loading priority #110."
   },
   {
     "shipment_id": "S0111",
@@ -26303,7 +26303,7 @@
       "slack_delta_h": 6.313738457472937
     },
     "discount": null,
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 1515.09 h at arrival, slack 1467.09 h, margin \u20b98.42/kg. Dispatch priority #111."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 1515.09 h of shelf life left on arrival, 1467.09 h to spare, earns ₹8.42/kg. Loading priority #111."
   },
   {
     "shipment_id": "S0112",
@@ -26542,7 +26542,7 @@
       "slack_delta_h": 25.858226900664476
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 1368.64 h at arrival, slack 1320.64 h, margin \u20b94.23/kg. Dispatch priority #112."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 1368.64 h of shelf life left on arrival, 1320.64 h to spare, earns ₹4.23/kg. Loading priority #112."
   },
   {
     "shipment_id": "S0113",
@@ -26781,7 +26781,7 @@
       "slack_delta_h": -1.4499999999999886
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 80.5031 h at arrival, slack 56.5031 h, margin \u20b99.92/kg. Dispatch priority #113."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 80.5031 h of shelf life left on arrival, 56.5031 h to spare, earns ₹9.92/kg. Loading priority #113."
   },
   {
     "shipment_id": "S0114",
@@ -27020,7 +27020,7 @@
       "slack_delta_h": 3.088039882628564
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 85.0411 h at arrival, slack 61.0411 h, margin \u20b915.30/kg. Dispatch priority #114."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 85.0411 h of shelf life left on arrival, 61.0411 h to spare, earns ₹15.30/kg. Loading priority #114."
   },
   {
     "shipment_id": "S0115",
@@ -27259,7 +27259,7 @@
       "slack_delta_h": 5.208318443758557
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b917.45/kg); usable life 85.9114 h at arrival, slack 61.9114 h, margin \u20b919.27/kg. Dispatch priority #115."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹17.45/kg); 85.9114 h of shelf life left on arrival, 61.9114 h to spare, earns ₹19.27/kg. Loading priority #115."
   },
   {
     "shipment_id": "S0116",
@@ -27498,7 +27498,7 @@
       "slack_delta_h": -1.25
     },
     "discount": null,
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 80.7031 h at arrival, slack 56.7031 h, margin \u20b917.45/kg. Dispatch priority #116."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 80.7031 h of shelf life left on arrival, 56.7031 h to spare, earns ₹17.45/kg. Loading priority #116."
   },
   {
     "shipment_id": "S0117",
@@ -27737,7 +27737,7 @@
       "slack_delta_h": -1.4499999999999886
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 129.104 h at arrival, slack 105.104 h, margin \u20b99.92/kg. Dispatch priority #117."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 129.104 h of shelf life left on arrival, 105.104 h to spare, earns ₹9.92/kg. Loading priority #117."
   },
   {
     "shipment_id": "S0118",
@@ -27976,7 +27976,7 @@
       "slack_delta_h": 0.8869154486471302
     },
     "discount": null,
-    "text": "Sent to D4, not D3: D3 demand is already covered; usable life 131.441 h at arrival, slack 107.441 h, margin \u20b92.41/kg. Dispatch priority #118."
+    "text": "Sent to D4, not D3: D3 is already fully supplied; 131.441 h of shelf life left on arrival, 107.441 h to spare, earns ₹2.41/kg. Loading priority #118."
   },
   {
     "shipment_id": "S0119",
@@ -28215,7 +28215,7 @@
       "slack_delta_h": 0.7434449874968152
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 131.298 h at arrival, slack 107.298 h, margin \u20b913.91/kg. Dispatch priority #119."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 131.298 h of shelf life left on arrival, 107.298 h to spare, earns ₹13.91/kg. Loading priority #119."
   },
   {
     "shipment_id": "S0120",
@@ -28454,7 +28454,7 @@
       "slack_delta_h": 8.84278575138751
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 1561.23 h at arrival, slack 1513.23 h, margin \u20b94.23/kg. Dispatch priority #120."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 1561.23 h of shelf life left on arrival, 1513.23 h to spare, earns ₹4.23/kg. Loading priority #120."
   },
   {
     "shipment_id": "S0121",
@@ -28693,7 +28693,7 @@
       "slack_delta_h": 23.22184834383006
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 869.742 h at arrival, slack 821.742 h, margin \u20b94.38/kg. Dispatch priority #121."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 869.742 h of shelf life left on arrival, 821.742 h to spare, earns ₹4.38/kg. Loading priority #121."
   },
   {
     "shipment_id": "S0122",
@@ -28932,7 +28932,7 @@
       "slack_delta_h": 22.569688609068976
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 869.09 h at arrival, slack 821.09 h, margin \u20b96.17/kg. Dispatch priority #122."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 869.09 h of shelf life left on arrival, 821.09 h to spare, earns ₹6.17/kg. Loading priority #122."
   },
   {
     "shipment_id": "S0123",
@@ -29171,7 +29171,7 @@
       "slack_delta_h": 27.84997917243527
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 1251.24 h at arrival, slack 1203.24 h, margin \u20b95.12/kg. Dispatch priority #123."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 1251.24 h of shelf life left on arrival, 1203.24 h to spare, earns ₹5.12/kg. Loading priority #123."
   },
   {
     "shipment_id": "S0124",
@@ -29410,7 +29410,7 @@
       "slack_delta_h": 27.19781943767407
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 1250.59 h at arrival, slack 1202.59 h, margin \u20b97.83/kg. Dispatch priority #124."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 1250.59 h of shelf life left on arrival, 1202.59 h to spare, earns ₹7.83/kg. Loading priority #124."
   },
   {
     "shipment_id": "S0125",
@@ -29654,7 +29654,7 @@
       "tier_pct": 30.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 31.274 h at arrival, slack 7.27398 h, margin \u20b920.03/kg. Dispatch priority #125. 30.0 % off from day 2: unsold-risk 0.00 -> tier 30.0 %, capped by max_discount."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 31.274 h of shelf life left on arrival, 7.27398 h to spare, earns ₹20.03/kg. Loading priority #125. Price cut: 30.0 % off from day 2 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0126",
@@ -29893,7 +29893,7 @@
       "slack_delta_h": 3.5772985224138267
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 101.241 h at arrival, slack 77.2407 h, margin \u20b911.23/kg. Dispatch priority #126."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 101.241 h of shelf life left on arrival, 77.2407 h to spare, earns ₹11.23/kg. Loading priority #126."
   },
   {
     "shipment_id": "S0127",
@@ -30132,7 +30132,7 @@
       "slack_delta_h": 34.78581484543622
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 963.555 h at arrival, slack 915.555 h, margin \u20b97.83/kg. Dispatch priority #127."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 963.555 h of shelf life left on arrival, 915.555 h to spare, earns ₹7.83/kg. Loading priority #127."
   },
   {
     "shipment_id": "S0128",
@@ -30376,7 +30376,7 @@
       "tier_pct": 40.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 14.6221 h at arrival, slack 2.6221 h, margin \u20b915.98/kg. Dispatch priority #128. 40.0 % off from day 1: unsold-risk 0.00 -> tier 40.0 %, capped by max_discount."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 14.6221 h of shelf life left on arrival, 2.6221 h to spare, earns ₹15.98/kg. Loading priority #128. Price cut: 40.0 % off from day 1 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0129",
@@ -30620,7 +30620,7 @@
       "tier_pct": 40.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 20.5403 h at arrival, slack 8.54034 h, margin \u20b923.49/kg. Dispatch priority #129. 40.0 % off from day 1: unsold-risk 0.00 -> tier 40.0 %, capped by max_discount."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 20.5403 h of shelf life left on arrival, 8.54034 h to spare, earns ₹23.49/kg. Loading priority #129. Price cut: 40.0 % off from day 1 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0130",
@@ -30864,7 +30864,7 @@
       "tier_pct": 40.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b928.03/kg); usable life 21.4282 h at arrival, slack 9.42822 h, margin \u20b929.04/kg. Dispatch priority #130. 40.0 % off from day 1: unsold-risk 0.00 -> tier 40.0 %, capped by max_discount."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹28.03/kg); 21.4282 h of shelf life left on arrival, 9.42822 h to spare, earns ₹29.04/kg. Loading priority #130. Price cut: 40.0 % off from day 1 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0131",
@@ -31108,7 +31108,7 @@
       "tier_pct": 40.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 14.8621 h at arrival, slack 2.8621 h, margin \u20b926.56/kg. Dispatch priority #131. 40.0 % off from day 1: unsold-risk 0.00 -> tier 40.0 %, capped by max_discount."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 14.8621 h of shelf life left on arrival, 2.8621 h to spare, earns ₹26.56/kg. Loading priority #131. Price cut: 40.0 % off from day 1 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0132",
@@ -31347,7 +31347,7 @@
       "slack_delta_h": 27.19781943767407
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 1196.46 h at arrival, slack 1148.46 h, margin \u20b97.83/kg. Dispatch priority #132."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 1196.46 h of shelf life left on arrival, 1148.46 h to spare, earns ₹7.83/kg. Loading priority #132."
   },
   {
     "shipment_id": "S0133",
@@ -31586,7 +31586,7 @@
       "slack_delta_h": 26.40564886038395
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 122.394 h at arrival, slack 98.3938 h, margin \u20b938.85/kg. Dispatch priority #133."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 122.394 h of shelf life left on arrival, 98.3938 h to spare, earns ₹38.85/kg. Loading priority #133."
   },
   {
     "shipment_id": "S0134",
@@ -31830,7 +31830,7 @@
       "tier_pct": 40.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 27.2661 h at arrival, slack 15.2661 h, margin \u20b923.55/kg. Dispatch priority #134. 40.0 % off from day 2: unsold-risk 0.00 -> tier 40.0 %, capped by max_discount."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 27.2661 h of shelf life left on arrival, 15.2661 h to spare, earns ₹23.55/kg. Loading priority #134. Price cut: 40.0 % off from day 2 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0135",
@@ -32069,7 +32069,7 @@
       "slack_delta_h": -22.932189035467673
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 1306.74 h at arrival, slack 1258.74 h, margin \u20b97.36/kg. Dispatch priority #135."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 1306.74 h of shelf life left on arrival, 1258.74 h to spare, earns ₹7.36/kg. Loading priority #135."
   },
   {
     "shipment_id": "S0136",
@@ -32308,7 +32308,7 @@
       "slack_delta_h": -30.78542676620702
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life -15.058 h at arrival, slack -27.058 h, margin \u20b923.49/kg. Dispatch priority #136."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; -15.058 h of shelf life left on arrival, -27.058 h to spare, earns ₹23.49/kg. Loading priority #136."
   },
   {
     "shipment_id": "S0137",
@@ -32547,7 +32547,7 @@
       "slack_delta_h": -1.2760000000000105
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 70.6014 h at arrival, slack 46.6014 h, margin \u20b911.38/kg. Dispatch priority #137."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 70.6014 h of shelf life left on arrival, 46.6014 h to spare, earns ₹11.38/kg. Loading priority #137."
   },
   {
     "shipment_id": "S0138",
@@ -32786,7 +32786,7 @@
       "slack_delta_h": -1.1000000000000085
     },
     "discount": null,
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 70.7774 h at arrival, slack 46.7774 h, margin \u20b920.03/kg. Dispatch priority #138."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 70.7774 h of shelf life left on arrival, 46.7774 h to spare, earns ₹20.03/kg. Loading priority #138."
   },
   {
     "shipment_id": "S0139",
@@ -33025,7 +33025,7 @@
       "slack_delta_h": -18.086109265531434
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 131.451 h at arrival, slack 107.451 h, margin \u20b917.54/kg. Dispatch priority #139."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 131.451 h of shelf life left on arrival, 107.451 h to spare, earns ₹17.54/kg. Loading priority #139."
   },
   {
     "shipment_id": "S0140",
@@ -33264,7 +33264,7 @@
       "slack_delta_h": -25.282536565637145
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 84.5974 h at arrival, slack 60.5974 h, margin \u20b917.60/kg. Dispatch priority #140."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 84.5974 h of shelf life left on arrival, 60.5974 h to spare, earns ₹17.60/kg. Loading priority #140."
   },
   {
     "shipment_id": "S0141",
@@ -33503,7 +33503,7 @@
       "slack_delta_h": 3.5772985224138267
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 126.811 h at arrival, slack 102.811 h, margin \u20b911.23/kg. Dispatch priority #141."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 126.811 h of shelf life left on arrival, 102.811 h to spare, earns ₹11.23/kg. Loading priority #141."
   },
   {
     "shipment_id": "S0142",
@@ -33742,7 +33742,7 @@
       "slack_delta_h": 22.569688609068976
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 819.61 h at arrival, slack 771.61 h, margin \u20b96.17/kg. Dispatch priority #142."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 819.61 h of shelf life left on arrival, 771.61 h to spare, earns ₹6.17/kg. Loading priority #142."
   },
   {
     "shipment_id": "S0143",
@@ -33981,7 +33981,7 @@
       "slack_delta_h": 1.5855034389427303
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 43.4637 h at arrival, slack 19.4637 h, margin \u20b941.15/kg. Dispatch priority #143."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 43.4637 h of shelf life left on arrival, 19.4637 h to spare, earns ₹41.15/kg. Loading priority #143."
   },
   {
     "shipment_id": "S0144",
@@ -34220,7 +34220,7 @@
       "slack_delta_h": -22.932189035467786
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 803.973 h at arrival, slack 755.973 h, margin \u20b97.36/kg. Dispatch priority #144."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 803.973 h of shelf life left on arrival, 755.973 h to spare, earns ₹7.36/kg. Loading priority #144."
   },
   {
     "shipment_id": "S0145",
@@ -34459,7 +34459,7 @@
       "slack_delta_h": -23.157488653875134
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 1235.15 h at arrival, slack 1187.15 h, margin \u20b97.30/kg. Dispatch priority #145."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 1235.15 h of shelf life left on arrival, 1187.15 h to spare, earns ₹7.30/kg. Loading priority #145."
   },
   {
     "shipment_id": "S0146",
@@ -34698,7 +34698,7 @@
       "slack_delta_h": -18.086109265531434
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 127.371 h at arrival, slack 103.371 h, margin \u20b917.54/kg. Dispatch priority #146."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 127.371 h of shelf life left on arrival, 103.371 h to spare, earns ₹17.54/kg. Loading priority #146."
   },
   {
     "shipment_id": "S0147",
@@ -34937,7 +34937,7 @@
       "slack_delta_h": -23.157488653875134
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 1387.39 h at arrival, slack 1339.39 h, margin \u20b97.30/kg. Dispatch priority #147."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 1387.39 h of shelf life left on arrival, 1339.39 h to spare, earns ₹7.30/kg. Loading priority #147."
   },
   {
     "shipment_id": "S0148",
@@ -35176,7 +35176,7 @@
       "slack_delta_h": -21.61241869894593
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 demand is already covered; usable life 1388.27 h at arrival, slack 1340.27 h, margin \u20b99.50/kg. Dispatch priority #148."
+    "text": "Sent to D3, not D8: D8 is already fully supplied; 1388.27 h of shelf life left on arrival, 1340.27 h to spare, earns ₹9.50/kg. Loading priority #148."
   },
   {
     "shipment_id": "S0149",
@@ -35415,7 +35415,7 @@
       "slack_delta_h": -24.670820393250096
     },
     "discount": null,
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 1385.88 h at arrival, slack 1337.88 h, margin \u20b98.42/kg. Dispatch priority #149."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 1385.88 h of shelf life left on arrival, 1337.88 h to spare, earns ₹8.42/kg. Loading priority #149."
   },
   {
     "shipment_id": "S0150",
@@ -35641,7 +35641,7 @@
       "slack_delta_h": -1.8606581353476699
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 39.8897 h at arrival, slack 15.8897 h, margin \u20b932.97/kg. Dispatch priority #150."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 39.8897 h of shelf life left on arrival, 15.8897 h to spare, earns ₹32.97/kg. Loading priority #150."
   },
   {
     "shipment_id": "S0151",
@@ -35867,7 +35867,7 @@
       "slack_delta_h": -35.62877237325965
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 94.9256 h at arrival, slack 70.9256 h, margin \u20b98.74/kg. Dispatch priority #151."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 94.9256 h of shelf life left on arrival, 70.9256 h to spare, earns ₹8.74/kg. Loading priority #151."
   },
   {
     "shipment_id": "S0152",
@@ -36093,7 +36093,7 @@
       "slack_delta_h": -1.860658135347677
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 65.9897 h at arrival, slack 41.9897 h, margin \u20b932.97/kg. Dispatch priority #152."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 65.9897 h of shelf life left on arrival, 41.9897 h to spare, earns ₹32.97/kg. Loading priority #152."
   },
   {
     "shipment_id": "S0153",
@@ -36319,7 +36319,7 @@
       "slack_delta_h": 3.47632850534103
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 41.8964 h at arrival, slack 17.8964 h, margin \u20b932.97/kg. Dispatch priority #153."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 41.8964 h of shelf life left on arrival, 17.8964 h to spare, earns ₹32.97/kg. Loading priority #153."
   },
   {
     "shipment_id": "S0154",
@@ -36545,7 +36545,7 @@
       "slack_delta_h": -9.607510513403213
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 1548.45 h at arrival, slack 1500.45 h, margin \u20b94.04/kg. Dispatch priority #154."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 1548.45 h of shelf life left on arrival, 1500.45 h to spare, earns ₹4.04/kg. Loading priority #154."
   },
   {
     "shipment_id": "S0155",
@@ -36771,7 +36771,7 @@
       "slack_delta_h": -47.07213397206192
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 68.671 h at arrival, slack 44.671 h, margin \u20b98.74/kg. Dispatch priority #155."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 68.671 h of shelf life left on arrival, 44.671 h to spare, earns ₹8.74/kg. Loading priority #155."
   },
   {
     "shipment_id": "S0156",
@@ -36997,7 +36997,7 @@
       "slack_delta_h": -37.61805965583538
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 48.3463 h at arrival, slack 24.3463 h, margin \u20b98.65/kg. Dispatch priority #156."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 48.3463 h of shelf life left on arrival, 24.3463 h to spare, earns ₹8.65/kg. Loading priority #156."
   },
   {
     "shipment_id": "S0157",
@@ -37223,7 +37223,7 @@
       "slack_delta_h": 0.3124599764596496
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 860.485 h at arrival, slack 812.485 h, margin \u20b96.12/kg. Dispatch priority #157."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 860.485 h of shelf life left on arrival, 812.485 h to spare, earns ₹6.12/kg. Loading priority #157."
   },
   {
     "shipment_id": "S0158",
@@ -37449,7 +37449,7 @@
       "slack_delta_h": -1.8087666533177753
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 585.956 h at arrival, slack 537.956 h, margin \u20b94.04/kg. Dispatch priority #158."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 585.956 h of shelf life left on arrival, 537.956 h to spare, earns ₹4.04/kg. Loading priority #158."
   },
   {
     "shipment_id": "S0159",
@@ -37675,7 +37675,7 @@
       "slack_delta_h": -1.808766653317889
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 1435.96 h at arrival, slack 1387.96 h, margin \u20b94.04/kg. Dispatch priority #159."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 1435.96 h of shelf life left on arrival, 1387.96 h to spare, earns ₹4.04/kg. Loading priority #159."
   },
   {
     "shipment_id": "S0160",
@@ -37901,7 +37901,7 @@
       "slack_delta_h": -9.607510513403042
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 450.258 h at arrival, slack 402.258 h, margin \u20b94.04/kg. Dispatch priority #160."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 450.258 h of shelf life left on arrival, 402.258 h to spare, earns ₹4.04/kg. Loading priority #160."
   },
   {
     "shipment_id": "S0161",
@@ -38127,7 +38127,7 @@
       "slack_delta_h": 1.472562320550196
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 1170.73 h at arrival, slack 1122.73 h, margin \u20b96.21/kg. Dispatch priority #161."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 1170.73 h of shelf life left on arrival, 1122.73 h to spare, earns ₹6.21/kg. Loading priority #161."
   },
   {
     "shipment_id": "S0162",
@@ -38353,7 +38353,7 @@
       "slack_delta_h": 1.472562320550196
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 1251.4 h at arrival, slack 1203.4 h, margin \u20b96.21/kg. Dispatch priority #162."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 1251.4 h of shelf life left on arrival, 1203.4 h to spare, earns ₹6.21/kg. Loading priority #162."
   },
   {
     "shipment_id": "S0163",
@@ -38579,7 +38579,7 @@
       "slack_delta_h": 1.472562320550196
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 1084.98 h at arrival, slack 1036.98 h, margin \u20b96.21/kg. Dispatch priority #163."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 1084.98 h of shelf life left on arrival, 1036.98 h to spare, earns ₹6.21/kg. Loading priority #163."
   },
   {
     "shipment_id": "S0164",
@@ -38805,7 +38805,7 @@
       "slack_delta_h": 3.7902912050171835
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 1304.18 h at arrival, slack 1256.18 h, margin \u20b96.12/kg. Dispatch priority #164."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 1304.18 h of shelf life left on arrival, 1256.18 h to spare, earns ₹6.12/kg. Loading priority #164."
   },
   {
     "shipment_id": "S0165",
@@ -39031,7 +39031,7 @@
       "slack_delta_h": -9.607510513403213
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 1236.4 h at arrival, slack 1188.4 h, margin \u20b94.04/kg. Dispatch priority #165."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 1236.4 h of shelf life left on arrival, 1188.4 h to spare, earns ₹4.04/kg. Loading priority #165."
   },
   {
     "shipment_id": "S0166",
@@ -39257,7 +39257,7 @@
       "slack_delta_h": 3.7902912050171835
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 1235.93 h at arrival, slack 1187.93 h, margin \u20b96.12/kg. Dispatch priority #166."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 1235.93 h of shelf life left on arrival, 1187.93 h to spare, earns ₹6.12/kg. Loading priority #166."
   },
   {
     "shipment_id": "S0167",
@@ -39483,7 +39483,7 @@
       "slack_delta_h": -31.09213092148336
     },
     "discount": null,
-    "text": "Sent to D5, not D3: D3 demand is already covered; usable life 92.1413 h at arrival, slack 68.1413 h, margin \u20b910.70/kg. Dispatch priority #167."
+    "text": "Sent to D5, not D3: D3 is already fully supplied; 92.1413 h of shelf life left on arrival, 68.1413 h to spare, earns ₹10.70/kg. Loading priority #167."
   },
   {
     "shipment_id": "S0168",
@@ -39722,7 +39722,7 @@
       "slack_delta_h": 1.8582269006643628
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 771.153 h at arrival, slack 723.153 h, margin \u20b94.40/kg. Dispatch priority #168."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 771.153 h of shelf life left on arrival, 723.153 h to spare, earns ₹4.40/kg. Loading priority #168."
   },
   {
     "shipment_id": "S0169",
@@ -39961,7 +39961,7 @@
       "slack_delta_h": 2.3875813010540696
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b912.51/kg); usable life 921.362 h at arrival, slack 873.362 h, margin \u20b913.99/kg. Dispatch priority #169."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹12.51/kg); 921.362 h of shelf life left on arrival, 873.362 h to spare, earns ₹13.99/kg. Loading priority #169."
   },
   {
     "shipment_id": "S0170",
@@ -40200,7 +40200,7 @@
       "slack_delta_h": -0.7781516561699391
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 971.952 h at arrival, slack 923.952 h, margin \u20b94.55/kg. Dispatch priority #170."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 971.952 h of shelf life left on arrival, 923.952 h to spare, earns ₹4.55/kg. Loading priority #170."
   },
   {
     "shipment_id": "S0171",
@@ -40439,7 +40439,7 @@
       "slack_delta_h": -0.7781516561699391
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 1067.46 h at arrival, slack 1019.46 h, margin \u20b96.55/kg. Dispatch priority #171."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 1067.46 h of shelf life left on arrival, 1019.46 h to spare, earns ₹6.55/kg. Loading priority #171."
   },
   {
     "shipment_id": "S0172",
@@ -40678,7 +40678,7 @@
       "slack_delta_h": 2.3875813010540696
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b912.51/kg); usable life 1069.95 h at arrival, slack 1021.95 h, margin \u20b913.99/kg. Dispatch priority #172."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹12.51/kg); 1069.95 h of shelf life left on arrival, 1021.95 h to spare, earns ₹13.99/kg. Loading priority #172."
   },
   {
     "shipment_id": "S0173",
@@ -40917,7 +40917,7 @@
       "slack_delta_h": -0.6708203932500965
     },
     "discount": null,
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 1067.56 h at arrival, slack 1019.56 h, margin \u20b912.51/kg. Dispatch priority #173."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 1067.56 h of shelf life left on arrival, 1019.56 h to spare, earns ₹12.51/kg. Loading priority #173."
   },
   {
     "shipment_id": "S0174",
@@ -41156,7 +41156,7 @@
       "slack_delta_h": 4.17823823734993
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 35.6703 h at arrival, slack 23.6703 h, margin \u20b925.03/kg. Dispatch priority #174."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 35.6703 h of shelf life left on arrival, 23.6703 h to spare, earns ₹25.03/kg. Loading priority #174."
   },
   {
     "shipment_id": "S0175",
@@ -41395,7 +41395,7 @@
       "slack_delta_h": 1.8582269006643628
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 713.459 h at arrival, slack 665.459 h, margin \u20b96.40/kg. Dispatch priority #175."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 713.459 h of shelf life left on arrival, 665.459 h to spare, earns ₹6.40/kg. Loading priority #175."
   },
   {
     "shipment_id": "S0176",
@@ -41634,7 +41634,7 @@
       "slack_delta_h": -0.7781516561699391
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 1090.89 h at arrival, slack 1042.89 h, margin \u20b96.55/kg. Dispatch priority #176."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 1090.89 h of shelf life left on arrival, 1042.89 h to spare, earns ₹6.55/kg. Loading priority #176."
   },
   {
     "shipment_id": "S0177",
@@ -41873,7 +41873,7 @@
       "slack_delta_h": -1.4303113909311378
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 1090.24 h at arrival, slack 1042.24 h, margin \u20b99.54/kg. Dispatch priority #177."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 1090.24 h of shelf life left on arrival, 1042.24 h to spare, earns ₹9.54/kg. Loading priority #177."
   },
   {
     "shipment_id": "S0178",
@@ -42112,7 +42112,7 @@
       "slack_delta_h": 1.8582269006644765
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 1352.48 h at arrival, slack 1304.48 h, margin \u20b94.40/kg. Dispatch priority #178."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 1352.48 h of shelf life left on arrival, 1304.48 h to spare, earns ₹4.40/kg. Loading priority #178."
   },
   {
     "shipment_id": "S0179",
@@ -42351,7 +42351,7 @@
       "slack_delta_h": -1.4499999999999886
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 94.0444 h at arrival, slack 70.0444 h, margin \u20b99.01/kg. Dispatch priority #179."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 94.0444 h of shelf life left on arrival, 70.0444 h to spare, earns ₹9.01/kg. Loading priority #179."
   },
   {
     "shipment_id": "S0180",
@@ -42590,7 +42590,7 @@
       "slack_delta_h": 2.412608953222417
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 123.18 h at arrival, slack 99.18 h, margin \u20b917.09/kg. Dispatch priority #180."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 123.18 h of shelf life left on arrival, 99.18 h to spare, earns ₹17.09/kg. Loading priority #180."
   },
   {
     "shipment_id": "S0181",
@@ -42829,7 +42829,7 @@
       "slack_delta_h": -1.430311390931024
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 680.045 h at arrival, slack 632.045 h, margin \u20b99.54/kg. Dispatch priority #181."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 680.045 h of shelf life left on arrival, 632.045 h to spare, earns ₹9.54/kg. Loading priority #181."
   },
   {
     "shipment_id": "S0182",
@@ -43068,7 +43068,7 @@
       "slack_delta_h": -0.7781516561699391
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 831.682 h at arrival, slack 783.682 h, margin \u20b94.55/kg. Dispatch priority #182."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 831.682 h of shelf life left on arrival, 783.682 h to spare, earns ₹4.55/kg. Loading priority #182."
   },
   {
     "shipment_id": "S0183",
@@ -43307,7 +43307,7 @@
       "slack_delta_h": 1.8582269006644765
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 1042.39 h at arrival, slack 994.388 h, margin \u20b94.40/kg. Dispatch priority #183."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 1042.39 h of shelf life left on arrival, 994.388 h to spare, earns ₹4.40/kg. Loading priority #183."
   },
   {
     "shipment_id": "S0184",
@@ -43546,7 +43546,7 @@
       "slack_delta_h": 2.4126089532224455
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 136.557 h at arrival, slack 112.557 h, margin \u20b917.09/kg. Dispatch priority #184."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 136.557 h of shelf life left on arrival, 112.557 h to spare, earns ₹17.09/kg. Loading priority #184."
   },
   {
     "shipment_id": "S0185",
@@ -43785,7 +43785,7 @@
       "slack_delta_h": 4.368919259358563
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b919.54/kg); usable life 137.413 h at arrival, slack 113.413 h, margin \u20b921.58/kg. Dispatch priority #185."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹19.54/kg); 137.413 h of shelf life left on arrival, 113.413 h to spare, earns ₹21.58/kg. Loading priority #185."
   },
   {
     "shipment_id": "S0186",
@@ -44024,7 +44024,7 @@
       "slack_delta_h": 1.8582269006644765
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 1131.48 h at arrival, slack 1083.48 h, margin \u20b94.40/kg. Dispatch priority #186."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 1131.48 h of shelf life left on arrival, 1083.48 h to spare, earns ₹4.40/kg. Loading priority #186."
   },
   {
     "shipment_id": "S0187",
@@ -44263,7 +44263,7 @@
       "slack_delta_h": -0.9348812013163297
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 1128.69 h at arrival, slack 1080.69 h, margin \u20b96.52/kg. Dispatch priority #187."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 1128.69 h of shelf life left on arrival, 1080.69 h to spare, earns ₹6.52/kg. Loading priority #187."
   },
   {
     "shipment_id": "S0188",
@@ -44502,7 +44502,7 @@
       "slack_delta_h": 3.5772985224137983
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 143.591 h at arrival, slack 119.591 h, margin \u20b910.86/kg. Dispatch priority #188."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 143.591 h of shelf life left on arrival, 119.591 h to spare, earns ₹10.86/kg. Loading priority #188."
   },
   {
     "shipment_id": "S0189",
@@ -44741,7 +44741,7 @@
       "slack_delta_h": 1.0340000000000202
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b919.59/kg); usable life 140.013 h at arrival, slack 116.013 h, margin \u20b921.74/kg. Dispatch priority #189."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹19.59/kg); 140.013 h of shelf life left on arrival, 116.013 h to spare, earns ₹21.74/kg. Loading priority #189."
   },
   {
     "shipment_id": "S0190",
@@ -44980,7 +44980,7 @@
       "slack_delta_h": 0.5283899247252464
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 140.542 h at arrival, slack 116.542 h, margin \u20b915.76/kg. Dispatch priority #190."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 140.542 h of shelf life left on arrival, 116.542 h to spare, earns ₹15.76/kg. Loading priority #190."
   },
   {
     "shipment_id": "S0191",
@@ -45224,7 +45224,7 @@
       "tier_pct": 40.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 9.47135 h at arrival, slack -2.52865 h, margin \u20b917.25/kg. Dispatch priority #191. 40.0 % off from day 2: unsold-risk 0.00 -> tier 40.0 %, capped by max_discount."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 9.47135 h of shelf life left on arrival, -2.52865 h to spare, earns ₹17.25/kg. Loading priority #191. Price cut: 40.0 % off from day 2 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0192",
@@ -45468,7 +45468,7 @@
       "tier_pct": 40.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 15.3896 h at arrival, slack 3.38958 h, margin \u20b925.03/kg. Dispatch priority #192. 40.0 % off from day 2: unsold-risk 0.00 -> tier 40.0 %, capped by max_discount."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 15.3896 h of shelf life left on arrival, 3.38958 h to spare, earns ₹25.03/kg. Loading priority #192. Price cut: 40.0 % off from day 2 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0193",
@@ -45712,7 +45712,7 @@
       "tier_pct": 40.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b928.03/kg); usable life 16.2775 h at arrival, slack 4.27747 h, margin \u20b930.78/kg. Dispatch priority #193. 40.0 % off from day 2: unsold-risk 0.00 -> tier 40.0 %, capped by max_discount."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹28.03/kg); 16.2775 h of shelf life left on arrival, 4.27747 h to spare, earns ₹30.78/kg. Loading priority #193. Price cut: 40.0 % off from day 2 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0194",
@@ -45956,7 +45956,7 @@
       "tier_pct": 40.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 9.71135 h at arrival, slack -2.28865 h, margin \u20b928.22/kg. Dispatch priority #194. 40.0 % off from day 2: unsold-risk 0.00 -> tier 40.0 %, capped by max_discount."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 9.71135 h of shelf life left on arrival, -2.28865 h to spare, earns ₹28.22/kg. Loading priority #194. Price cut: 40.0 % off from day 2 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0195",
@@ -46195,7 +46195,7 @@
       "slack_delta_h": -1.4303113909311378
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 1578.85 h at arrival, slack 1530.85 h, margin \u20b96.38/kg. Dispatch priority #195."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 1578.85 h of shelf life left on arrival, 1530.85 h to spare, earns ₹6.38/kg. Loading priority #195."
   },
   {
     "shipment_id": "S0196",
@@ -46434,7 +46434,7 @@
       "slack_delta_h": -1.4303113909311378
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 1505.19 h at arrival, slack 1457.19 h, margin \u20b96.38/kg. Dispatch priority #196."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 1505.19 h of shelf life left on arrival, 1457.19 h to spare, earns ₹6.38/kg. Loading priority #196."
   },
   {
     "shipment_id": "S0197",
@@ -46673,7 +46673,7 @@
       "slack_delta_h": 1.5000383901416114
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 70.6444 h at arrival, slack 46.6444 h, margin \u20b912.95/kg. Dispatch priority #197."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 70.6444 h of shelf life left on arrival, 46.6444 h to spare, earns ₹12.95/kg. Loading priority #197."
   },
   {
     "shipment_id": "S0198",
@@ -46912,7 +46912,7 @@
       "slack_delta_h": 1.5000383901416114
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 101.623 h at arrival, slack 77.6231 h, margin \u20b912.95/kg. Dispatch priority #198."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 101.623 h of shelf life left on arrival, 77.6231 h to spare, earns ₹12.95/kg. Loading priority #198."
   },
   {
     "shipment_id": "S0199",
@@ -47138,7 +47138,7 @@
       "slack_delta_h": -1.9104905314382137
     },
     "discount": null,
-    "text": "Sent to D7, not D3: D3 demand is already covered; usable life 98.2126 h at arrival, slack 74.2126 h, margin \u20b96.63/kg. Dispatch priority #199."
+    "text": "Sent to D7, not D3: D3 is already fully supplied; 98.2126 h of shelf life left on arrival, 74.2126 h to spare, earns ₹6.63/kg. Loading priority #199."
   },
   {
     "shipment_id": "S0200",
@@ -47364,7 +47364,7 @@
       "slack_delta_h": -4.210396104220763
     },
     "discount": null,
-    "text": "Sent to D7, not D3: D3 demand is already covered; usable life 1241.97 h at arrival, slack 1193.97 h, margin \u20b92.12/kg. Dispatch priority #200."
+    "text": "Sent to D7, not D3: D3 is already fully supplied; 1241.97 h of shelf life left on arrival, 1193.97 h to spare, earns ₹2.12/kg. Loading priority #200."
   },
   {
     "shipment_id": "S0201",
@@ -47603,7 +47603,7 @@
       "slack_delta_h": -1.2759999999999962
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 112.078 h at arrival, slack 88.078 h, margin \u20b911.01/kg. Dispatch priority #201."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 112.078 h of shelf life left on arrival, 88.078 h to spare, earns ₹11.01/kg. Loading priority #201."
   },
   {
     "shipment_id": "S0202",
@@ -47842,7 +47842,7 @@
       "slack_delta_h": -1.1000000000000085
     },
     "discount": null,
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 112.254 h at arrival, slack 88.254 h, margin \u20b919.54/kg. Dispatch priority #202."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 112.254 h of shelf life left on arrival, 88.254 h to spare, earns ₹19.54/kg. Loading priority #202."
   },
   {
     "shipment_id": "S0203",
@@ -48068,7 +48068,7 @@
       "slack_delta_h": -1.9104905314382137
     },
     "discount": null,
-    "text": "Sent to D7, not D3: D3 demand is already covered; usable life 94.0239 h at arrival, slack 70.0239 h, margin \u20b96.63/kg. Dispatch priority #203."
+    "text": "Sent to D7, not D3: D3 is already fully supplied; 94.0239 h of shelf life left on arrival, 70.0239 h to spare, earns ₹6.63/kg. Loading priority #203."
   },
   {
     "shipment_id": "S0204",
@@ -48307,7 +48307,7 @@
       "slack_delta_h": 0.5283899247252464
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 149.928 h at arrival, slack 125.928 h, margin \u20b915.76/kg. Dispatch priority #204."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 149.928 h of shelf life left on arrival, 125.928 h to spare, earns ₹15.76/kg. Loading priority #204."
   },
   {
     "shipment_id": "S0205",
@@ -48533,7 +48533,7 @@
       "slack_delta_h": -4.210396104220763
     },
     "discount": null,
-    "text": "Sent to D7, not D3: D3 demand is already covered; usable life 954.57 h at arrival, slack 906.57 h, margin \u20b92.12/kg. Dispatch priority #205."
+    "text": "Sent to D7, not D3: D3 is already fully supplied; 954.57 h of shelf life left on arrival, 906.57 h to spare, earns ₹2.12/kg. Loading priority #205."
   },
   {
     "shipment_id": "S0206",
@@ -48772,7 +48772,7 @@
       "slack_delta_h": 0.5283899247252606
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 63.7818 h at arrival, slack 39.7818 h, margin \u20b915.76/kg. Dispatch priority #206."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 63.7818 h of shelf life left on arrival, 39.7818 h to spare, earns ₹15.76/kg. Loading priority #206."
   },
   {
     "shipment_id": "S0207",
@@ -48998,7 +48998,7 @@
       "slack_delta_h": -3.357059666646421
     },
     "discount": null,
-    "text": "Sent to D7, not D3: D3 demand is already covered; usable life 59.8964 h at arrival, slack 35.8964 h, margin \u20b98.64/kg. Dispatch priority #207."
+    "text": "Sent to D7, not D3: D3 is already fully supplied; 59.8964 h of shelf life left on arrival, 35.8964 h to spare, earns ₹8.64/kg. Loading priority #207."
   },
   {
     "shipment_id": "S0208",
@@ -49224,7 +49224,7 @@
       "slack_delta_h": -3.357059666646421
     },
     "discount": null,
-    "text": "Sent to D7, not D3: D3 demand is already covered; usable life 95.3429 h at arrival, slack 71.3429 h, margin \u20b98.64/kg. Dispatch priority #208."
+    "text": "Sent to D7, not D3: D3 is already fully supplied; 95.3429 h of shelf life left on arrival, 71.3429 h to spare, earns ₹8.64/kg. Loading priority #208."
   },
   {
     "shipment_id": "S0209",
@@ -49463,7 +49463,7 @@
       "slack_delta_h": -1.2759999999999962
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 110.541 h at arrival, slack 86.5414 h, margin \u20b911.01/kg. Dispatch priority #209."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 110.541 h of shelf life left on arrival, 86.5414 h to spare, earns ₹11.01/kg. Loading priority #209."
   },
   {
     "shipment_id": "S0210",
@@ -49689,7 +49689,7 @@
       "slack_delta_h": -3.357059666646421
     },
     "discount": null,
-    "text": "Sent to D7, not D3: D3 demand is already covered; usable life 109.703 h at arrival, slack 85.7029 h, margin \u20b98.64/kg. Dispatch priority #210."
+    "text": "Sent to D7, not D3: D3 is already fully supplied; 109.703 h of shelf life left on arrival, 85.7029 h to spare, earns ₹8.64/kg. Loading priority #210."
   },
   {
     "shipment_id": "S0211",
@@ -49933,7 +49933,7 @@
       "tier_pct": 40.0,
       "capped_by": "max_discount"
     },
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 15.4317 h at arrival, slack 3.43175 h, margin \u20b923.53/kg. Dispatch priority #211. 40.0 % off from day 2: unsold-risk 0.00 -> tier 40.0 %, capped by max_discount."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 15.4317 h of shelf life left on arrival, 3.43175 h to spare, earns ₹23.53/kg. Loading priority #211. Price cut: 40.0 % off from day 2 (risk of not selling 0.00), limited by max_discount."
   },
   {
     "shipment_id": "S0212",
@@ -50172,7 +50172,7 @@
       "slack_delta_h": -0.934881201316216
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 792.246 h at arrival, slack 744.246 h, margin \u20b99.68/kg. Dispatch priority #212."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 792.246 h of shelf life left on arrival, 744.246 h to spare, earns ₹9.68/kg. Loading priority #212."
   },
   {
     "shipment_id": "S0213",
@@ -50398,7 +50398,7 @@
       "slack_delta_h": -4.210396104220763
     },
     "discount": null,
-    "text": "Sent to D7, not D3: D3 demand is already covered; usable life 788.971 h at arrival, slack 740.971 h, margin \u20b94.15/kg. Dispatch priority #213."
+    "text": "Sent to D7, not D3: D3 is already fully supplied; 788.971 h of shelf life left on arrival, 740.971 h to spare, earns ₹4.15/kg. Loading priority #213."
   },
   {
     "shipment_id": "S0214",
@@ -50624,7 +50624,7 @@
       "slack_delta_h": -1.910490531438228
     },
     "discount": null,
-    "text": "Sent to D7, not D3: D3 demand is already covered; usable life 125.994 h at arrival, slack 101.994 h, margin \u20b96.63/kg. Dispatch priority #214."
+    "text": "Sent to D7, not D3: D3 is already fully supplied; 125.994 h of shelf life left on arrival, 101.994 h to spare, earns ₹6.63/kg. Loading priority #214."
   },
   {
     "shipment_id": "S0215",
@@ -50850,7 +50850,7 @@
       "slack_delta_h": -3.357059666646421
     },
     "discount": null,
-    "text": "Sent to D7, not D3: D3 demand is already covered; usable life 102.463 h at arrival, slack 78.4629 h, margin \u20b98.64/kg. Dispatch priority #215."
+    "text": "Sent to D7, not D3: D3 is already fully supplied; 102.463 h of shelf life left on arrival, 78.4629 h to spare, earns ₹8.64/kg. Loading priority #215."
   },
   {
     "shipment_id": "S0216",
@@ -51089,7 +51089,7 @@
       "slack_delta_h": 1.8877745139853062
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 40.3079 h at arrival, slack 16.3079 h, margin \u20b948.17/kg. Dispatch priority #216."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 40.3079 h of shelf life left on arrival, 16.3079 h to spare, earns ₹48.17/kg. Loading priority #216."
   },
   {
     "shipment_id": "S0217",
@@ -51328,7 +51328,7 @@
       "slack_delta_h": -1.4499999999999886
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 109.573 h at arrival, slack 85.5731 h, margin \u20b99.01/kg. Dispatch priority #217."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 109.573 h of shelf life left on arrival, 85.5731 h to spare, earns ₹9.01/kg. Loading priority #217."
   },
   {
     "shipment_id": "S0218",
@@ -51554,7 +51554,7 @@
       "slack_delta_h": -3.357059666646421
     },
     "discount": null,
-    "text": "Sent to D7, not D3: D3 demand is already covered; usable life 99.2229 h at arrival, slack 75.2229 h, margin \u20b98.64/kg. Dispatch priority #218."
+    "text": "Sent to D7, not D3: D3 is already fully supplied; 99.2229 h of shelf life left on arrival, 75.2229 h to spare, earns ₹8.64/kg. Loading priority #218."
   },
   {
     "shipment_id": "S0219",
@@ -51793,7 +51793,7 @@
       "slack_delta_h": -25.261013998964685
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 60.7034 h at arrival, slack 36.7034 h, margin \u20b914.24/kg. Dispatch priority #219."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 60.7034 h of shelf life left on arrival, 36.7034 h to spare, earns ₹14.24/kg. Loading priority #219."
   },
   {
     "shipment_id": "S0220",
@@ -52019,7 +52019,7 @@
       "slack_delta_h": -3.3570596666464496
     },
     "discount": null,
-    "text": "Sent to D7, not D3: D3 demand is already covered; usable life 128.826 h at arrival, slack 104.826 h, margin \u20b98.64/kg. Dispatch priority #220."
+    "text": "Sent to D7, not D3: D3 is already fully supplied; 128.826 h of shelf life left on arrival, 104.826 h to spare, earns ₹8.64/kg. Loading priority #220."
   },
   {
     "shipment_id": "S0221",
@@ -52245,7 +52245,7 @@
       "slack_delta_h": -4.210396104220763
     },
     "discount": null,
-    "text": "Sent to D7, not D3: D3 demand is already covered; usable life 1074.2 h at arrival, slack 1026.2 h, margin \u20b94.15/kg. Dispatch priority #221."
+    "text": "Sent to D7, not D3: D3 is already fully supplied; 1074.2 h of shelf life left on arrival, 1026.2 h to spare, earns ₹4.15/kg. Loading priority #221."
   },
   {
     "shipment_id": "S0222",
@@ -52471,7 +52471,7 @@
       "slack_delta_h": -4.210396104220763
     },
     "discount": null,
-    "text": "Sent to D7, not D3: D3 demand is already covered; usable life 1239.1 h at arrival, slack 1191.1 h, margin \u20b92.12/kg. Dispatch priority #222."
+    "text": "Sent to D7, not D3: D3 is already fully supplied; 1239.1 h of shelf life left on arrival, 1191.1 h to spare, earns ₹2.12/kg. Loading priority #222."
   },
   {
     "shipment_id": "S0223",
@@ -52697,7 +52697,7 @@
       "slack_delta_h": -1.2083003055060573
     },
     "discount": null,
-    "text": "Sent to D7, not D3: D3 demand is already covered; usable life 106.219 h at arrival, slack 82.2191 h, margin \u20b930.50/kg. Dispatch priority #223."
+    "text": "Sent to D7, not D3: D3 is already fully supplied; 106.219 h of shelf life left on arrival, 82.2191 h to spare, earns ₹30.50/kg. Loading priority #223."
   },
   {
     "shipment_id": "S0224",
@@ -52936,7 +52936,7 @@
       "slack_delta_h": -1.4499999999999886
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 108.574 h at arrival, slack 84.5744 h, margin \u20b99.01/kg. Dispatch priority #224."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 108.574 h of shelf life left on arrival, 84.5744 h to spare, earns ₹9.01/kg. Loading priority #224."
   },
   {
     "shipment_id": "S0225",
@@ -53175,7 +53175,7 @@
       "slack_delta_h": 0.8869154486471302
     },
     "discount": null,
-    "text": "Sent to D4, not D3: D3 demand is already covered; usable life 110.911 h at arrival, slack 86.9113 h, margin \u20b91.75/kg. Dispatch priority #225."
+    "text": "Sent to D4, not D3: D3 is already fully supplied; 110.911 h of shelf life left on arrival, 86.9113 h to spare, earns ₹1.75/kg. Loading priority #225."
   },
   {
     "shipment_id": "S0226",
@@ -53414,7 +53414,7 @@
       "slack_delta_h": -46.865152561483825
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 55.9579 h at arrival, slack 31.9579 h, margin \u20b914.18/kg. Dispatch priority #226."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 55.9579 h of shelf life left on arrival, 31.9579 h to spare, earns ₹14.18/kg. Loading priority #226."
   },
   {
     "shipment_id": "S0227",
@@ -53653,7 +53653,7 @@
       "slack_delta_h": 0.8869154486471302
     },
     "discount": null,
-    "text": "Sent to D4, not D3: D3 demand is already covered; usable life 93.3 h at arrival, slack 69.3 h, margin \u20b91.75/kg. Dispatch priority #227."
+    "text": "Sent to D4, not D3: D3 is already fully supplied; 93.3 h of shelf life left on arrival, 69.3 h to spare, earns ₹1.75/kg. Loading priority #227."
   },
   {
     "shipment_id": "S0228",
@@ -53892,7 +53892,7 @@
       "slack_delta_h": -51.40319244411238
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 43.7299 h at arrival, slack 19.7299 h, margin \u20b99.01/kg. Dispatch priority #228."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 43.7299 h of shelf life left on arrival, 19.7299 h to spare, earns ₹9.01/kg. Loading priority #228."
   },
   {
     "shipment_id": "S0229",
@@ -54131,7 +54131,7 @@
       "slack_delta_h": -46.865152561483825
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 48.2679 h at arrival, slack 24.2679 h, margin \u20b914.18/kg. Dispatch priority #229."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 48.2679 h of shelf life left on arrival, 24.2679 h to spare, earns ₹14.18/kg. Loading priority #229."
   },
   {
     "shipment_id": "S0230",
@@ -54370,7 +54370,7 @@
       "slack_delta_h": -44.74487400035382
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b917.45/kg); usable life 49.1382 h at arrival, slack 25.1382 h, margin \u20b918.02/kg. Dispatch priority #230."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹17.45/kg); 49.1382 h of shelf life left on arrival, 25.1382 h to spare, earns ₹18.02/kg. Loading priority #230."
   },
   {
     "shipment_id": "S0231",
@@ -54609,7 +54609,7 @@
       "slack_delta_h": -51.203192444112375
     },
     "discount": null,
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 43.9299 h at arrival, slack 19.9299 h, margin \u20b916.26/kg. Dispatch priority #231."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 43.9299 h of shelf life left on arrival, 19.9299 h to spare, earns ₹16.26/kg. Loading priority #231."
   },
   {
     "shipment_id": "S0232",
@@ -54848,7 +54848,7 @@
       "slack_delta_h": 2.751036111257484
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 65.2011 h at arrival, slack 41.2011 h, margin \u20b932.53/kg. Dispatch priority #232."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 65.2011 h of shelf life left on arrival, 41.2011 h to spare, earns ₹32.53/kg. Loading priority #232."
   },
   {
     "shipment_id": "S0233",
@@ -55087,7 +55087,7 @@
       "slack_delta_h": 1.8877745139853133
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 64.3379 h at arrival, slack 40.3379 h, margin \u20b948.17/kg. Dispatch priority #233."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 64.3379 h of shelf life left on arrival, 40.3379 h to spare, earns ₹48.17/kg. Loading priority #233."
   },
   {
     "shipment_id": "S0234",
@@ -55326,7 +55326,7 @@
       "slack_delta_h": -0.9170605214488319
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 95.0711 h at arrival, slack 71.0711 h, margin \u20b932.68/kg. Dispatch priority #234."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 95.0711 h of shelf life left on arrival, 71.0711 h to spare, earns ₹32.68/kg. Loading priority #234."
   },
   {
     "shipment_id": "S0235",
@@ -55565,7 +55565,7 @@
       "slack_delta_h": -0.17415435398964974
     },
     "discount": null,
-    "text": "Sent to D4, not D3: D3 demand is already covered; usable life 95.814 h at arrival, slack 71.814 h, margin \u20b912.41/kg. Dispatch priority #235."
+    "text": "Sent to D4, not D3: D3 is already fully supplied; 95.814 h of shelf life left on arrival, 71.814 h to spare, earns ₹12.41/kg. Loading priority #235."
   },
   {
     "shipment_id": "S0236",
@@ -55804,7 +55804,7 @@
       "slack_delta_h": 0.10265142713873843
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 96.0908 h at arrival, slack 72.0908 h, margin \u20b945.68/kg. Dispatch priority #236."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 96.0908 h of shelf life left on arrival, 72.0908 h to spare, earns ₹45.68/kg. Loading priority #236."
   },
   {
     "shipment_id": "S0237",
@@ -56043,7 +56043,7 @@
       "slack_delta_h": 1.0678109645323275
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 1247.07 h at arrival, slack 1199.07 h, margin \u20b97.58/kg. Dispatch priority #237."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 1247.07 h of shelf life left on arrival, 1199.07 h to spare, earns ₹7.58/kg. Loading priority #237."
   },
   {
     "shipment_id": "S0238",
@@ -56282,7 +56282,7 @@
       "slack_delta_h": 0.10265142713873843
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 83.1908 h at arrival, slack 59.1908 h, margin \u20b945.68/kg. Dispatch priority #238."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 83.1908 h of shelf life left on arrival, 59.1908 h to spare, earns ₹45.68/kg. Loading priority #238."
   },
   {
     "shipment_id": "S0239",
@@ -56521,7 +56521,7 @@
       "slack_delta_h": 1.0678109645323275
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 1233.21 h at arrival, slack 1185.21 h, margin \u20b910.88/kg. Dispatch priority #239."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 1233.21 h of shelf life left on arrival, 1185.21 h to spare, earns ₹10.88/kg. Loading priority #239."
   },
   {
     "shipment_id": "S0240",
@@ -56760,7 +56760,7 @@
       "slack_delta_h": 1.0678109645323275
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 1151.11 h at arrival, slack 1103.11 h, margin \u20b97.58/kg. Dispatch priority #240."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 1151.11 h of shelf life left on arrival, 1103.11 h to spare, earns ₹7.58/kg. Loading priority #240."
   },
   {
     "shipment_id": "S0241",
@@ -56999,7 +56999,7 @@
       "slack_delta_h": -0.5438421325900435
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 1149.5 h at arrival, slack 1101.5 h, margin \u20b97.69/kg. Dispatch priority #241."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 1149.5 h of shelf life left on arrival, 1101.5 h to spare, earns ₹7.69/kg. Loading priority #241."
   },
   {
     "shipment_id": "S0242",
@@ -57238,7 +57238,7 @@
       "slack_delta_h": 0.6305711696550134
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b98.70/kg); usable life 1150.05 h at arrival, slack 1102.05 h, margin \u20b99.90/kg. Dispatch priority #242."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹8.70/kg); 1150.05 h of shelf life left on arrival, 1102.05 h to spare, earns ₹9.90/kg. Loading priority #242."
   },
   {
     "shipment_id": "S0243",
@@ -57477,7 +57477,7 @@
       "slack_delta_h": -0.5438421325900435
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 740.059 h at arrival, slack 692.059 h, margin \u20b910.99/kg. Dispatch priority #243."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 740.059 h of shelf life left on arrival, 692.059 h to spare, earns ₹10.99/kg. Loading priority #243."
   },
   {
     "shipment_id": "S0244",
@@ -57716,7 +57716,7 @@
       "slack_delta_h": -0.5438421325900435
     },
     "discount": null,
-    "text": "Sent to D2, not D3: D3 demand is already covered; usable life 1087.33 h at arrival, slack 1039.33 h, margin \u20b910.99/kg. Dispatch priority #244."
+    "text": "Sent to D2, not D3: D3 is already fully supplied; 1087.33 h of shelf life left on arrival, 1039.33 h to spare, earns ₹10.99/kg. Loading priority #244."
   },
   {
     "shipment_id": "S0245",
@@ -57955,7 +57955,7 @@
       "slack_delta_h": 0.6305711696550134
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b912.56/kg); usable life 1087.87 h at arrival, slack 1039.87 h, margin \u20b914.15/kg. Dispatch priority #245."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹12.56/kg); 1087.87 h of shelf life left on arrival, 1039.87 h to spare, earns ₹14.15/kg. Loading priority #245."
   },
   {
     "shipment_id": "S0246",
@@ -58194,7 +58194,7 @@
       "slack_delta_h": -0.7781516561699391
     },
     "discount": null,
-    "text": "Sent to D1, not D3: D3 demand is already covered; usable life 796.262 h at arrival, slack 748.262 h, margin \u20b94.55/kg. Dispatch priority #246."
+    "text": "Sent to D1, not D3: D3 is already fully supplied; 796.262 h of shelf life left on arrival, 748.262 h to spare, earns ₹4.55/kg. Loading priority #246."
   },
   {
     "shipment_id": "S0247",
@@ -58433,7 +58433,7 @@
       "slack_delta_h": 2.3875813010540696
     },
     "discount": null,
-    "text": "Sent to D3, not D8: D8 earns a lower margin (\u20b98.65/kg); usable life 798.757 h at arrival, slack 750.757 h, margin \u20b99.74/kg. Dispatch priority #247."
+    "text": "Sent to D3, not D8: D8 earns less per kg (₹8.65/kg); 798.757 h of shelf life left on arrival, 750.757 h to spare, earns ₹9.74/kg. Loading priority #247."
   },
   {
     "shipment_id": "S0248",
@@ -58672,7 +58672,7 @@
       "slack_delta_h": -0.6708203932498691
     },
     "discount": null,
-    "text": "Sent to D8, not D3: D3 demand is already covered; usable life 796.37 h at arrival, slack 748.37 h, margin \u20b98.65/kg. Dispatch priority #248."
+    "text": "Sent to D8, not D3: D3 is already fully supplied; 796.37 h of shelf life left on arrival, 748.37 h to spare, earns ₹8.65/kg. Loading priority #248."
   },
   {
     "shipment_id": "S0249",
@@ -58911,7 +58911,7 @@
       "slack_delta_h": 0.5811631101416168
     },
     "discount": null,
-    "text": "Sent to D6, not D3: D3 demand is already covered; usable life 89.8815 h at arrival, slack 65.8815 h, margin \u20b945.82/kg. Dispatch priority #249."
+    "text": "Sent to D6, not D3: D3 is already fully supplied; 89.8815 h of shelf life left on arrival, 65.8815 h to spare, earns ₹45.82/kg. Loading priority #249."
   },
   {
     "shipment_id": "S0250",
@@ -59137,6 +59137,6 @@
       "slack_delta_h": -1.2083003055060573
     },
     "discount": null,
-    "text": "Sent to D7, not D3: D3 demand is already covered; usable life 88.092 h at arrival, slack 64.092 h, margin \u20b930.50/kg. Dispatch priority #250."
+    "text": "Sent to D7, not D3: D3 is already fully supplied; 88.092 h of shelf life left on arrival, 64.092 h to spare, earns ₹30.50/kg. Loading priority #250."
   }
 ]

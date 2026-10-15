@@ -22,12 +22,13 @@ _ARC_REASON = {"SHELF_LIFE": "SHELF_LIFE", "WINDOW": "WINDOW", "BEYOND_HORIZON":
 
 # reason_code -> phrase about the runner-up `a` (an alternatives[] entry)
 _PHRASES = {
-    "SHELF_LIFE": lambda a: (f"{a['dest_id']} arrival leaves {_n(a['usable_life_at_arrival_h'])} h"
-                             " of life, below the sell window"),
-    "WINDOW": lambda a: f"{a['dest_id']} arrival misses its receiving window",
-    "CAPACITY_BOUND": lambda a: f"no vehicle or receiving capacity left for {a['dest_id']}",
-    "DEMAND_CAP": lambda a: f"{a['dest_id']} demand is already covered",
-    "LOWER_MARGIN": lambda a: (f"{a['dest_id']} earns a lower margin "
+    "SHELF_LIFE": lambda a: (f"it would reach {a['dest_id']} with only "
+                             f"{_n(a['usable_life_at_arrival_h'])} h of shelf life left, "
+                             "too little to sell"),
+    "WINDOW": lambda a: f"it would arrive at {a['dest_id']} outside its receiving hours",
+    "CAPACITY_BOUND": lambda a: f"no truck or unloading space is left for {a['dest_id']}",
+    "DEMAND_CAP": lambda a: f"{a['dest_id']} is already fully supplied",
+    "LOWER_MARGIN": lambda a: (f"{a['dest_id']} earns less per kg "
                                f"(₹{a['margin_inr_kg']:.2f}/kg)"),
 }
 
@@ -49,14 +50,14 @@ def render_text(card: dict) -> str:
     if alts:
         a = alts[0]
         head += f", not {a['dest_id']}: {_PHRASES[a['reason_code']](a)}"
-    text = (f"{head}; usable life {_n(c['usable_life_at_arrival_h'])} h at arrival, "
-            f"slack {_n(c['slack_h'])} h, margin ₹{c['margin_inr_kg']:.2f}/kg. "
-            f"Dispatch priority #{card['priority']['rank']}.")
+    text = (f"{head}; {_n(c['usable_life_at_arrival_h'])} h of shelf life left on arrival, "
+            f"{_n(c['slack_h'])} h to spare, earns ₹{c['margin_inr_kg']:.2f}/kg. "
+            f"Loading priority #{card['priority']['rank']}.")
     d = card.get("discount")
     if d is not None:
-        text += (f" {d['tier_pct']} % off from day {d['day']}: unsold-risk {d['risk']:.2f}"
-                 f" -> tier {d['tier_pct']} %")
-        text += f", capped by {d['capped_by']}." if d.get("capped_by", "none") != "none" else "."
+        text += (f" Price cut: {d['tier_pct']} % off from day {d['day']} "
+                 f"(risk of not selling {d['risk']:.2f})")
+        text += f", limited by {d['capped_by']}." if d.get("capped_by", "none") != "none" else "."
     return text
 
 

@@ -36,7 +36,7 @@ def _guard(text: str, *sources, extra=()) -> None:
 
 def test_every_number_comes_from_the_json():
     text = template_narration(DIFF, METRICS)
-    assert "+1 more" in text and "Replanned in 3.4 s" in text
+    assert "+1 more" in text and "Re-planned in 3.4 s" in text
     _guard(text, DIFF, METRICS, extra=[len(DIFF["moved_batches"]), 1, 3])
 
 

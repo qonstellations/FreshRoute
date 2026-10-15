@@ -20,25 +20,26 @@ def template_narration(diff: dict, metrics: dict) -> str:
     moved = diff.get("moved_batches") or []
     changes = diff.get("discount_changes") or []
     out = [f"Event {diff['event_id']} at hour {diff['at_h']:g}: "
-           f"{diff.get('frozen_shipments', 0)} shipments already dispatched stay frozen."]
+           f"{diff.get('frozen_shipments', 0)} shipments were already on the road "
+           "and stay as planned."]
     if moved:
         lines = "; ".join(_describe_move(m) for m in moved[:_SHOW_MOVES])
         more = f"; +{len(moved) - _SHOW_MOVES} more" if len(moved) > _SHOW_MOVES else ""
-        out.append(f"Replan moved {len(moved)} batches: {lines}{more}.")
+        out.append(f"Re-plan moved {len(moved)} batches: {lines}{more}.")
     else:
-        out.append("Replan kept every batch on its destination.")
+        out.append("Re-plan kept every batch on its destination.")
     if changes:
         c = changes[0]
-        out.append(f"Markdowns changed: {len(changes)}, e.g. lot {c['lot_id']} day {c['day']} "
+        out.append(f"Price cuts changed: {len(changes)}, e.g. lot {c['lot_id']} day {c['day']} "
                    f"{c['from_pct']}% -> {c['to_pct']}%.")
     d = diff.get("delta_kpis") or {}
     if d:
-        out.append(f"Versus keeping the old plan: net {d['net_inr']:+,.0f} INR, "
+        out.append(f"Compared with keeping the old plan: profit {d['net_inr']:+,.0f} INR, "
                    f"spoilage {d['spoilage_kg']:+,.0f} kg, "
-                   f"fulfillment {d['demand_fulfillment_pct']:+.1f} pp.")
+                   f"orders filled {d['demand_fulfillment_pct']:+.1f} points.")
     if "solve_seconds" in diff:
-        out.append(f"Replanned in {diff['solve_seconds']:.1f} s.")
+        out.append(f"Re-planned in {diff['solve_seconds']:.1f} s.")
     k = metrics["kpis"]
-    out.append(f"Run {metrics['run_id']}: net {k['net_inr']:,.0f} INR, "
+    out.append(f"Run {metrics['run_id']}: profit {k['net_inr']:,.0f} INR, "
                f"spoilage {k['spoilage_kg']:,.0f} kg.")
     return " ".join(out)

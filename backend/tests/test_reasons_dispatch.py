@@ -25,10 +25,10 @@ CARD = {  # DATABASE.md 5.9 example
 
 def test_render_text_example_card():
     t = render_text(CARD)
-    assert t.startswith("Sent to PUNE, not DELHI: DELHI arrival leaves 9 h of life")
-    assert "usable life 41 h at arrival, slack 17 h" in t
+    assert t.startswith("Sent to PUNE, not DELHI: it would reach DELHI with only 9 h of shelf")
+    assert "41 h of shelf life left on arrival, 17 h to spare" in t
     assert "priority #3" in t
-    assert "20 % off from day 2: unsold-risk 0.38" in t
+    assert "20 % off from day 2 (risk of not selling 0.38)" in t
 
 
 def test_render_text_other_codes_and_no_discount():
@@ -37,7 +37,7 @@ def test_render_text_other_codes_and_no_discount():
                 "alternatives": [{**CARD["alternatives"][0], "reason_code": code}]}
         t = render_text(card)
         assert "DELHI" in t and "off from day" not in t
-    assert render_text({**CARD, "alternatives": []}).startswith("Sent to PUNE; usable life")
+    assert render_text({**CARD, "alternatives": []}).startswith("Sent to PUNE; ")
 
 
 def test_dispatch_sheet_on_fixture():
@@ -53,7 +53,7 @@ def test_dispatch_sheet_on_fixture():
     blocks = text.strip().split("\n\n")
     assert len(blocks) == r.trips.trip_id.nunique()
     pat = (r"Vehicle \S+ \| Trip \S+ \| Depart \d\d:\d\d \(day \d+\)\nTo: .+\n"
-           r"Load: .+ kg \(slack .+ h\)\nArrive by: day \d+ \d\d:\d\d")
+           r"Load: .+ kg \(.+ h to spare\)\nArrive by: day \d+ \d\d:\d\d")
     assert all(re.fullmatch(pat, b) for b in blocks)
 
     sc.tables["destinations"] = sc.tables["destinations"].drop(columns="name")

@@ -407,7 +407,7 @@ The simulator executes the plan; it does **not** enforce windows/capacities (tha
 ## 15. Explainability
 
 **Reason card** per shipment (`reason_cards.json`, fields in `DATABASE.md` §5.9). Rendered text pattern:
-> "Sent to **Pune**, not Delhi: Delhi arrival leaves 9 h of life, below the 24 h sell window; Pune leaves 41 h; margin ₹X/kg. Dispatch priority #3 (slack 17 h)."
+> "Sent to **Pune**, not Delhi: it would reach Delhi with only 9 h of shelf life left, too little to sell; 41 h of shelf life left on arrival, 17 h to spare, earns ₹X/kg. Loading priority #3."
 
 Reason codes for the runner-up: `SHELF_LIFE`, `WINDOW`, `CAPACITY_BOUND`, `DEMAND_CAP`, `LOWER_MARGIN`. **Discount card** (only for runs that carry discounts, i.e. `last_day_50`): "50 % off from day 2: last 24 h of usable life; still above salvage floor."
 
