@@ -1,9 +1,9 @@
 import {
-  ActionIcon, Alert, Badge, Button, Drawer, Group, NumberInput, Paper,
+  Alert, Badge, Button, Group, NumberInput, Paper,
   Select, Stack, Switch, Tabs, Text, ThemeIcon, Title, Tooltip
 } from '@mantine/core'
 import {
-  IconAdjustments, IconAlertTriangle, IconCpu, IconRoute, IconShieldCheck, IconTrendingUp, IconTruck
+  IconAlertTriangle, IconCpu, IconRoute, IconShieldCheck, IconTrendingUp, IconTruck
 } from '@tabler/icons-react'
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../api/client'
@@ -22,8 +22,6 @@ interface DashboardProps {
   onBackToOverview: () => void
 }
 
-const FIXTURE_RUN_ID = 'EXAMPLE-SYNTHETIC'
-
 export function Dashboard({ onBackToOverview }: DashboardProps) {
   const [scenarios, setScenarios] = useState<ScenarioInfo[]>([])
   const [runs, setRuns] = useState<RunsList>({ runs: [], fixture: false })
@@ -34,8 +32,6 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
   const [reload, setReload] = useState(0) // bumped per published plan: re-fetch the same run id
   const [activeTab, setActiveTab] = useState<string>('overview')
 
-  // Developer settings (tucked in drawer)
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const [scenario, setScenario] = useState('practice')
   const [policy, setPolicy] = useState('milp')
   const [seed, setSeed] = useState(42)
@@ -45,11 +41,8 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
     try {
       const r = await api.runs()
       setRuns(r)
-      // prefer the demo run (practice / milp), else the newest listing
-      const demo = r.runs.find(
-        (x) => x.scenario.split('/').pop() === 'practice' && x.policy === 'milp'
-      )
-      setRunId(select ?? demo?.run_id ?? r.runs[0]?.run_id ?? (r.fixture ? FIXTURE_RUN_ID : null))
+      // blank slate until the user runs the optimiser (or picks a saved run)
+      if (select) setRunId(select)
     } catch (e) {
       setError(`Could not load the saved results: ${e instanceof Error ? e.message : e}`)
     }
@@ -100,10 +93,8 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
               {scenarioName(scenario).toUpperCase()}
             </Title>
             <Text size="sm" c="dimmed" maw={720} mt={4}>
-              What you're looking at: a made-up but realistic produce hub near Bengaluru with 200 batches of fresh
-              produce, 8 markets and a 3-day plan. Results compares FreshRoute with simple rules. Today's plan shows
-              which crate goes on which truck. What if something breaks? lets you close a road and watch it re-plan.
-              Proof &amp; audit shows the independent check.
+              A made-up but realistic produce hub near Bengaluru: 200 batches of fresh produce, 8 markets, a 3-day
+              plan. Use the tabs below to see results, today's loading list, a re-plan after a disruption, and the independent check.
             </Text>
           </div>
 
@@ -121,19 +112,6 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
               onError={setError}
             />
 
-            {/* Subtle Advanced Settings Drawer trigger */}
-            <Tooltip label="Advanced settings: scenario, plan type, seed, saved results">
-              <ActionIcon
-                variant="default"
-                size="xl"
-                radius="xs"
-                onClick={() => setSettingsOpen(true)}
-                aria-label="Advanced settings"
-              >
-                <IconAdjustments size={20} stroke={1.8} />
-              </ActionIcon>
-            </Tooltip>
-
             {/* Back to the overview page */}
             <Tooltip label="Back to the overview page">
               <Button
@@ -147,6 +125,49 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
               </Button>
             </Tooltip>
           </Group>
+        </Group>
+
+        {/* Run settings, always visible: what the optimiser plans for. Defaults reproduce the demo run. */}
+        <Group gap="md" mt="md" align="flex-end" wrap="wrap">
+          <Select
+            label="Scenario"
+            size="xs"
+            w={300}
+            value={scenario}
+            onChange={(v) => v && setScenario(v)}
+            data={scenarios.map((s) => ({ value: s.name, label: `${scenarioName(s.name)} (${s.horizon_days} days)` }))}
+            allowDeselect={false}
+          />
+          <Select
+            label="How to plan"
+            size="xs"
+            w={240}
+            value={policy}
+            onChange={(v) => v && setPolicy(v)}
+            data={[
+              { value: 'milp', label: `${policyName('milp')} (recommended)` },
+              { value: 'fefo', label: policyName('fefo') },
+              { value: 'fifo', label: policyName('fifo') },
+              { value: 'last_day_50', label: policyName('last_day_50') },
+            ]}
+            allowDeselect={false}
+          />
+          <NumberInput
+            label={<Explain term="seed">Random seed</Explain>}
+            size="xs"
+            w={100}
+            value={seed}
+            onChange={(v) => setSeed(Number(v))}
+            allowDecimal={false}
+          />
+          <Switch
+            size="xs"
+            mb={6}
+            label={<Explain term="newsvendor">Ship more or less than forecast</Explain>}
+            checked={newsvendor}
+            onChange={(e) => setNewsvendor(e.currentTarget.checked)}
+          />
+          {runs.runs.length > 0 && <RunPicker runs={runs.runs} value={runId} onChange={setRunId} />}
         </Group>
 
         {live && (
@@ -250,75 +271,6 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
         )}
       </div>
 
-      {/* 4. SETTINGS DRAWER (TUCKED AWAY FOR ADVANCED CONTROL) */}
-      <Drawer
-        opened={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        title="Advanced settings"
-        position="right"
-        size="md"
-      >
-        <Stack gap="md">
-          <Text size="xs" c="dimmed">
-            Change what the optimiser plans for. The defaults run FreshRoute on the practice scenario, which is the
-            setup every result on this page uses.
-          </Text>
-
-          <Select
-            label="Scenario"
-            value={scenario}
-            onChange={(v) => v && setScenario(v)}
-            data={scenarios.map((s) => ({ value: s.name, label: `${scenarioName(s.name)} (${s.horizon_days} days)` }))}
-            allowDeselect={false}
-          />
-
-          <Select
-            label="How to plan"
-            value={policy}
-            onChange={(v) => v && setPolicy(v)}
-            data={[
-              { value: 'milp', label: `${policyName('milp')} (recommended)` },
-              { value: 'fefo', label: policyName('fefo') },
-              { value: 'fifo', label: policyName('fifo') },
-              { value: 'last_day_50', label: policyName('last_day_50') },
-            ]}
-            allowDeselect={false}
-          />
-
-          <NumberInput
-            label={<Explain term="seed">Random seed</Explain>}
-            description="Same seed, same result, every time"
-            value={seed}
-            onChange={(v) => setSeed(Number(v))}
-            allowDecimal={false}
-          />
-
-          <Switch
-            label={<Explain term="newsvendor">Ship more or less than forecast (newsvendor)</Explain>}
-            description="Aims a little above or below expected demand, whichever loses less money"
-            checked={newsvendor}
-            onChange={(e) => setNewsvendor(e.currentTarget.checked)}
-          />
-
-          <div style={{ marginTop: 16 }}>
-            <Text size="xs" fw={700} mb="xs">
-              SAVED RESULTS
-            </Text>
-            <RunPicker runs={runs.runs} value={runId} onChange={setRunId} />
-          </div>
-
-          <Button
-            mt="lg"
-            variant="light"
-            color="green"
-            onClick={() => {
-              setSettingsOpen(false)
-            }}
-          >
-            Save and close
-          </Button>
-        </Stack>
-      </Drawer>
     </div>
   )
 }

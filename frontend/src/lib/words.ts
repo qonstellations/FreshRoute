@@ -53,9 +53,21 @@ export const ruleText = named({
   DEMAND_CAP_EXCEEDED: 'Sends more than the market is expected to buy (warning only)',
 })
 
-export const scenarioName = (s: string) =>
-  ({ practice: 'Practice scenario · 200 batches · 8 markets · 8 trucks' } as Record<string, string>)[s.split(/[\\/]/).pop() ?? s]
-  ?? s.split(/[\\/]/).pop() ?? s
+// Same pattern for every scenario: "<what it is> · <what it tests>". Counts only where docs/DATABASE.md states them.
+export const scenarioName = named({
+  practice: 'Practice scenario · 200 batches · 8 markets',
+  small: 'Small scenario · quick test run',
+  hidden_small: 'Held-out set · small',
+  hidden_practice: 'Held-out set · practice size',
+  hidden_3x: 'Held-out set · 3× bigger',
+  hidden_10x: 'Held-out set · 10× bigger',
+  hidden_edge: 'Held-out set · odd cases (already-expired batch, idle truck)',
+  hidden_ev_delay: 'Held-out set · delivery delay',
+  hidden_ev_capacity: 'Held-out set · truck capacity change',
+  hidden_ev_demand: 'Held-out set · demand change',
+  hidden_ev_order: 'Held-out set · new order arrives',
+  hidden_ev_price: 'Held-out set · market price change',
+})
 
 /** Short explanations shown in <Explain> hover notes. Adapted from docs/GLOSSARY.md. */
 /** Where the spoiled food went (Metrics.spoilage_breakdown_kg keys): label, plain explanation, bar colour. */

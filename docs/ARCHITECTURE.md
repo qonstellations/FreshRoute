@@ -160,7 +160,7 @@ freshroute/
 | `adapters/` | Empty package; the organizer-format adapter (`adapters/organizer.py`) is planned |
 | `engine/dispatch_sheet.py`, `engine/narrator.py` | Dispatch sheet, narration (template first, LLM optional) |
 | `api/` (FastAPI) | HTTP surface over `outputs/` and the run queue; never a KPI (§16, D-18, D-21) |
-| `frontend/` (React) | Landing page plus dashboard tabs Results, Today's plan, What if something breaks?, Proof & audit (§16, D-19, D-32) |
+| `frontend/` (React) | Landing page (incl. "Who it's for" segments from the PS commercial model) plus dashboard tabs Results, Today's plan, What if something breaks?, Proof & audit (§16, D-19, D-32) |
 
 Key function contracts (names are the contract; internals are free):
 
@@ -428,7 +428,7 @@ Reason codes for the runner-up: `SHELF_LIFE`, `WINDOW`, `CAPACITY_BOUND`, `DEMAN
 
 ## 16. Dashboard (`frontend/`, React SPA over `backend/src/freshroute/api/`)
 
-Components are Mantine 9; GSAP 3.12.5 ScrollTrigger drives the landing page's scroll choreography (hero intro/parallax, section reveals, marquee, anchor nav) and motion springs animate the reason-card drawer, KPI count-ups, table rows and the replan diff (D-24, amended by D-27). Recharts draws the charts; the route map is an offline SVG. Every animation respects `prefers-reduced-motion` (static page fallback). The app has two parts switched by URL hash (D-32): `pages/LandingPage.tsx` (narrative) and `pages/Dashboard.tsx` (four tabs, content in `tabs/`). Labels are plain language; uncommon terms carry a hover note (`components/Explain.tsx`), and all display wording (policy names, rule names, term notes) lives in `lib/words.ts`, which holds words only, never numbers. Method, seed, newsvendor and saved runs live under "Advanced settings".
+Components are Mantine 9; GSAP 3.12.5 ScrollTrigger drives the landing page's scroll choreography (hero intro/parallax, section reveals, marquee, anchor nav) and motion springs animate the reason-card drawer, KPI count-ups, table rows and the replan diff (D-24, amended by D-27). Recharts draws the charts; the route map is an offline SVG. Every animation respects `prefers-reduced-motion` (static page fallback). The app has two parts switched by URL hash (D-32): `pages/LandingPage.tsx` (narrative) and `pages/Dashboard.tsx` (four tabs, content in `tabs/`). Labels are plain language; uncommon terms carry a hover note (`components/Explain.tsx`), and all display wording (policy names, rule names, term notes) lives in `lib/words.ts`, which holds words only, never numbers. Scenario, method, seed, newsvendor and saved runs are inline controls in the dashboard header bar, next to "Run the optimiser".
 
 | Part | Contents |
 |---|---|
