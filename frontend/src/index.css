@@ -1,4 +1,5 @@
-:root {
+:root,
+[data-mantine-color-scheme=light] {
   --bg: #fef0d5; --panel: #fdf6e6; --text: #174229; --muted: #3d684f; --border: #1f7a4d4d;
   --accent: #1f7a4d; --good: #1a6b3f; --bad: #a8201a;
   --warn-bg: #fff7e6; --info-bg: #e6f7ff; --error-bg: #fff1f0;

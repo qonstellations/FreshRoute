@@ -1,5 +1,5 @@
 import {
-  ActionIcon, AppShell, Group, Text, Tooltip, useMantineColorScheme
+  ActionIcon, AppShell, Group, Text, Tooltip, useComputedColorScheme, useMantineColorScheme
 } from '@mantine/core'
 import {
   IconArrowLeft, IconArrowRight, IconLeaf, IconMoon, IconSun
@@ -22,24 +22,9 @@ export default function App() {
     return window.location.hash.includes('dashboard') ? 'dashboard' : 'landing'
   })
 
-  const [dark, setDark] = useState(() => {
-    try {
-      return localStorage.getItem('fr-theme') === 'dark'
-    } catch {
-      return false
-    }
-  })
-
   const { setColorScheme } = useMantineColorScheme()
-
-  useEffect(() => {
-    setColorScheme(dark ? 'dark' : 'light')
-    try {
-      localStorage.setItem('fr-theme', dark ? 'dark' : 'light')
-    } catch {
-      /* private browsing */
-    }
-  }, [dark, setColorScheme])
+  const computedColorScheme = useComputedColorScheme('light', { getInitialValueInEffect: true })
+  const dark = computedColorScheme === 'dark'
 
   useEffect(() => {
     const onHashChange = () => {
@@ -137,7 +122,7 @@ export default function App() {
                   variant="subtle"
                   size="lg"
                   aria-label="Toggle theme"
-                  onClick={() => setDark((v) => !v)}
+                  onClick={() => setColorScheme(dark ? 'light' : 'dark')}
                   data-cursor="THEME"
                 >
                   {dark ? <IconSun size={20} /> : <IconMoon size={20} />}
