@@ -32,6 +32,8 @@ The frontend has two parts, switched by URL hash (D-32): a narrative **landing p
 3. **What if something breaks?**: click a road on the map (or close one from the list) to re-plan around it, or pick an event and press "Re-plan now"; then the replan diff, the stress test and the sensitivity table.
 4. **Proof & audit**: `run_manifest.json` ("Reproduce this exact result"), every `config.py` constant, and the assumptions.
 
+After "Run the optimiser" finishes, the engine also rewrites the ladder and waterfall for that scenario and seed (A-55), so the cards, the ladder table and the waterfall on Results always show the same run.
+
 The landing page's numbers are not typed in: it reads them from `GET /api/ladder` and `GET /api/stress` for the demo run (`practice`, seed 42) and shows dashes if that run is not on disk. Labels are plain language; an uncommon term has a dotted underline and a hover note (`components/Explain.tsx`), and all wording lives in `lib/words.ts` (words only, no numbers).
 
 A synthetic-data banner is driven by `scenario.json → source` and is shown whenever the data is synthetic (Rule 7).

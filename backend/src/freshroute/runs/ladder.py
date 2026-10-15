@@ -39,11 +39,24 @@ def run_ladder(scenario: str, seed: int, out: str | None = None,
     `newsvendor` adds an `ablation` entry: PLAN re-run with --newsvendor (section 14.3)."""
     root = Path(out) if out else Path("outputs")
     name = load_scenario(scenario).name
-    metrics = {}
     for pol in LADDER + EXTRAS:
-        run_dir = run(scenario, pol, seed, str(root / naming.run_id(name, pol, seed)))
-        metrics[pol] = json.loads((run_dir / "metrics.json").read_text(encoding="utf-8"))
+        run(scenario, pol, seed, str(root / naming.run_id(name, pol, seed)))
+    ablation = None
+    if newsvendor:  # flag off: ladder.json unchanged (AGENTS.md rule 9)
+        nv_id = naming.run_id(name, PLAN, seed, True)
+        run(scenario, PLAN, seed, str(root / nv_id), newsvendor=True)
+        ablation = nv_id
+    return write_ladder(root, name, seed, ablation)
 
+
+def _metrics(d: Path) -> dict:
+    return json.loads((d / "metrics.json").read_text(encoding="utf-8"))
+
+
+def write_ladder(root: Path, name: str, seed: int, ablation: str | None = None) -> Path:
+    """(Re)write ladder.json + waterfall.json from the run directories now under `root`, so the
+    ladder always shows the latest run of each policy (A-55). `ablation` = newsvendor run id."""
+    metrics = {p: _metrics(root / naming.run_id(name, p, seed)) for p in LADDER + EXTRAS}
     out_dir = root / naming.run_id(name, "ladder", seed)
     out_dir.mkdir(parents=True, exist_ok=True)
     ladder = {
@@ -52,19 +65,31 @@ def run_ladder(scenario: str, seed: int, out: str | None = None,
         "ladder": [{"policy": p, "kpis": metrics[p]["kpis"]} for p in LADDER],
         "extras": [{"policy": p, "kpis": metrics[p]["kpis"]} for p in EXTRAS],
     }
-    if newsvendor:  # flag off: ladder.json unchanged (AGENTS.md rule 9)
-        nv_id = naming.run_id(name, PLAN, seed, True)
-        k = json.loads((run(scenario, PLAN, seed, str(root / nv_id), newsvendor=True)
-                        / "metrics.json").read_text(encoding="utf-8"))["kpis"]
-        ref = metrics[PLAN]["kpis"]
+    if ablation and (root / ablation / "metrics.json").is_file():
+        k, ref = _metrics(root / ablation)["kpis"], metrics[PLAN]["kpis"]
         ladder["ablation"] = [{
-            "policy": PLAN, "flags": {"newsvendor": True}, "run_id": nv_id, "vs": PLAN,
+            "policy": PLAN, "flags": {"newsvendor": True}, "run_id": ablation, "vs": PLAN,
             "kpis": k, "delta": {key: k[key] - ref[key] for key in ABLATION_DELTAS}}]
     wf = {"baseline": BASELINE, "plan": PLAN, "tolerance_inr": TOLERANCE_INR,
           "steps": waterfall(metrics[BASELINE]["economics_inr"], metrics[PLAN]["economics_inr"])}
     (out_dir / "ladder.json").write_text(json.dumps(ladder, indent=2) + "\n", encoding="utf-8")
     (out_dir / "waterfall.json").write_text(json.dumps(wf, indent=2) + "\n", encoding="utf-8")
     return out_dir
+
+
+def refresh_ladder(out_dir: Path, name: str, policy: str, seed: int) -> None:
+    """After a plain run of a ladder policy into `<root>/<run_id>`: if a ladder for the same
+    scenario and seed exists under `root` and every ladder run is on disk, rewrite it."""
+    if policy not in LADDER + EXTRAS or out_dir.name != naming.run_id(name, policy, seed):
+        return
+    root = out_dir.parent
+    lad = root / naming.run_id(name, "ladder", seed) / "ladder.json"
+    if not lad.is_file() or not all(
+            (root / naming.run_id(name, p, seed) / "metrics.json").is_file()
+            for p in LADDER + EXTRAS):
+        return
+    old = json.loads(lad.read_text(encoding="utf-8")).get("ablation") or [{}]
+    write_ladder(root, name, seed, old[0].get("run_id"))
 
 
 def format_ladder(out_dir: Path) -> str:

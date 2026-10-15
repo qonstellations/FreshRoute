@@ -69,3 +69,26 @@ def test_demo_writes_pitch_files(tmp_path, capsys):
     assert (tmp_path / "tiny_3batch__ladder__s42" / "waterfall.json").is_file()
     out = capsys.readouterr().out
     assert "milp validation: 0 violation(s)" in out and "s wall" in out
+
+
+def test_run_refreshes_ladder(tmp_path):
+    """A later plain run of a ladder policy rewrites ladder.json + waterfall.json (A-55)."""
+    lad_dir = ladder.run_ladder(TINY, 42, str(tmp_path))
+    run_dir = tmp_path / "tiny_3batch__milp__s42"
+    m = json.loads((run_dir / "metrics.json").read_text(encoding="utf-8"))
+    m["kpis"]["net_inr"] += 1000.0  # stand-in for a later, different solve
+    m["economics_inr"]["net"] += 1000.0
+    (run_dir / "metrics.json").write_text(json.dumps(m), encoding="utf-8")
+    ladder.refresh_ladder(run_dir, "tiny_3batch", "milp", 42)
+    lad = json.loads((lad_dir / "ladder.json").read_text(encoding="utf-8"))
+    wf = json.loads((lad_dir / "waterfall.json").read_text(encoding="utf-8"))
+    row = next(e for e in lad["ladder"] if e["policy"] == "milp")
+    assert row["kpis"] == m["kpis"] and wf["steps"][-1]["value"] == m["economics_inr"]["net"]
+    # an end-to-end run lands in the ladder too; a run outside the ladder root does not
+    k = json.loads((cli.run(TINY, "milp", 42, str(run_dir)) / "metrics.json")
+                   .read_text(encoding="utf-8"))["kpis"]
+    lad = json.loads((lad_dir / "ladder.json").read_text(encoding="utf-8"))
+    assert next(e for e in lad["ladder"] if e["policy"] == "milp")["kpis"] == k
+    before = (lad_dir / "ladder.json").read_text(encoding="utf-8")
+    cli.run(TINY, "milp", 42, str(tmp_path / "elsewhere"))
+    assert (lad_dir / "ladder.json").read_text(encoding="utf-8") == before

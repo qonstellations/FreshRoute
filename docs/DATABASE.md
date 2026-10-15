@@ -368,6 +368,8 @@ Arrive by: day 0 17:00
 
 ### 5.11 `ladder.json` and `waterfall.json`
 
+Both are rebuilt from the run directories under the same output root, by `freshroute ladder` and again by every later plain run of a ladder policy there (ARCHITECTURE.md §12, A-55); the `milp` row always equals `<scenario>__milp__s<seed>/metrics.json → kpis`.
+
 `ladder.json`:
 ```json
 {"scenario": "…", "seed": 42, "realization": "base",

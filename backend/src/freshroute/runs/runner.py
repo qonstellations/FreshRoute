@@ -173,4 +173,7 @@ def run(scenario: str, policy: str, seed: int, out: str | None = None,
     else:
         prog._publish = lambda b: _write(out_dir, sc, b, manifest(b, result.solver))
         prog.finish(scored)
+    if not newsvendor:  # keep an existing ladder on the latest run of each policy (A-55)
+        from freshroute.runs.ladder import refresh_ladder  # lazy: ladder imports this module
+        refresh_ladder(out_dir, sc.name, policy, seed)
     return out_dir
