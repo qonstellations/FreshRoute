@@ -223,7 +223,7 @@ export function Dashboard({ onBackToStory }: DashboardProps) {
                       </Text>
                     </div>
                     <Badge color="blue" variant="light">
-                      REAL-TIME RE-SOLVE &lt; 4s
+                      HiGHS RE-SOLVE · 2 S CAP
                     </Badge>
                   </Group>
                 </Paper>

@@ -11,11 +11,12 @@ import { useEffect, useRef, useState } from 'react'
 import { api, waitReplan } from '../api/client'
 import { ExampleBanner } from '../components/Banners'
 import { KpiTile, toneOf } from '../components/KpiTile'
+import { ShelfLifeMap } from '../components/plan/ShelfLifeMap'
 import { Reveal } from '../components/score/Reveal'
 import { fmt, fmtSigned } from '../lib/delta'
 import type { TabProps } from '../lib/story'
 import { spring } from '../theme'
-import type { Diff, EventType, ReplanEvent, ReplanKpis, ReplanResult } from '../types'
+import type { Diff, DispatchRow, EventType, ReplanEvent, ReplanKpis, ReplanResult } from '../types'
 
 // The 5 canned events of DATABASE §6; magnitudes are the documented demo defaults (editable inputs, not coefficients).
 type Ids = { dest: string; commodity: string; vehicle: string }
@@ -33,6 +34,7 @@ const CANNED: Record<EventType, { label: string; note: string; magnitude: number
 }
 const TYPES = Object.keys(CANNED) as EventType[]
 const AT_H = 8 // DATABASE §6 example event time
+const CLOSE_H = 12 // a click on the map closes a road: route_delay of this many hours (audited demo default)
 
 type Form = Omit<ReplanEvent, 'event_id'>
 const formFor = (type: EventType, ids: Ids): Form =>
@@ -48,11 +50,13 @@ export function Replan({ run, runId, step }: TabProps) {
   const [error, setError] = useState('')
   const [result, setResult] = useState<ReplanResult | null>(null)
   const started = useRef(false)
+  const [rows, setRows] = useState<DispatchRow[]>([])
 
   // a vehicle id for the reefer-breakdown default, from the run's own dispatch sheet
   useEffect(() => {
-    started.current = false; setResult(null); setError('')
+    started.current = false; setResult(null); setError(''); setRows([])
     api.dispatchSheet(runId).then(s => {
+      setRows(s?.csv ?? [])
       const v = s?.csv[0]?.vehicle_id
       if (v) setIds(i => ({ ...i, vehicle: v }))
     }).catch(() => { /* optional: the vehicle target stays editable */ })
@@ -60,12 +64,12 @@ export function Replan({ run, runId, step }: TabProps) {
   useEffect(() => { if (form.type === 'capacity_drop' && ids.vehicle) setForm(f => ({ ...f, target: CANNED.capacity_drop.target(ids) })) },
     [ids])
 
-  async function apply() {
+  async function apply(f: Form = form) {
     if (busy) return
     started.current = true
-    setBusy(true); setError('')
+    setBusy(true); setError(''); setResult(null)
     // ponytail: time-based id, unique per click; the engine keys replan/<event_id>/ by it
-    const event: ReplanEvent = { ...form, event_id: `E-${Date.now().toString(36).toUpperCase()}` }
+    const event: ReplanEvent = { ...f, event_id: `E-${Date.now().toString(36).toUpperCase()}` }
     try {
       const r = await api.postReplan({ run_id: runId, event })
       setResult(await waitReplan(r.run_id, r.event_id))
@@ -76,10 +80,28 @@ export function Replan({ run, runId, step }: TabProps) {
   // story beat 1 presses Apply once if nothing is on screen yet
   useEffect(() => { if (step != null && step >= 1 && !started.current) apply() }, [step])
 
+  // Break it live: a road click closes that road and replans at once; a destination click only fills the form.
+  function closeRoad(o: string, d: string) {
+    if (busy) return
+    const f: Form = { type: 'route_delay', target: `${o}|${d}|*`, magnitude: CLOSE_H, at_h: AT_H, note: `road ${o} → ${d} closed` }
+    setForm(f); apply(f)
+  }
+  const spikeAt = (d: string | undefined) => d && setForm(formFor('demand_spike', { ...ids, dest: d }))
+  const after = result?.trips && { at_h: result.diff.at_h, routes: result.trips
+    .filter(t => t.dispatch_h > result.diff.at_h).map(t => [t.origin, t.dest_id] as [string, string]) }
+
   const meta = CANNED[form.type]
   return (
     <Stack gap="lg">
       <ExampleBanner show={!!result?.example} what="replan" />
+      {rows.length > 0 && (
+        <Stack gap={4}>
+          <Text fw={700}>Break it live: click any road to close it for {CLOSE_H} h from hour {AT_H}, or a market to stage a demand spike.</Text>
+          <ShelfLifeMap scenario={run.scenario.split(/[\\/]/).pop() ?? run.scenario} runId={runId} rows={rows}
+            onPick={spikeAt} onRoute={closeRoad} after={after} />
+          {after && <Text size="xs" c="dimmed">Red dashed: roads the replan stopped using · bold green: roads it uses now.</Text>}
+        </Stack>
+      )}
       <Paper withBorder radius="lg" p="lg">
         <Group gap="md" mb="md" wrap="nowrap">
           <ThemeIcon size={44} radius="md" variant="light"><IconBolt size={26} /></ThemeIcon>
@@ -100,7 +122,7 @@ export function Replan({ run, runId, step }: TabProps) {
         <Group mt="md" justify="space-between" align="flex-end">
           <TextInput label="Note (not used by the solver)" value={form.note ?? ''} w={320}
             onChange={e => setForm({ ...form, note: e.currentTarget.value })} />
-          <Button size="md" radius="xl" leftSection={<IconRefresh size={18} />} loading={busy} onClick={apply}
+          <Button size="md" radius="xl" leftSection={<IconRefresh size={18} />} loading={busy} onClick={() => apply()}
             disabled={!form.target.trim()}>Apply and replan</Button>
         </Group>
       </Paper>

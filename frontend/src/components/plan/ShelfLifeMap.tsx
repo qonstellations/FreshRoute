@@ -1,11 +1,12 @@
 // Shelf-life countdown map (ARCHITECTURE §16): offline SVG route network over geo.csv, or a colour table without it.
 // Colours pick the smallest served slack_h per destination; routes are the served trips' origin → dest_id pairs.
-import { ColorSwatch, Group, Paper, Skeleton, Stack, Table, Text, Title, Tooltip } from '@mantine/core'
+import { Button, ColorSwatch, Group, Paper, Skeleton, Stack, Table, Text, Title, Tooltip } from '@mantine/core'
 import { m, type Variants } from 'motion/react'
 import { useEffect, useId, useState } from 'react'
 import { api } from '../../api/client'
 import type { DispatchRow, GeoRecord } from '../../types'
 import { band, BANDS, HUB, num } from './format'
+import './plan.css'
 
 // Fixed viewBox; points are fitted inside it with equal x/y scale (lon squeezed by cos(lat) so shapes stay true).
 const W = 1000, H = 460, PAD = 70
@@ -24,13 +25,18 @@ function curve([x1, y1]: number[], [x2, y2]: number[]) {
   return `M${x1},${y1} Q${mx - (y2 - y1) * k},${my + (x2 - x1) * k} ${x2},${y2}`
 }
 
-export function ShelfLifeMap({ scenario, runId, rows, filter, onPick }: {
+// `onRoute` makes each route clickable (Replan: close that road). `after` = a replan's event hour and the origin → dest
+// pairs of its trips leaving after it; against this run's trips leaving after that hour, dropped routes are drawn as
+// cut and added ones as new (trips already on the road stay as they were).
+export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, after }: {
   scenario: string; runId: string; rows: DispatchRow[]
   filter?: string; onPick: (destId: string | undefined) => void
+  onRoute?: (origin: string, dest: string) => void; after?: { at_h: number; routes: [string, string][] }
 }) {
   const uid = useId().replace(/:/g, '')
   const [geo, setGeo] = useState<GeoRecord[] | null | undefined>(undefined)
   const [routes, setRoutes] = useState<[string, string][]>([])
+  const [late, setLate] = useState<{ h: number; key: string }[]>([]) // trips' dispatch hour per route, for `after`
   const [hover, setHover] = useState<string | undefined>(undefined)
   useEffect(() => {
     setGeo(undefined)
@@ -41,6 +47,7 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick }: {
     api.table(runId, 'trips').then(t => {
       const seen = new Set(t.records.map(r => `${r.origin}|${r.dest_id}`))
       setRoutes([...seen].sort().map(k => k.split('|') as [string, string]))
+      setLate(t.records.map(r => ({ h: Number(r.dispatch_h), key: `${r.origin}|${r.dest_id}` })))
     }).catch(() => setRoutes([])) // routes are decoration; the map still works without them
   }, [runId])
 
@@ -80,7 +87,13 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick }: {
     ox + ((g.lon as number) - Math.min(...lons)) * sx * s,
     oy + (Math.max(...lats) - (g.lat as number)) * s,
   ]]))
-  const lines = routes.filter(([o, d]) => at.has(o) && at.has(d))
+  const key = ([o, d]: [string, string]) => `${o}|${d}`
+  const all = new Set(routes.map(key)), next = after && new Set(after.routes.map(key))
+  const was = new Set(late.filter(t => after && t.h > after.at_h).map(t => t.key))
+  const extra = (after?.routes ?? []).filter(r => !all.has(key(r)))
+  const lines = [...routes, ...extra].filter(([o, d]) => at.has(o) && at.has(d))
+  const fate = (r: [string, string]) =>
+    !next ? '' : next.has(key(r)) ? (was.has(key(r)) ? ' kept' : ' new') : was.has(key(r)) ? ' cut' : ' kept'
   const active = hover ?? filter
 
   return (
@@ -114,11 +127,16 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick }: {
 
             <m.g variants={draw} initial="hidden" animate="show" fill="none">
               {lines.map(([o, d]) => {
-                const cls = active ? (d === active ? ' on' : ' dim') : ''
+                const cls = (active ? (d === active ? ' on' : ' dim') : '') + fate([o, d]) + (onRoute ? ' clickable' : '')
+                const path = curve(at.get(o)!, at.get(d)!)
                 return (
                   <g key={`r-${o}-${d}`} className={`route${cls}`}>
-                    <m.path variants={stroke} d={curve(at.get(o)!, at.get(d)!)} className="route-base" />
-                    <path d={curve(at.get(o)!, at.get(d)!)} className="route-flow" />
+                    <m.path variants={stroke} d={path} className="route-base" />
+                    <path d={path} className="route-flow" />
+                    {onRoute && <path d={path} className="route-hit" tabIndex={0} role="button"
+                      aria-label={`Close the road ${o} to ${d} and replan`}
+                      onClick={() => onRoute(o, d)}
+                      onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onRoute(o, d))} />}
                   </g>
                 )
               })}
@@ -126,7 +144,7 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick }: {
 
             {/* ponytail: decorative only — dots glide along each route on a loop; they are not vehicle positions. */}
             <g className="trucks">
-              {lines.map(([o, d], i) => (
+              {lines.filter(r => fate(r) !== ' cut').map(([o, d], i) => (
                 <circle key={`t-${o}-${d}`} r={4.5} className="truck">
                   <animateMotion dur={`${3.2 + (i % 4) * 0.5}s`} begin={`${1.4 + i * 0.35}s`} repeatCount="indefinite"
                     path={curve(at.get(o)!, at.get(d)!)} />
@@ -173,6 +191,17 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick }: {
               ) : <g key={id}>{node}</g>
             })}
           </svg>
+        )}
+        {/* ponytail: far destinations squeeze the hub cluster on the map, so every road also gets a plain button */}
+        {onRoute && pts.length > 0 && (
+          <Group gap={6}>
+            <Text size="xs" c="dimmed">Close a road:</Text>
+            {lines.map(([o, d]) => (
+              <Button key={`b-${o}-${d}`} size="compact-xs" radius="xl" color={fate([o, d]) === ' cut' ? 'red' : 'gray'}
+                variant={fate([o, d]) === ' cut' ? 'filled' : 'default'} onClick={() => onRoute(o, d)}>
+                {o} → {String(pts.find(g => String(g.node_id) === d)?.name ?? d)}</Button>
+            ))}
+          </Group>
         )}
       </Stack>
     </Paper>

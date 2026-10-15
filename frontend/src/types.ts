@@ -163,4 +163,7 @@ export interface Diff { // §5.13 diff.json
   kpis_old_plan_under_event: ReplanKpis; kpis_replanned: ReplanKpis; delta_kpis: ReplanKpis
   solve_seconds: number
 }
-export interface ReplanResult extends Example { diff: Diff; narration: string }
+export interface ReplanResult extends Example {
+  diff: Diff; narration: string
+  trips?: { origin: string; dest_id: string; trip_id: string; dispatch_h: number }[] // replanned trips.csv records
+}

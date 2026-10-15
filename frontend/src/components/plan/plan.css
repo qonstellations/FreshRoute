@@ -34,6 +34,13 @@
 .route.on .route-base { stroke: light-dark(var(--mantine-color-dark-6), var(--mantine-color-gray-2)); stroke-width: 4; }
 .route.on .route-flow { stroke-width: 4; }
 .route.dim, .node.dim { opacity: .25; }
+/* Replan overlay: roads the replan dropped, roads it added; clickable roads for "break it live". */
+.route.cut .route-base { stroke: var(--mantine-color-red-6); stroke-dasharray: 6 8; opacity: .55; }
+.route.cut .route-flow { display: none; }
+.route.new .route-base { stroke: light-dark(var(--mantine-color-green-7), var(--mantine-color-green-4)); stroke-width: 4; }
+.route-hit { stroke: transparent; stroke-width: 18; fill: none; cursor: pointer; pointer-events: stroke; outline: none; }
+.route.clickable:hover .route-base, .route-hit:focus-visible { stroke: var(--mantine-color-red-6); stroke-width: 5; }
+.route-hit:focus-visible { stroke-opacity: .35; }
 
 .truck { fill: var(--mantine-color-body); stroke: light-dark(var(--mantine-color-dark-6), var(--mantine-color-gray-3)); stroke-width: 2; }
 

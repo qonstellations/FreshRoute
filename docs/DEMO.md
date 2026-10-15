@@ -19,7 +19,7 @@ A script and a safety net for the pitch. The length (assumed 3:00) and format (l
 | 0:30 | Plan view | Batches, markets, shelf life ticking down. "We only consider shipments that can still be sold." |
 | 1:00 | Scoreboard and waterfall | FIFO against FEFO against FreshRoute, on synthetic data, seed 42. "Same simulator scores all of them." |
 | 1:45 | Validator panel and a reason card | "Zero violations, checked by an independent package." Open one card: why Pune and not Delhi. |
-| 2:15 | Replan | Trigger a route delay, show the diff. Say it is a repair of the old plan under a 2 s cap. |
+| 2:15 | Replan: "break it live" | Dashboard → What-if. Invite a judge to click any road on the map, or one of the "Close a road" buttons under it. That closes the road for 12 h from hour 8. After a few seconds, the road turns red (the replan stopped using it), the batches move, and the narration says what changed against keeping the old plan. Say: "Shipments already on the road stay frozen; HiGHS repairs the rest under a 2 s cap, starting from the old plan." |
 | 2:45 | Close | Limits and next steps. |
 
 ## Say, and do not say
