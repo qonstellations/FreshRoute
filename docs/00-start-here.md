@@ -62,6 +62,7 @@ make setup                 # uv sync + npm ci --prefix frontend
 make check                 # ruff + pytest + frontend build + validate the demo plan
 make demo                  # the ladder and waterfall on the practice scenario, seed 42
 make serve                 # build the SPA and serve everything on http://127.0.0.1:8000
+make gauntlet             # milp on every data/scenarios/hidden_*, writes outputs/gauntlet/gauntlet.csv (a few minutes)
 ```
 
 There is no `make` on Windows by default. Either install it (for example ezwinports) or copy the recipe lines from the `Makefile` and run them by hand, for example `uv sync` then `npm ci --prefix frontend`.

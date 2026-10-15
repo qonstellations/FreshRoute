@@ -32,7 +32,11 @@ serve:
 	npm --prefix frontend run build
 	uv run uvicorn freshroute.api.app:app --host 127.0.0.1 --port 8000
 
+# milp on every data/scenarios/hidden_* -> outputs/gauntlet/gauntlet.csv (up to 30 s per scenario)
+gauntlet:
+	uv run python -m freshroute.runs.gauntlet
+
 run-stub:
 	uv run freshroute run --scenario backend/tests/fixtures/tiny_3batch --policy milp --seed 42
 
-.PHONY: setup test check demo api web serve run-stub
+.PHONY: setup test check demo api web serve gauntlet run-stub
