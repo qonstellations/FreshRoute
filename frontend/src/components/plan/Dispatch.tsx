@@ -124,9 +124,11 @@ export function Dispatch({ sheet, runId, onRow, filter, onClear }: {
           )}
         </CopyButton>
       </Group>
-      <Paper withBorder radius="md" p={0} className="whatsapp">
-        <Code block>{sheet.text}</Code>
-      </Paper>
+      <Stack gap="xs" className="whatsapp">
+        {sheet.text.trim().split(/\n\s*\n/).map((t, i) => (
+          <Paper key={i} withBorder radius="md" p={0}><Code block>{t}</Code></Paper>
+        ))}
+      </Stack>
     </Stack>
   )
 }

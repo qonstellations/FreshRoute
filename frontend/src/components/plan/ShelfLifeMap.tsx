@@ -1,20 +1,16 @@
-// Shelf-life countdown map (ARCHITECTURE §16): offline SVG route network over geo.csv, or a colour table without it.
+// Shelf-life route board (ARCHITECTURE §16): hubs on the left, markets on the right, a lane per served route.
 // Colours pick the smallest served slack_h per destination; routes are the served trips' origin → dest_id pairs.
+// Layout only: geography is dropped on purpose (a 500 km market beside a 5 km one made the old map unreadable).
 import { Button, ColorSwatch, Group, Paper, Skeleton, Stack, Table, Text, Title, Tooltip } from '@mantine/core'
 import { m, type Variants } from 'motion/react'
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
 import type { DispatchRow, GeoRecord } from '../../types'
 import { Explain } from '../Explain'
 import { band, BANDS, HUB, num } from './format'
 import './plan.css'
 
-// Fixed viewBox; points are fitted inside it with equal x/y scale (lon squeezed by cos(lat) so shapes stay true).
-const W = 1000, H = 520, PAD = 50, PAD_X = 240 // side padding leaves room for labels
-const LOG_KM_DEG = 0.35 // log-compression knee in degrees (~40 km): closer than this stays near-linear
-const FAR_CAP = 1.25 // outliers sit at most this many times the median distance out, in their true direction
-const MIN_GAP = 34 // px: spacing pass, in a metric that shrinks x by LABEL_X so wide labels on one row also part
-const LABEL_X = 5
+const W = 1000, PAD = 24, ROW = 62, HUB_X = 30, HUB_W = 250, HUB_H = 76, DEST_X = 600, DEST_W = 370
 
 const draw: Variants = { hidden: {}, show: { transition: { staggerChildren: 0.09, delayChildren: 0.15 } } }
 const stroke: Variants = {
@@ -22,13 +18,13 @@ const stroke: Variants = {
   show: { pathLength: 1, opacity: 1, transition: { pathLength: { duration: 0.9, ease: 'easeOut' }, opacity: { duration: 0.1 } } },
 }
 
-const pulse = (h: number) => (h < 6 ? 'fast' : h < 24 ? 'mid' : 'slow')
-
-// Quadratic Bézier hub → destination, bowed sideways by a fraction of its length so parallel lanes separate.
+// Cubic S-curve between the two columns.
 function curve([x1, y1]: number[], [x2, y2]: number[]) {
-  const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, k = 0.18
-  return `M${x1},${y1} Q${mx - (y2 - y1) * k},${my + (x2 - x1) * k} ${x2},${y2}`
+  const mx = (x1 + x2) / 2
+  return `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`
 }
+
+const trunc = (t: string, n: number) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
 
 // `onRoute` makes each route clickable (Replan: close that road). `after` = a replan's event hour and the origin → dest
 // pairs of its trips leaving after it; against this run's trips leaving after that hour, dropped routes are drawn as
@@ -38,7 +34,6 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
   filter?: string; onPick: (destId: string | undefined) => void
   onRoute?: (origin: string, dest: string) => void; after?: { at_h: number; routes: [string, string][] }
 }) {
-  const uid = useId().replace(/:/g, '')
   const [geo, setGeo] = useState<GeoRecord[] | null | undefined>(undefined)
   const [routes, setRoutes] = useState<[string, string][]>([])
   const [late, setLate] = useState<{ h: number; key: string }[]>([]) // trips' dispatch hour per route, for `after`
@@ -53,26 +48,25 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
       const seen = new Set(t.records.map(r => `${r.origin}|${r.dest_id}`))
       setRoutes([...seen].sort().map(k => k.split('|') as [string, string]))
       setLate(t.records.map(r => ({ h: Number(r.dispatch_h), key: `${r.origin}|${r.dest_id}` })))
-    }).catch(() => setRoutes([])) // routes are decoration; the map still works without them
+    }).catch(() => setRoutes([])) // routes are decoration; the board still works without them
   }, [runId])
 
   // Per destination: the smallest served slack_h among its dispatch rows (picks a value, computes none).
   const urgent = new Map<string, DispatchRow>()
-  // Served kg grouped per destination, used only to size markers (never printed).
+  // Served kg grouped per destination (shown as a label).
   const kg = new Map<string, number>()
   for (const r of rows) {
     if (!urgent.has(r.dest_id) || r.slack_h < urgent.get(r.dest_id)!.slack_h) urgent.set(r.dest_id, r)
     kg.set(r.dest_id, (kg.get(r.dest_id) ?? 0) + r.kg)
   }
   const dests = [...urgent.values()].sort((a, b) => a.slack_h - b.slack_h)
-  const maxKg = Math.max(1, ...kg.values())
 
   const legend = (
     <Group gap="md">
       {BANDS.map(([c, l]) => <Group key={l} gap={6}><ColorSwatch color={c} size={14} /><Text size="sm">{l}</Text></Group>)}
       <Group gap={6}><ColorSwatch color={HUB} size={14} radius={3} /><Text size="sm">hub (warehouse)</Text></Group>
-      <Text size="sm" c="dimmed">· circle size = kg delivered · number = least <Explain term="slack">time to spare</Explain> at
-        that market · click a market to filter the list below</Text>
+      <Text size="sm" c="dimmed">· the pill = least <Explain term="slack">time to spare</Explain> at that market ·
+        click a market to filter the list below</Text>
     </Group>
   )
 
@@ -80,45 +74,42 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
     <Paper withBorder radius="md" p="md"><Skeleton h={22} w={260} mb="sm" /><Skeleton h={420} /></Paper>
   )
   const pts = (geo ?? []).filter(g => typeof g.lat === 'number' && typeof g.lon === 'number')
-
-  // Schematic projection (display geometry only): true bearing from the hubs' centre, distance compressed with log1p,
-  // so a city cluster spreads out while far markets (hundreds of km) still fit on the page.
-  const centre = pts.some(g => g.node_type === 'hub') ? pts.filter(g => g.node_type === 'hub') : pts
-  const cLat = centre.reduce((a, g) => a + (g.lat as number), 0) / centre.length
-  const cLon = centre.reduce((a, g) => a + (g.lon as number), 0) / centre.length
-  const kx = Math.cos((cLat * Math.PI) / 180)
-  const raw = pts.map(g => {
-    const dx = ((g.lon as number) - cLon) * kx, dy = (g.lat as number) - cLat
-    return [String(g.node_id), dx, dy, Math.log1p(Math.hypot(dx, dy) / LOG_KM_DEG)] as const
+  const hubs = pts.filter(g => g.node_type === 'hub')
+  // Market order: served ones by urgency, then idle ones; ids break ties so the layout is stable.
+  const markets = pts.filter(g => g.node_type !== 'hub').sort((a, b) => {
+    const ua = urgent.get(String(a.node_id)), ub = urgent.get(String(b.node_id))
+    return (ua ? ua.slack_h : Infinity) - (ub ? ub.slack_h : Infinity) || String(a.node_id).localeCompare(String(b.node_id))
   })
-  const radii = raw.map(p => p[3]).sort((a, b) => a - b), cap = FAR_CAP * radii[Math.floor(radii.length / 2)]
-  const polar = raw.map(([id, dx, dy, rr]) => {
-    const d = Math.hypot(dx, dy), k = d > 1e-9 ? Math.min(rr, cap) / d : 0
-    return [id, dx * k, dy * k] as const
-  })
-  const xs = polar.map(p => p[1]), ys = polar.map(p => p[2])
-  const spanX = Math.max(Math.max(...xs) - Math.min(...xs), 1e-6), spanY = Math.max(Math.max(...ys) - Math.min(...ys), 1e-6)
-  const s = Math.min((W - 2 * PAD_X) / spanX, (H - 2 * PAD) / spanY)
-  const ox = (W - spanX * s) / 2, oy = (H - spanY * s) / 2
-  const xy = polar.map(([, x, y]) => [ox + (x - Math.min(...xs)) * s, oy + (Math.max(...ys) - y) * s])
-  // ponytail: O(n²) spacing pass, fine for tens of nodes; a real layout library if maps grow to hundreds
-  for (let it = 0; it < 80; it++) for (let i = 0; i < xy.length; i++) for (let j = i + 1; j < xy.length; j++) {
-    const dx = (xy[j][0] - xy[i][0]) / LABEL_X, dy = xy[j][1] - xy[i][1], d = Math.hypot(dx, dy)
-    if (d >= MIN_GAP) continue
-    const push = (MIN_GAP - d) / 2, ux = d > 1e-3 ? dx / d : 0, uy = d > 1e-3 ? dy / d : 1
-    xy[i][0] -= ux * push * LABEL_X; xy[i][1] -= uy * push; xy[j][0] += ux * push * LABEL_X; xy[j][1] += uy * push
-  }
-  for (const p of xy) { p[0] = Math.min(W - PAD_X / 2, Math.max(PAD_X / 2, p[0])); p[1] = Math.min(H - PAD / 2, Math.max(PAD / 2, p[1])) }
-  const at = new Map(polar.map(([id], i) => [id, xy[i]]))
-  const midX = W / 2
-  // Short labels: "KR Market mandi, Bengaluru" -> "KR Market mandi"; hubs -> "Kolar hub". Full names stay in tooltips.
-  const short = (g: GeoRecord) => g.node_type === 'hub' ? `${String(g.name).split(' ')[0]} hub` : String(g.name).split(',')[0]
-  const nameOf = (id: string) => { const g = pts.find(p => String(p.node_id) === id); return g ? short(g) : id }
+  const H = PAD * 2 + Math.max(markets.length * ROW, hubs.length * (HUB_H + 24))
+  const dy = new Map(markets.map((g, i) => [String(g.node_id), PAD + ROW * i + ROW / 2]))
   const key = ([o, d]: [string, string]) => `${o}|${d}`
   const all = new Set(routes.map(key)), next = after && new Set(after.routes.map(key))
   const was = new Set(late.filter(t => after && t.h > after.at_h).map(t => t.key))
   const extra = (after?.routes ?? []).filter(r => !all.has(key(r)))
-  const lines = [...routes, ...extra].filter(([o, d]) => at.has(o) && at.has(d))
+  const known = new Set(pts.map(g => String(g.node_id)))
+  const lines = [...routes, ...extra].filter(([o, d]) => known.has(o) && dy.has(d))
+  // Hubs sit at the average height of the markets they serve, then are spread so cards never overlap.
+  const want = hubs.map(h => {
+    const ys = lines.filter(([o]) => o === String(h.node_id)).map(([, d]) => dy.get(d)!)
+    return { h, y: ys.length ? ys.reduce((a, b) => a + b, 0) / ys.length : H / 2 }
+  }).sort((a, b) => a.y - b.y)
+  for (let i = 1; i < want.length; i++) want[i].y = Math.max(want[i].y, want[i - 1].y + HUB_H + 16)
+  const over = want.length ? want[want.length - 1].y + HUB_H / 2 + PAD - H : 0
+  if (over > 0) want.forEach(w => { w.y -= over })
+  const hy = new Map(want.map(w => [String(w.h.node_id), Math.max(PAD + HUB_H / 2, w.y)]))
+  const at = new Map<string, number[]>([
+    ...hubs.map(g => [String(g.node_id), [HUB_X + HUB_W, hy.get(String(g.node_id))!]] as [string, number[]]),
+    ...markets.map(g => [String(g.node_id), [DEST_X, dy.get(String(g.node_id))!]] as [string, number[]]),
+  ])
+  // Short labels: "KR Market mandi, Bengaluru" -> "KR Market mandi"; hubs -> "Kolar hub". Full names stay in tooltips.
+  const short = (g: GeoRecord) => g.node_type === 'hub' ? `${String(g.name).split(' ')[0]} hub` : String(g.name).split(',')[0]
+  const nameOf = (id: string) => { const g = pts.find(p => String(p.node_id) === id); return g ? short(g) : id }
+  // Lanes leave a hub at spread-out heights so they fan out instead of piling into one point.
+  const pathOf = (o: string, d: string) => {
+    const mine = lines.filter(([a]) => a === o), i = mine.findIndex(([, b]) => b === d)
+    const [x, y] = at.get(o)!
+    return curve([x, y + (i - (mine.length - 1) / 2) * Math.min(10, (HUB_H - 24) / mine.length)], at.get(d)!)
+  }
   const fate = (r: [string, string]) =>
     !next ? '' : next.has(key(r)) ? (was.has(key(r)) ? ' kept' : ' new') : was.has(key(r)) ? ' cut' : ' kept'
   const active = hover ?? filter
@@ -128,7 +119,8 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
       <Stack gap="sm">
         <div>
           <Title order={3}>Where every truck goes, and how much time each delivery has to spare</Title>
-          <Text size="sm" c="dimmed">{pts.length ? 'Simplified map: directions are true, distances are squeezed so everything fits'
+          <Text size="sm" c="dimmed">{pts.length
+            ? 'Warehouses on the left, markets on the right, most urgent market first. Each line is a road with a truck on it.'
             : 'No map locations for this scenario, so the markets are listed in a table instead'}</Text>
         </div>
         {legend}
@@ -146,17 +138,11 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
           </Table>
         ) : (
           <svg className="plan-map" viewBox={`0 0 ${W} ${H}`} role="img"
-            aria-label="Map of truck routes: hubs, and markets coloured by their least time to spare">
-            <defs>
-              <filter id={`glow-${uid}`} x="-100%" y="-100%" width="300%" height="300%">
-                <feGaussianBlur stdDeviation="5" />
-              </filter>
-            </defs>
-
+            aria-label="Route board: warehouses linked to the markets they serve, markets coloured by their least time to spare">
             <m.g variants={draw} initial="hidden" animate="show" fill="none">
               {lines.map(([o, d]) => {
                 const cls = (active ? (d === active ? ' on' : ' dim') : '') + fate([o, d]) + (onRoute ? ' clickable' : '')
-                const path = curve(at.get(o)!, at.get(d)!)
+                const path = pathOf(o, d)
                 return (
                   <g key={`r-${o}-${d}`} className={`route${cls}`}>
                     <m.path variants={stroke} d={path} className="route-base" />
@@ -173,25 +159,31 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
             {/* ponytail: decorative only — dots glide along each route on a loop; they are not vehicle positions. */}
             <g className="trucks">
               {lines.filter(r => fate(r) !== ' cut').map(([o, d], i) => (
-                <circle key={`t-${o}-${d}`} r={3} className="truck">
+                <circle key={`t-${o}-${d}`} r={3.5} className="truck">
                   <animateMotion dur={`${3.2 + (i % 4) * 0.5}s`} begin={`${1.4 + i * 0.35}s`} repeatCount="indefinite"
-                    path={curve(at.get(o)!, at.get(d)!)} />
+                    path={pathOf(o, d)} />
                 </circle>
               ))}
             </g>
 
-            {pts.map(g => {
-              const id = String(g.node_id)
-              const [x, y] = at.get(id)!
-              if (g.node_type === 'hub') return (
+            {hubs.map(g => {
+              const id = String(g.node_id), y = hy.get(id)!
+              const n = lines.filter(([o]) => o === id).length
+              return (
                 <g key={id} className="node hub">
-                  <rect x={x - 8} y={y - 8} width={16} height={16} rx={4} fill={HUB} className="node-mark" />
-                  <text x={x} y={y - 14} textAnchor="middle" className="node-label hub-label">{short(g)}</text>
+                  <rect x={HUB_X} y={y - HUB_H / 2} width={HUB_W} height={HUB_H} rx={12} className="card" />
+                  <rect x={HUB_X} y={y - HUB_H / 2} width={6} height={HUB_H} rx={3} fill={HUB} />
+                  <text x={HUB_X + 22} y={y - 8} className="card-title">{short(g)}</text>
+                  <text x={HUB_X + 22} y={y + 10} className="card-sub">{trunc(String(g.name), 32)}</text>
+                  <text x={HUB_X + 22} y={y + 27} className="card-sub">sends to {n} market{n === 1 ? '' : 's'}</text>
                 </g>
               )
+            })}
+
+            {markets.map(g => {
+              const id = String(g.node_id), y = dy.get(id)!, top = y - ROW / 2 + 5, h = ROW - 10
               const u = urgent.get(id)
               const colour = u ? band(u.slack_h)[0] : undefined
-              const r = 5 + 7 * Math.sqrt((kg.get(id) ?? 0) / maxKg)
               const node = (
                 <g className={`node dest${u ? '' : ' idle'}${active === id ? ' on' : active ? ' dim' : ''}`}
                   onMouseEnter={() => setHover(id)} onMouseLeave={() => setHover(undefined)}
@@ -200,16 +192,19 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
                   tabIndex={u ? 0 : undefined} role={u ? 'button' : undefined}
                   aria-label={u ? `${g.name}: least time to spare ${num(u.slack_h)} h. Show only this market in the loading list`
                     : `${g.name}: no deliveries`}>
-                  {u && <circle cx={x} cy={y} r={r + 3} fill={colour} filter={`url(#glow-${uid})`} className="glow" />}
-                  {u && <circle cx={x} cy={y} r={r} fill="none" stroke={colour} className={`halo halo-${pulse(u.slack_h)}`} />}
-                  <circle cx={x} cy={y} r={r} fill={colour} className="node-mark" />
-                  <text x={x < midX ? x - r - 6 : x + r + 6} y={y + 4} textAnchor={x < midX ? 'end' : 'start'} className="node-label">
-                    {short(g)}{u && <tspan className="slack" fill={colour}> {num(u.slack_h)} h</tspan>}
-                  </text>
+                  <rect x={DEST_X} y={top} width={DEST_W} height={h} rx={10} className="card" />
+                  {u && <rect x={DEST_X} y={top} width={6} height={h} rx={3} fill={colour} />}
+                  <text x={DEST_X + 20} y={y - 3} className="card-title">{trunc(short(g), 32)}</text>
+                  <text x={DEST_X + 20} y={y + 14} className="card-sub">
+                    {u ? `${num(kg.get(id) ?? 0)} kg · ${u.commodity}` : 'no deliveries'}</text>
+                  {u && <>
+                    <rect x={DEST_X + DEST_W - 86} y={y - 13} width={72} height={26} rx={13} fill={colour} />
+                    <text x={DEST_X + DEST_W - 50} y={y + 5} textAnchor="middle" className="pill-text">{num(u.slack_h)} h</text>
+                  </>}
                 </g>
               )
               return u ? (
-                <Tooltip key={id} withArrow position="top" offset={r + 4} transitionProps={{ transition: 'pop', duration: 150 }}
+                <Tooltip key={id} withArrow position="left" transitionProps={{ transition: 'pop', duration: 150 }}
                   label={<Stack gap={0}>
                     <Text size="sm" fw={700}>{u.dest_name} ({u.dest_id})</Text>
                     <Text size="xs">Least time to spare: {num(u.slack_h)} h · must arrive by hour {num(u.arrive_by_h)}</Text>
@@ -221,7 +216,6 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
             })}
           </svg>
         )}
-        {/* ponytail: far destinations squeeze the hub cluster on the map, so every road also gets a plain button */}
         {onRoute && pts.length > 0 && (
           <Group gap={6}>
             <Text size="xs" c="dimmed">Or close a road from this list:</Text>

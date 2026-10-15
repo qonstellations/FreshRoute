@@ -27,8 +27,8 @@ In development, `make api` (port 8000) and `make web` (Vite on 5173, proxying `/
 
 The frontend has two parts, switched by URL hash (D-32): a narrative **landing page** (Problem, How it works, Results, Trust, Who it's for; the button "Open the live demo" leads on), and an **operations dashboard** with one "Run the optimiser" button and four tabs:
 
-1. **Results**: baseline against ours on profit after all costs, food spoiled, orders filled, worst-served market and rule breaks, plus the waterfall ("Where the extra profit comes from"), the ladder ("Every rule vs FreshRoute") and the validator panel ("Independent check").
-2. **Today's plan**: the route map, the truck loading list and driver message, reason cards and price cuts.
+1. **Results**: baseline against ours on profit after all costs, food spoiled, orders filled, worst-served market and rule breaks, plus the profit steps ("Where the extra profit comes from", one row per waterfall step), the ladder ("Every rule vs FreshRoute") and the validator panel ("Independent check").
+2. **Today's plan**: the route board (hubs to markets, most urgent first), the truck loading list and one driver message per trip, reason cards and price cuts.
 3. **What if something breaks?**: click a road on the map (or close one from the list) to re-plan around it, or pick an event and press "Re-plan now"; then the replan diff, the stress test and the sensitivity table.
 4. **Proof & audit**: `run_manifest.json` ("Reproduce this exact result"), every `config.py` constant, and the assumptions.
 
