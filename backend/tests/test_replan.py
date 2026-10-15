@@ -103,6 +103,24 @@ def test_event_before_first_dispatch(base, tmp_path):
         k: _read(base, "metrics.json")["kpis"][k] for k in d["kpis_old_plan_under_event"]})
 
 
+def test_pooled_replan_starts_from_old_plan(tmp_path, monkeypatch):
+    # practice-size runs use the pooled model (section 9.5); a no-op event must keep the plan
+    import freshroute.policies.milp as milp
+    from freshroute.solvers import milp_model
+    monkeypatch.setattr(milp, "AGG_ARC_THRESHOLD", 0)
+    pooled = run(TINY, "milp", 42, str(tmp_path / "pooled"))
+    seen, real = [], milp_model.warm_plan
+    monkeypatch.setattr(milp_model, "warm_plan",
+                        lambda *a: seen.append(real(*a)) or seen[-1])
+    out = replan_run(pooled, _event(tmp_path, "E0", "price_shock", 8.0, magnitude=1.0),
+                     tmp_path / "o")
+    d = _read(out, "diff.json")
+    old = pd.read_csv(pooled / "plan.csv")
+    assert len(seen) == 1 and sum(seen[0][0]) == pytest.approx(old[old.dispatch_h > 8].kg.sum())
+    assert d["moved_batches"] == []
+    assert d["kpis_replanned"]["net_inr"] >= d["kpis_old_plan_under_event"]["net_inr"] - 1e-6
+
+
 def test_event_after_everything_dispatched(base, tmp_path):
     out = replan_run(base, _event(tmp_path, "E9", "demand_spike", 1000.0), tmp_path / "o")
     d = _read(out, "diff.json")

@@ -140,9 +140,16 @@ def plan_aggregated(sc: Scenario, ctx: dict, policy: str, time_limit_s: float, g
                 plan, viol = assemble(x, n, {"status": "incumbent"})
                 return None if viol else plan
             on_plan(make, profit)
+    warm = ctx.get("warm_start")  # replan: old plan rows -> groups and lane classes
+    if warm is not None:
+        gid = {bid: g for g, m in members.items() for bid in m.batch_id}
+        warm = warm[warm.batch_id.isin(gid) & warm.vehicle_id.isin(cls_of)]
+        warm = warm.assign(batch_id=warm.batch_id.map(gid),
+                           class_id=warm.vehicle_id.map(cls_of),
+                           vehicle_id=warm.vehicle_id.map(cls_of).map(fleet.lane_class))
     sol, info = milp_model.solve(agg, arcs, batches, unship, time_limit_s, gap,
-                                 override=ov, overship=slack, used=used_c, fleet=fleet,
-                                 on_incumbent=inc)
+                                 override=ov, overship=slack, used=used_c, warm=warm,
+                                 fleet=fleet, on_incumbent=inc)
     info["fallback_used"] = sol is None
     if sol is None:
         info.update(slack_usage={}, mip_gap=None)

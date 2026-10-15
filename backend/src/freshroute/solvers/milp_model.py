@@ -136,7 +136,8 @@ def solve(sc: Scenario, arcs, batches, unship, time_limit_s, gap, override=None,
     # under the MILP objective, even when the time limit stops the search early. A replan
     # (section 14.2) starts from the old plan's undispatched rows instead while they still
     # satisfy every constraint: fewest moves, and the old plan was itself optimized.
-    if warm is None or not start(*warm_plan(arcs, warm, veh)):
+    if warm is None or not start(*_fit(arcs, *warm_plan(arcs, warm, veh, fleet is not None),
+                                       f, cls)):
         gx, gn = fefo_greedy(sc, arcs, batches, override, overship, used, fleet)
         start(gx, gn)
         if warm is None:  # FEFO ignores C6, so the rounded LP is usually the better start
@@ -252,12 +253,16 @@ def _lp_start(prob):
     return best
 
 
-def warm_plan(arcs, warm: pd.DataFrame, veh):
+def warm_plan(arcs, warm: pd.DataFrame, veh, pooled: bool = False):
     """Plan rows (batch, dest, vehicle, dispatch_day, kg) as (x, n); rows whose arc is no
-    longer feasible are dropped (their kg goes back to u)."""
+    longer feasible are dropped (their kg goes back to u). `pooled` (section 9.5): rows are
+    already mapped to groups / lane classes and carry `class_id`; n counts the old trips."""
     keys = ["batch_id", "dest_id", "vehicle_id", "dispatch_day"]
     kg = warm.groupby(keys).kg.sum()
     x = [float(kg.get(k, 0.0)) for k in arcs[keys].itertuples(index=False, name=None)]
+    if pooled:
+        trips = warm.groupby(["class_id", "dest_id", "dispatch_day"]).trip_id.nunique()
+        return x, {k: int(q) for k, q in trips.items()}
     load: dict = {}
     for k, q in zip(arcs[keys[1:]].itertuples(index=False, name=None), x, strict=True):
         load[k] = load.get(k, 0.0) + q
@@ -265,6 +270,19 @@ def warm_plan(arcs, warm: pd.DataFrame, veh):
     n = {(v, d, day): math.ceil(q / cap[v] - FLOAT_TOL) if cap[v] > 0 else 0
          for (d, v, day), q in load.items() if q > FLOAT_TOL}
     return x, n
+
+
+def _fit(arcs, x, n, f, cls):
+    """Zero warm-start loads that no longer fit their trips (C2), e.g. after a capacity_drop,
+    so the rest of the old plan still seeds the replan instead of the whole start failing."""
+    g = [arcs.vehicle_id.values, arcs.dest_id.values, arcs.dispatch_day.values]
+    load = pd.Series(x, dtype=float).groupby(g).sum()
+    over = {k for k, q in load.items() if q > FLOAT_TOL + sum(
+        float(f.capacity_kg[c]) * n.get((c, k[1], k[2]), 0) for c in cls[k[0]])}
+    if not over:
+        return x, n
+    keys = zip(*g, strict=True)
+    return [0.0 if k in over else q for k, q in zip(keys, x, strict=True)], n
 
 
 def build_plan(sc: Scenario, arcs, x, n, solver: dict, policy: str) -> Plan:
