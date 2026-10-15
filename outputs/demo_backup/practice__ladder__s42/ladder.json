@@ -29,11 +29,11 @@
     {
       "policy": "milp",
       "kpis": {
-        "spoilage_kg": 854.0684700000023,
-        "spoilage_pct": 1.5802697307872964,
-        "demand_fulfillment_pct": 83.00915860253403,
-        "min_dest_fill_pct": 52.76377697408504,
-        "net_inr": 442214.11961399973,
+        "spoilage_kg": 736.091308065508,
+        "spoilage_pct": 1.3619784058197886,
+        "demand_fulfillment_pct": 72.03811866335883,
+        "min_dest_fill_pct": 34.14348128211231,
+        "net_inr": 404431.9259903152,
         "violations": 0
       }
     }

@@ -18,10 +18,10 @@ No LLM decides anything, and there is no LLM code in the repository today. The s
 ## Spoilage reduction (20)
 
 **How much did you reduce spoilage?**
-Against FEFO, spoilage fell from 904 kg to 854 kg on practice, roughly 6 %. That is modest and we say so. The larger gains are in fulfilment and net ₹.
+Against FEFO, spoilage fell from 904 kg to 736 kg on practice, about 19 %, while net rose ₹133k. An earlier stored 30 s solve got 854 kg at a higher net; the time limit makes the exact trade-off vary by run (A-40).
 
 **Can you cut spoilage further?**
-Yes, at a price, and we show both. `milp_robust` (planned on P10 shelf life, P90 travel) gets 726 kg against 854 kg and beats FEFO on spoilage in 100 % of 200 futures, but nets ₹396,895 against ₹442,214. The frontier run shows the same trade-off point by point. 838 of the 854 kg is handling loss, which grows with kg delivered.
+Yes, at a price, and we show both. The frontier run shows the trade-off point by point: 536 kg at ₹324,700, 169 kg at ₹82,487. `milp_robust` (planned on P10 shelf life, P90 travel) gets 726 kg against 736 kg at ₹396,895 against ₹404,432. 733 of the 736 kg is handling loss, which grows with kg delivered.
 
 **Why did spoilage % not fall more?**
 The MILP ships and sells more, and handling loss scales with delivered kilograms, so percentage can look flat while kilograms fall (A-39). The scenario also has a low base spoilage rate.
@@ -34,7 +34,7 @@ No. We built a tiered markdown rule and measured it: on practice it gave results
 **How do you measure it, and can it be gamed?**
 `Σ min(sold, undiscounted demand) / Σ undiscounted demand`. Discounts raise sales but not the denominator. We also report the minimum destination fill rate so starving one market shows up.
 
-**Your minimum fill is 52.8 %. Is that fair?**
+**Your minimum fill is 34.1 %. Is that fair?**
 It is an honest report, up from 0 % under FEFO. A soft balance constraint (C6) pushes toward fairness without making the plan infeasible.
 
 ## Net economic outcome (20)
@@ -63,7 +63,7 @@ Measured: Hidden-style scenarios (synthetic, seed 42, `milp`): 10/10 run with 0 
 We do not claim they are right. The sensitivity run shows how results change with `q10`, elasticity (ε against ε/2), the overship slack, and demand ±20 %.
 
 **What happens when the world differs from the forecast?**
-The 200-future Monte Carlo test evaluates the committed plan, without re-solving, on the same futures as the baseline. The plan beats FEFO on net in all 200 futures and on spoilage kg in 84.5 %; the robust variant `milp_robust` beats it on spoilage in 100 % (at lower net).
+The 200-future Monte Carlo test evaluates the committed plan, without re-solving, on the same futures as the baseline. The plan beats FEFO on net and on spoilage kg in all 200 futures (P50 ₹380,974 against ₹249,720; 773 kg against 932 kg).
 
 **Can it replan?**
 Yes: five event types, with already-dispatched shipments frozen. Be careful: with a 2 s cap it is mostly a repair of the old plan (A-43), and we have not reviewed replan numbers enough to quote.

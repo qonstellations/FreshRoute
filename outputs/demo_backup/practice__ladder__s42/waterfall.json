@@ -10,27 +10,27 @@
     },
     {
       "label": "Spoilage cost avoided",
-      "value": 1357.091224999962,
+      "value": 3523.5210040173642,
       "type": "delta"
     },
     {
       "label": "Extra sales (list price)",
-      "value": 321101.00857299985,
+      "value": 141152.6011005072,
       "type": "delta"
     },
     {
       "label": "Cost of extra goods sold",
-      "value": -186364.03991000005,
+      "value": -87524.8960858885,
       "type": "delta"
     },
     {
       "label": "Extra transport",
-      "value": 45542.724344999966,
+      "value": 79244.13432188051,
       "type": "delta"
     },
     {
       "label": "Extra handling",
-      "value": -10449.900395000004,
+      "value": -2990.670126201345,
       "type": "delta"
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "label": "FreshRoute net",
-      "value": 442214.11961399973,
+      "value": 404431.9259903152,
       "type": "total"
     }
   ]

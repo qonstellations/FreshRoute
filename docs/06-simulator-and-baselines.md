@@ -43,7 +43,7 @@ From the FEFO net to the FreshRoute net, in six steps: spoilage cost avoided, ex
 Measured on the synthetic `practice` scenario, seed 42, from `outputs/demo_backup/`:
 
 - FIFO and `last_day_50` show 19 violations each; their higher fill rate comes from an infeasible plan.
-- Against FEFO, the MILP adds about ₹171k net. The gain comes mainly from **fulfilling more demand** at a lower transport bill, not from a large drop in spoilage (904 kg to 854 kg).
+- Against FEFO, the MILP adds about ₹133k net, from **fulfilling more demand** (64.5 % to 72.0 %) at a ₹79k lower transport bill, and spoilage falls from 904 kg to 736 kg (stored run; numbers in the README).
 - Spoilage % can rise for a plan that ships more, because handling loss scales with delivered kilograms (A-39).
 
 Always quote numbers with their scenario and seed, and always say synthetic. The README holds the current table; copy from there, never from memory.
