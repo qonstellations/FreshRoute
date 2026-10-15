@@ -52,7 +52,7 @@ function Ladder({ ladder }: { ladder: LadderData['ladder'] }) {
   ]
   const chart = rows.map(r => ({ policy: r.policy, net_inr: r.kpis.net_inr }))
   const fill = (c: (typeof chart)[number]) =>
-    c.policy === OURS ? C.good : c.net_inr >= 0 ? 'var(--mantine-color-gray-5)' : C.bad
+    c.policy === OURS ? C.good : c.net_inr >= 0 ? 'light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-2))' : C.bad
   return (
     <Paper withBorder radius="lg" p="lg">
       <Title order={3}>Every rule vs FreshRoute, scored the same way</Title>
@@ -76,7 +76,8 @@ function Ladder({ ladder }: { ladder: LadderData['ladder'] }) {
         </BarChart>
       </ResponsiveContainer>
       <Table.ScrollContainer minWidth={760} mt="md">
-        <Table striped highlightOnHover verticalSpacing="sm" fz="md">
+        <Table striped highlightOnHover stripedColor="color-mix(in srgb, var(--accent) 7%, transparent)"
+          highlightOnHoverColor="color-mix(in srgb, var(--accent) 16%, transparent)" verticalSpacing="sm" fz="md">
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Plan</Table.Th><Table.Th>Type</Table.Th><Table.Th ta="right">Spoiled kg</Table.Th>
@@ -89,7 +90,7 @@ function Ladder({ ladder }: { ladder: LadderData['ladder'] }) {
             {rows.map(r => {
               const ours = r.policy === OURS
               return (
-                <Table.Tr key={r.policy} bg={ours ? 'var(--mantine-color-green-0)' : undefined} fw={ours ? 700 : undefined}>
+                <Table.Tr key={r.policy} bg={ours ? 'color-mix(in srgb, var(--accent) 22%, transparent)' : undefined} fw={ours ? 700 : undefined}>
                   <Table.Td>{policyName(r.policy)} {ours && <Badge size="sm" ml={6}>ours</Badge>}</Table.Td>
                   <Table.Td c="dimmed">{r.group}</Table.Td>
                   <Table.Td ta="right">{fmt(r.kpis.spoilage_kg)}</Table.Td>
