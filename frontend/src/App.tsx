@@ -11,9 +11,9 @@ import { Dashboard } from './pages/Dashboard'
 import { LandingPage } from './pages/LandingPage'
 
 const NAV_SECTIONS = [
-  { id: 'crisis', n: '01', label: 'CRISIS' },
-  { id: 'workflow', n: '02', label: 'WORKFLOW' },
-  { id: 'results', n: '03', label: 'BENCHMARK' },
+  { id: 'crisis', n: '01', label: 'PROBLEM' },
+  { id: 'workflow', n: '02', label: 'HOW IT WORKS' },
+  { id: 'results', n: '03', label: 'RESULTS' },
   { id: 'audit', n: '04', label: 'TRUST' },
 ]
 
@@ -109,7 +109,7 @@ export default function App() {
                   data-cursor="BACK"
                 >
                   <IconArrowLeft size={14} />
-                  <span>BACK TO PRODUCT STORY</span>
+                  <span>BACK TO OVERVIEW</span>
                 </button>
               </Group>
             )}
@@ -124,8 +124,8 @@ export default function App() {
                   data-cursor="CONSOLE"
                 >
                   <span className="cta-mask">
-                    <span className="cta-label">LAUNCH CONSOLE</span>
-                    <span className="cta-clone">LAUNCH CONSOLE</span>
+                    <span className="cta-label">OPEN LIVE DEMO</span>
+                    <span className="cta-clone">OPEN LIVE DEMO</span>
                   </span>
                   <span className="cta-div" aria-hidden />
                   <IconArrowRight size={14} />
