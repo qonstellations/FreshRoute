@@ -147,6 +147,11 @@ export interface SensitivityRow { // §5.12 sensitivity.csv
 }
 export interface SensitivityResponse extends Example { records: SensitivityRow[] }
 
+export interface FrontierRow { // §5.12 frontier.csv, one row per spoilage weight
+  lambda_spoil: number; net_inr: number; spoilage_kg: number; demand_fulfillment_pct: number; min_dest_fill_pct: number
+}
+export interface FrontierResponse { records: FrontierRow[] }
+
 export type EventType = 'route_delay' | 'capacity_drop' | 'demand_spike' | 'new_order' | 'price_shock'
 export interface ReplanEvent { // §6
   event_id: string; type: EventType; target: string; magnitude: number; at_h: number; note?: string

@@ -4,7 +4,7 @@ import { Alert, Badge, Button, Code, Group, Paper, SimpleGrid, Skeleton, Slider,
 import { IconAlertTriangle, IconChartDots3, IconPlayerPlayFilled, IconShieldCheck } from '@tabler/icons-react'
 import { m, useReducedMotion, type Variants } from 'motion/react'
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { Bar, BarChart, CartesianGrid, Cell, ReferenceDot, ResponsiveContainer, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, Cell, LabelList, ReferenceDot, ResponsiveContainer, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from 'recharts'
 import { api, notOnDisk, waitDone } from '../api/client'
 import { ExampleBanner } from '../components/Banners'
 import { Explain } from '../components/Explain'
@@ -13,7 +13,7 @@ import { C } from '../components/Waterfall'
 import { dotsWon, fmt, fmtShare } from '../lib/delta'
 import { policyName, type Term } from '../lib/words'
 import { spring } from '../theme'
-import type { Band, SensitivityResponse, SensitivityRow, StressKpi, StressResponse, TabProps } from '../types'
+import type { Band, FrontierResponse, SensitivityResponse, SensitivityRow, StressKpi, StressResponse, TabProps } from '../types'
 
 // ponytail: N of ARCHITECTURE §14.1, sent with POST /api/stress; the CLI owns the real default
 const STRESS_N = 200
@@ -37,6 +37,8 @@ export function Robustness({ run }: TabProps) {
   const stress = useServed(() => api.stress(run.scenario, run.seed), [run.scenario, run.seed])
   const sens = useServed(() => api.sensitivity(run.scenario, run.seed), [run.scenario, run.seed])
 
+  const front = useServed(() => api.frontier(run.scenario, run.seed), [run.scenario, run.seed])
+
   const s = stress.data
   return (
     <Stack gap="lg">
@@ -48,6 +50,7 @@ export function Robustness({ run }: TabProps) {
         <Hero s={s} />
         <Bands s={s} />
       </>}
+      <Frontier load={front.data} />
           <Sensitivity load={sens.data} error={sens.error} scenario={run.scenario} seed={run.seed} />
     </Stack>
   )
@@ -258,6 +261,42 @@ function Sensitivity({ load, error, scenario, seed }: { load: Load<SensitivityRe
           </Table.Tbody>
         </Table>
       </Table.ScrollContainer>
+    </Paper>
+  )
+}
+
+// ---------- spoilage / profit frontier ----------
+const SHIPPED_LAMBDA = 1 // config.LAMBDA_SPOIL: the weight of the plan we ship
+
+function Frontier({ load }: { load: Load<FrontierResponse> }) {
+  if (!load) return (
+    <Paper withBorder radius="lg" p="lg">
+      <Title order={3}>Profit versus spoilage</Title>
+      <Text size="sm" c="dimmed">{load === undefined ? 'Loading…' : '— (not run for this plan yet)'}</Text>
+    </Paper>
+  )
+  const pts = load.records.map(r => ({ ...r, label: `λ=${r.lambda_spoil}` }))
+  return (
+    <Paper withBorder radius="lg" p="lg">
+      <Title order={3}>Profit versus spoilage</Title>
+      <Text size="sm" c="dimmed" mb="md">
+        We re-plan with a different penalty (λ) on each kg that spoils. Higher λ saves more food but gives up some profit.
+        The highlighted point (λ={SHIPPED_LAMBDA}) is the plan we ship. Each point is a time-limited solve, so a point can sit slightly off the curve.
+      </Text>
+      <ResponsiveContainer width="100%" height={300}>
+        <ScatterChart margin={{ top: 16, right: 32, bottom: 24, left: 16 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis type="number" dataKey="spoilage_kg" name="Food spoiled" unit=" kg" domain={['auto', 'auto']}
+            label={{ value: 'Food spoiled (kg)', position: 'insideBottom', offset: -12 }} />
+          <YAxis type="number" dataKey="net_inr" name="Profit" width={80} domain={['auto', 'auto']}
+            tickFormatter={v => `₹${fmt(v)}`} />
+          <ZAxis range={[90, 90]} />
+          <Scatter data={pts} fill="#868e96">
+            {pts.map(p => <Cell key={p.lambda_spoil} fill={p.lambda_spoil === SHIPPED_LAMBDA ? '#e8590c' : '#868e96'} />)}
+            <LabelList dataKey="label" position="top" />
+          </Scatter>
+        </ScatterChart>
+      </ResponsiveContainer>
     </Paper>
   )
 }

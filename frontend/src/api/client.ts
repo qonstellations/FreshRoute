@@ -1,7 +1,7 @@
 // Thin fetch wrappers for DATABASE.md §11.2. Errors surface the API's {"detail"} text.
 import type {
   ConfigConstants, DispatchSheet, GeoRecord, Health, Ladder, PostReplanRequest, PostReplanResponse, PostRunRequest,
-  PostRunResponse, PostStressRequest, ReasonCards, ReplanResult, RunDetail, RunsList, ScenarioInfo, SensitivityResponse,
+  FrontierResponse, PostRunResponse, PostStressRequest, ReasonCards, ReplanResult, RunDetail, RunsList, ScenarioInfo, SensitivityResponse,
   StatusResponse, StressResponse, Table, TableName,
 } from '../types'
 
@@ -47,6 +47,8 @@ export const api = {
   postStress: (body: PostStressRequest) => req<PostRunResponse>('/stress', post(body)),
   sensitivity: (scenario: string, seed: number) =>
     req<SensitivityResponse>(`/sensitivity?scenario=${e(scenario)}&seed=${seed}`),
+  frontier: (scenario: string, seed: number) =>
+    req<FrontierResponse>(`/frontier?scenario=${e(scenario)}&seed=${seed}`),
   postReplan: (body: PostReplanRequest) => req<PostReplanResponse>('/replan', post(body)),
   replanResult: (runId: string, eventId: string) =>
     req<ReplanResult>(`/runs/${e(runId)}/replan/${e(eventId)}`),
