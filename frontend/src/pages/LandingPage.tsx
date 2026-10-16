@@ -49,11 +49,11 @@ const GUIDE_STEPS = [
   },
 ]
 
-// Frame-sequence intro: the 21.5 s brag film pre-extracted to 205 stills (1920x1080)
+// Frame-sequence intro: the 21.5 s brag film pre-extracted to 103 stills (1280x720 WebP, every 2nd frame)
 // (frontend/public/frames/). Scrubbing stills on a canvas is smooth;
 // seeking video.currentTime on scroll is not.
-const FRAME_COUNT = 205
-const frameSrc = (i: number) => `/frames/frame_${String(i + 1).padStart(3, '0')}.jpg`
+const FRAME_COUNT = 103
+const frameSrc = (i: number) => `/frames/frame_${String(i + 1).padStart(3, '0')}.webp`
 
 interface LandingPageProps {
   onLaunch: () => void
@@ -66,11 +66,14 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
   const guideRef = useRef<HTMLElement>(null)
   const framesRef = useRef<(HTMLImageElement | null)[]>(Array(FRAME_COUNT).fill(null))
   const progressRef = useRef(0)
-  // Reduced-motion or broken frames skips the scroll intro and shows the hero directly.
+  // Reduced-motion, phones, data-saver or broken frames skip the 17 MB scroll intro
+  // and show the hero directly.
   const [introOff, setIntroOff] = useState(
     () =>
       typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      (window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+        window.matchMedia('(max-width: 768px)').matches ||
+        !!(navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData),
   )
   const [framesReady, setFramesReady] = useState(0) // loaded stills, for the % counter
   const [framesFailed, setFramesFailed] = useState(false)
@@ -196,7 +199,7 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
                 loop
                 autoPlay
                 playsInline
-                preload="auto"
+                preload="none"
                 aria-label="FreshRoute introduction video"
               />
             ) : (
