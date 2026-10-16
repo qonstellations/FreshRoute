@@ -11,6 +11,12 @@ export const band = (h: number) => (h < 6 ? ['#c0392b', '< 6 h to spare (urgent)
 export const BANDS = [band(0), band(12), band(48)]
 export const HUB = '#5b6575'
 
+/** Cubic S-curve between a hub column and a market column (route boards). */
+export function curve([x1, y1]: number[], [x2, y2]: number[]) {
+  const mx = (x1 + x2) / 2
+  return `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`
+}
+
 // Fixed display scale for the shelf-life fuse: a bar at full width means ≥ this many hours of slack.
 export const FUSE_SCALE_H = 48
 export const fuseFrac = (slackH: number) => Math.min(Math.max(slackH / FUSE_SCALE_H, 0), 1)

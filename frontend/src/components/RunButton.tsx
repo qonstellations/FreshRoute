@@ -24,7 +24,9 @@ export function RunButton({ request, onDone, onProgress, onError }: {
 }) {
   const live = useLiveSolves()
   const mounted = useRef(true)
-  useEffect(() => () => { mounted.current = false }, []) // stop polling after navigating away
+  // stop polling after navigating away; set true on (re)mount, or StrictMode's dev remount leaves it false and the
+  // loop quits after its first sleep: the run finishes on the server but the page never hears about it
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
   const [busy, setBusy] = useState<string | null>(null)
   const [improving, setImproving] = useState(false) // a first plan is already on screen
   const [done, setDone] = useState<number | null>(null) // set per success: re-keys the burst + check
@@ -49,10 +51,10 @@ export function RunButton({ request, onDone, onProgress, onError }: {
         if (s.state === 'done') {
           setDone(Date.now())
           setTimeout(() => setDone(null), 1800) // back to the idle label
-          notifications.show({ color: 'green', title: 'Plan ready', message: 'The optimiser finished. Results are up to date.', icon: <IconCheck size={18} /> })
+          notifications.show({ color: 'green', title: 'Plan ready', message: 'Your plan is ready. Results are up to date.', icon: <IconCheck size={18} /> })
           return onDone(run_id)
         }
-        if (s.state === 'error') return fail(`The optimiser stopped with an error (${run_id}): ${s.error ?? 'unknown error'}`)
+        if (s.state === 'error') return fail(`Planning stopped with an error (${run_id}): ${s.error ?? 'unknown error'}`)
       }
     } catch (err) {
       fail(String(err instanceof Error ? err.message : err))
@@ -67,7 +69,7 @@ export function RunButton({ request, onDone, onProgress, onError }: {
   return (
     <Box pos="relative">
       <Tooltip multiline w={280} withArrow
-        label={live ? 'Solves the plan with HiGHS (up to 30 s). A first plan shows in about 1 s and improves while you watch.' : NO_SOLVES_HINT}>
+        label={live ? 'Works out the best plan for the day (takes up to 30 seconds). A first plan shows in about 1 second and keeps getting better while you watch.' : NO_SOLVES_HINT}>
       <Button fullWidth size="md" radius="md" onClick={run} disabled={!request.scenario || !live}
         aria-busy={!!busy} className="plan-btn" data-state={state}
         style={{ overflow: 'hidden', cursor: busy ? 'progress' : undefined }}>
@@ -82,7 +84,7 @@ export function RunButton({ request, onDone, onProgress, onError }: {
                 animate={{ scale: 1, rotate: 0 }} transition={spring.bouncy}><IconCheck size={18} stroke={3} /></m.span>
               Done
             </>}
-            {state === 'idle' && <><IconPlayerPlayFilled size={16} /> Run the optimiser</>}
+            {state === 'idle' && <><IconPlayerPlayFilled size={16} /> Make my plan</>}
           </m.span>
         </AnimatePresence>
       </Button>

@@ -1,60 +1,26 @@
-// Landing: hero with two actions, the marquee, a vendor-friendly 7-step usage guide,
-// and a minimal footer. A plain scrolling page: no intro film, nothing pinned.
-// No KPI maths here: the UI only shows served numbers; this page shows none.
-import { Group, SimpleGrid, Stack, Text, Title } from '@mantine/core'
+// Landing: a plain-words hero beside low-poly produce, the marquee, the crate's-journey usage guide, and a minimal
+// footer. No KPI maths here: the guide's crate shows served dispatch fields as-is.
+import { Group, Stack, Text, Title } from '@mantine/core'
 import { IconArrowRight, IconBook2, IconLeaf } from '@tabler/icons-react'
 import { gsap } from 'gsap'
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
 import { useLayoutEffect, useRef } from 'react'
+import { CrateJourney } from '../components/CrateJourney'
+import { ProducePile } from '../components/LowPolyProduce'
+import { useDemoDay } from '../lib/demo'
 
 gsap.registerPlugin(ScrollToPlugin)
 
-// Vendor-facing usage flow: how to operate the demo, not how the engine works.
-const GUIDE_STEPS = [
-  {
-    n: '01',
-    title: 'Open the live demo',
-    body: 'Press “Open the live demo”. A ready-made demo day loads: stock batches, markets, and trucks. Nothing to upload.',
-  },
-  {
-    n: '02',
-    title: 'Check what you have to sell',
-    body: 'Look at your batches: each one shows its quantity and how much freshness it has left. The oldest-feeling stock is flagged first.',
-  },
-  {
-    n: '03',
-    title: 'Check where it can go',
-    body: 'Each market shows what it ordered and the time window your truck must arrive in. If produce would arrive too old to sell, that trip is blocked for you.',
-  },
-  {
-    n: '04',
-    title: 'Press “Make my plan”',
-    body: 'FreshRoute works out every possible batch → truck → market trip, then picks the combination with the highest profit after transport, handling, and waste costs.',
-  },
-  {
-    n: '05',
-    title: 'Read the plan in plain words',
-    body: 'Every line says what goes where, on which truck, and when. Click any line to see why that trip won and why the next-best option lost.',
-  },
-  {
-    n: '06',
-    title: 'Send it to your drivers',
-    body: 'Download the loading list as a file, or copy the ready-written driver message and paste it into WhatsApp.',
-  },
-  {
-    n: '07',
-    title: 'Fix the day when things change',
-    body: 'Road closed or truck broke down? Tell the demo what happened and it re-plans the rest of the day in seconds. Trucks already on the road stay as they are.',
-  },
-]
-
-
 interface LandingPageProps {
-  onLaunch: () => void
+  /** `from` is the clicked control; it morphs into the dashboard header (App.tsx view transition). */
+  onLaunch: (from?: HTMLElement) => void
 }
 
 export function LandingPage({ onLaunch }: LandingPageProps) {
   const root = useRef<HTMLDivElement>(null)
+  const day = useDemoDay()
+  // shipment no. 1 of the saved plan rides through the guide
+  const first = day?.rows.find(r => r.priority_rank === 1) ?? day?.rows[0] ?? null
 
   // Ambient marquee loop and a gentle hero entrance (skipped for reduced motion).
   useLayoutEffect(() => {
@@ -77,47 +43,55 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
 
   return (
     <div ref={root} className="landing-page">
-      {/* HERO: big title + two actions */}
+      {/* HERO: what FreshRoute does in plain words, with produce spilling out of a crate beside it */}
       <section className="landing-hero">
         <div className="landing-hero-inner">
-          <Group gap="xs" className="landing-hero-fade">
-            <span className="sec-tag">[DAILY DISPATCH PLANNER FOR FRESH PRODUCE]</span>
-          </Group>
+          <div className="landing-hero-copy">
+            <span className="sec-tag">[A PLANNING TOOL FOR FRUIT AND VEGETABLE WAREHOUSES]</span>
 
-          <h1 className="display landing-title" aria-label="FreshRoute">
-            <span className="hero-mask">
-              <span className="landing-hero-line">FRESH PRODUCE.</span>
-            </span>
-            <span className="hero-mask">
-              <span className="landing-hero-line outline">SMARTER DISPATCH.</span>
-            </span>
-          </h1>
+            <h1 className="display landing-title" aria-label="Get food to market before it spoils">
+              <span className="hero-mask">
+                <span className="landing-hero-line">GET FOOD TO MARKET</span>
+              </span>
+              <span className="hero-mask">
+                <span className="landing-hero-line outline">BEFORE IT SPOILS.</span>
+              </span>
+            </h1>
 
-          <div className="landing-hero-fade" style={{ maxWidth: 660, marginTop: 18 }}>
-            <Text size="xl" lh={1.6} fw={400} c="var(--text)">
-              Every morning, a produce warehouse decides which crates go on which truck to which
-              market. Choose badly and tomatoes rot on the road.{' '}
-              <strong>FreshRoute</strong> checks how long each batch will stay fresh, then picks the
-              plan that earns the most without breaking a single delivery rule.
+            <Text className="hero-lede">
+              Fruit and vegetables only stay fresh for a few days. Every morning, a warehouse has to decide which
+              crate goes on which truck, and to which market. Get it wrong and the food goes bad on the way.{' '}
+              <strong>FreshRoute makes that plan for you.</strong>
+            </Text>
+
+            <ol className="hero-steps">
+              <li><span>1</span>It checks how many hours each crate has before it goes bad.</li>
+              <li><span>2</span>It picks a truck and a market for every crate, so the most food sells while it is fresh.</li>
+              <li><span>3</span>If a road closes or a truck breaks down, it makes a new plan in seconds.</li>
+            </ol>
+
+            <Group mt={30} gap="md">
+              <button className="atelier-cta" onClick={(e) => onLaunch(e.currentTarget)} data-cursor="OPEN">
+                <span className="cta-mask">
+                  <span className="cta-label">OPEN THE LIVE DEMO</span>
+                  <span className="cta-clone">OPEN THE LIVE DEMO</span>
+                </span>
+                <span className="cta-div" aria-hidden />
+                <IconArrowRight size={16} />
+              </button>
+              <button className="atelier-ghost" onClick={scrollToGuide} data-cursor="GUIDE">
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <IconBook2 size={16} />
+                  SEE HOW IT WORKS
+                </span>
+              </button>
+            </Group>
+            <Text size="sm" c="var(--muted)" mt="md">
+              The demo uses a made-up practice warehouse near Bengaluru, not a real company’s numbers.
             </Text>
           </div>
 
-          <Group mt={32} className="landing-hero-fade" gap="md">
-            <button className="atelier-ghost" onClick={scrollToGuide} data-cursor="GUIDE">
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <IconBook2 size={16} />
-                HOW OUR WEBSITE WORKS
-              </span>
-            </button>
-            <button className="atelier-cta" onClick={onLaunch} data-cursor="OPEN">
-              <span className="cta-mask">
-                <span className="cta-label">OPEN THE LIVE DEMO</span>
-                <span className="cta-clone">OPEN THE LIVE DEMO</span>
-              </span>
-              <span className="cta-div" aria-hidden />
-              <IconArrowRight size={16} />
-            </button>
-          </Group>
+          <ProducePile />
         </div>
       </section>
 
@@ -132,49 +106,28 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
         </div>
       </div>
 
-      {/* HOW OUR WEBSITE WORKS: 7 vendor steps */}
-      <section id="guide" className="atelier-sec">
-        <Text className="sec-tag">[HOW TO USE THIS WEBSITE]</Text>
-        <Title order={2} className="anton" style={{ fontSize: 'clamp(2rem, 4vw, 3.2rem)' }}>
-          PLAN A DAY IN 7 STEPS
-        </Title>
-        <Text size="md" c="var(--muted)" maw={640}>
-          Written for a first-time vendor: no technical terms, just what to click and what you get.
-        </Text>
-        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md" mt={36}>
-          {GUIDE_STEPS.map((s) => (
-            <div key={s.n} className="landing-card landing-guide-card">
-              <div>
-                <Text className="sec-tag">[{s.n}]</Text>
-                <Title order={3} fz="1.35rem" mt={6}>
-                  {s.title}
-                </Title>
-                <Text fz="1.02rem" lh={1.55} c="var(--text)" mt={8}>
-                  {s.body}
-                </Text>
-              </div>
-            </div>
-          ))}
-          <div className="landing-card landing-guide-card landing-guide-cta">
-            <div>
-              <Text className="sec-tag">[READY?]</Text>
-              <Title order={3} fz="1.35rem" mt={6}>
-                Try step 1 right now
-              </Title>
-              <Text fz="1.02rem" lh={1.55} c="var(--text)" mt={8}>
-                Open the demo and follow the steps above on a real practice day.
-              </Text>
-              <button className="atelier-cta" onClick={onLaunch} data-cursor="OPEN" style={{ marginTop: 16 }}>
-                <span className="cta-mask">
-                  <span className="cta-label">OPEN THE LIVE DEMO</span>
-                  <span className="cta-clone">OPEN THE LIVE DEMO</span>
-                </span>
-                <span className="cta-div" aria-hidden />
-                <IconArrowRight size={16} />
-              </button>
-            </div>
+      {/* HOW OUR WEBSITE WORKS: 7 vendor steps, one crate carried through them */}
+      <section id="guide" className="guide-sec">
+        <CrateJourney row={first} onLaunch={() => onLaunch()}>
+          <Text className="sec-tag">[HOW TO USE THIS WEBSITE]</Text>
+          <div className="guide-head">
+            <Title order={2} className="anton" style={{ fontSize: 'clamp(2rem, 4vw, 3.2rem)' }}>
+              PLAN A DAY IN 7 STEPS
+            </Title>
+            <button className="atelier-cta" onClick={(e) => onLaunch(e.currentTarget)} data-cursor="OPEN">
+              <span className="cta-mask">
+                <span className="cta-label">OPEN THE LIVE DEMO</span>
+                <span className="cta-clone">OPEN THE LIVE DEMO</span>
+              </span>
+              <span className="cta-div" aria-hidden />
+              <IconArrowRight size={16} />
+            </button>
           </div>
-        </SimpleGrid>
+          <Text size="md" c="var(--muted)" maw={640}>
+            Seven short steps, no technical words: what to click and what you get.
+            {first && ` Follow one real crate from the demo plan (batch ${first.batch_id}, ${first.commodity}) from the warehouse to the driver’s phone.`}
+          </Text>
+        </CrateJourney>
       </section>
 
       {/* MINIMAL FOOTER */}

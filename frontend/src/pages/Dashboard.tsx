@@ -5,9 +5,11 @@ import {
 import {
   IconAlertTriangle, IconCpu, IconRoute, IconShieldCheck, IconTrendingUp, IconTruck
 } from '@tabler/icons-react'
+import { AnimatePresence, m } from 'motion/react'
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../api/client'
 import { Explain } from '../components/Explain'
+import { Odometer } from '../components/KpiTile'
 import { RunButton } from '../components/RunButton'
 import { RunPicker } from '../components/RunPicker'
 import { Plan } from '../tabs/Plan'
@@ -15,16 +17,19 @@ import { Replan } from '../tabs/Replan'
 import { Robustness } from '../tabs/Robustness'
 import { Scoreboard } from '../tabs/Scoreboard'
 import { Trust } from '../tabs/Trust'
+import { DEMO_RUN } from '../lib/demo'
 import { policyName, scenarioName } from '../lib/words'
+import { spring } from '../theme'
 import type { Progress, RunDetail, RunsList, ScenarioInfo } from '../types'
 
-const DEMO_RUN = 'practice__milp__s42'
+const TABS = ['overview', 'trucks', 'disruptions', 'audit']
 
 interface DashboardProps {
   onBackToOverview: () => void
+  initialTab?: string
 }
 
-export function Dashboard({ onBackToOverview }: DashboardProps) {
+export function Dashboard({ onBackToOverview, initialTab = 'overview' }: DashboardProps) {
   const [scenarios, setScenarios] = useState<ScenarioInfo[]>([])
   const [runs, setRuns] = useState<RunsList>({ runs: [], fixture: false })
   const [runId, setRunId] = useState<string | null>(null)
@@ -33,7 +38,10 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
   const [runsLoaded, setRunsLoaded] = useState(false) // first run list answered (ok or not)
   const [live, setLive] = useState<Progress | null>(null) // solver still improving the shown plan
   const [reload, setReload] = useState(0) // bumped per published plan: re-fetch the same run id
-  const [activeTab, setActiveTab] = useState<string>('overview')
+  // dir: +1 moving right through the numbered tabs, -1 back; the content slides in from that side
+  const [tab, setTab] = useState({ id: initialTab, dir: 0 })
+  const activeTab = tab.id
+  const pickTab = (id: string) => setTab(t => ({ id, dir: Math.sign(TABS.indexOf(id) - TABS.indexOf(t.id)) }))
 
   const [scenario, setScenario] = useState('practice')
   const [policy, setPolicy] = useState('milp')
@@ -88,7 +96,7 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
   return (
     <div className="dashboard-container">
       {/* 1. TOP OPERATIONS CONTROL BAR */}
-      <Paper withBorder p="md" className="dashboard-header-bar" radius={0}>
+      <Paper withBorder p="md" className="dashboard-header-bar" radius={0} style={{ viewTransitionName: 'launch' }}>
         <Group justify="space-between" wrap="wrap" gap="md">
           <div>
             <Group gap="xs" mb={4}>
@@ -182,11 +190,22 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
           {runs.runs.length > 0 && <RunPicker runs={runs.runs} value={runId} onChange={setRunId} />}
         </Group>
 
-        {live && (
-          <Alert color="green" variant="light" mt="sm" title={`Showing the best plan so far (version ${live.version}) · still looking for a better one`}>
-            Profit after all costs so far: ₹{Math.round(live.net_inr).toLocaleString('en-IN')} · {live.elapsed_s} s of searching
-          </Alert>
-        )}
+        {/* Live solve: each better plan rolls the served profit forward; the tabs below refresh under it. */}
+        <AnimatePresence initial={false}>
+          {live && (
+            <m.div className="live-strip" role="status" initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={spring.soft}>
+              <m.span key={live.version} className="live-flash" initial={{ opacity: 0.55 }} animate={{ opacity: 0 }}
+                transition={{ duration: 0.9 }} aria-hidden />
+              <div className="live-inner">
+                <span className="live-dot" aria-hidden />
+                <span>Best plan so far, version <Odometer text={String(live.version)} />. Still looking for a better one.</span>
+                <span className="live-net">Profit after all costs ₹<Odometer text={Math.round(live.net_inr).toLocaleString('en-IN')} /></span>
+                <Text span size="xs" c="dimmed">{live.elapsed_s} s of searching</Text>
+              </div>
+            </m.div>
+          )}
+        </AnimatePresence>
 
         {error && (
           <Alert color="red" icon={<IconAlertTriangle />} title="Something went wrong" mt="sm">
@@ -197,20 +216,19 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
 
       {/* 2. OPERATIONAL NAVIGATION TABS */}
       <div className="dashboard-nav-strip">
-        <Tabs value={activeTab} onChange={(val) => val && setActiveTab(val)} color="green">
+        <Tabs value={activeTab} onChange={(val) => val && pickTab(val)} color="green">
           <Tabs.List className="dashboard-tabs-list">
-            <Tabs.Tab value="overview" leftSection={<IconTrendingUp size={18} />}>
-              1. RESULTS
-            </Tabs.Tab>
-            <Tabs.Tab value="trucks" leftSection={<IconTruck size={18} />}>
-              2. TODAY'S PLAN
-            </Tabs.Tab>
-            <Tabs.Tab value="disruptions" leftSection={<IconRoute size={18} />}>
-              3. WHAT IF SOMETHING BREAKS?
-            </Tabs.Tab>
-            <Tabs.Tab value="audit" leftSection={<IconShieldCheck size={18} />}>
-              4. PROOF &amp; AUDIT
-            </Tabs.Tab>
+            {([
+              ['overview', IconTrendingUp, '1. RESULTS'],
+              ['trucks', IconTruck, "2. TODAY'S PLAN"],
+              ['disruptions', IconRoute, '3. WHAT IF SOMETHING BREAKS?'],
+              ['audit', IconShieldCheck, '4. PROOF & AUDIT'],
+            ] as const).map(([v, Icon, label]) => (
+              <Tabs.Tab key={v} value={v} leftSection={<Icon size={18} />}>
+                {label}
+                {activeTab === v && <m.span layoutId="tab-ink" className="tab-ink" transition={spring.bouncy} aria-hidden />}
+              </Tabs.Tab>
+            ))}
           </Tabs.List>
         </Tabs>
       </div>
@@ -244,7 +262,14 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
             />
           </Paper>
         ) : (
-          <div style={{ marginTop: 24 }}>
+          <AnimatePresence mode="wait" initial={false} custom={tab.dir}>
+          <m.div key={activeTab} style={{ marginTop: 24 }} custom={tab.dir}
+            variants={{
+              enter: (d: number) => ({ opacity: 0, x: d * 48 }),
+              show: { opacity: 1, x: 0, transition: spring.snappy },
+              leave: (d: number) => ({ opacity: 0, x: d * -48, transition: { duration: 0.12 } }),
+            }}
+            initial="enter" animate="show" exit="leave">
             {activeTab === 'overview' && (
               <Stack gap="xl">
                 <Scoreboard run={run} />
@@ -253,7 +278,7 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
 
             {activeTab === 'trucks' && (
               <Stack gap="xl">
-                <Plan run={run} runId={runId} />
+                <Plan run={run} runId={runId} rev={reload} />
               </Stack>
             )}
 
@@ -270,7 +295,7 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
                       </Text>
                     </div>
                     <Badge color="blue" variant="light">
-                      SOLVER LIMIT 2 S PER RE-PLAN
+                      EACH RE-PLAN TAKES A FEW SECONDS
                     </Badge>
                   </Group>
                 </Paper>
@@ -284,7 +309,8 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
                 <Trust run={run} />
               </Stack>
             )}
-          </div>
+          </m.div>
+          </AnimatePresence>
         )}
       </div>
 

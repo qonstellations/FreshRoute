@@ -4,7 +4,7 @@
 import {
   Alert, Badge, Blockquote, Button, Group, NumberInput, Paper, Select, SimpleGrid, Stack, Table, Text, TextInput, ThemeIcon, Title,
 } from '@mantine/core'
-import { IconAlertTriangle, IconArrowRight, IconBolt, IconMessage2, IconRefresh, IconSnowflake, IconTruck } from '@tabler/icons-react'
+import { IconAlertTriangle, IconArrowRight, IconBolt, IconMessage2, IconRefresh, IconRestore, IconSnowflake, IconTruck } from '@tabler/icons-react'
 import { LayoutGroup, m } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { api, waitReplan } from '../api/client'
@@ -45,7 +45,9 @@ const CANNED: Record<EventType, { label: string; note: string; magnitude: number
 }
 const TYPES = Object.keys(CANNED) as EventType[]
 const AT_H = 8 // DATABASE §6 example event time
-const CLOSE_H = 12 // a click on the map closes a road: route_delay of this many hours (audited demo default)
+// A click on the map closes a road: a route_delay longer than the whole 3-day plan, so no arrival on it stays feasible
+// and the engine stops using it (a 12 h delay left the road usable, so clicks looked like they did nothing).
+const CLOSE_H = 72
 
 type Form = Omit<ReplanEvent, 'event_id'>
 const formFor = (type: EventType, ids: Ids): Form =>
@@ -61,10 +63,12 @@ export function Replan({ run, runId }: TabProps) {
   const [error, setError] = useState('')
   const [result, setResult] = useState<ReplanResult | null>(null)
   const [rows, setRows] = useState<DispatchRow[]>([])
+  const [closed, setClosed] = useState<[string, string] | null>(null) // the road a map click closed
+  const [closedName, setClosedName] = useState('')
 
   // a vehicle id for the reefer-breakdown default, from the run's own dispatch sheet
   useEffect(() => {
-    setResult(null); setError(''); setRows([])
+    setResult(null); setError(''); setRows([]); setClosed(null)
     api.dispatchSheet(runId).then(s => {
       setRows(s?.csv ?? [])
       const v = s?.csv[0]?.vehicle_id
@@ -74,24 +78,29 @@ export function Replan({ run, runId }: TabProps) {
   useEffect(() => { if (form.type === 'capacity_drop' && ids.vehicle) setForm(f => ({ ...f, target: CANNED.capacity_drop.target(ids) })) },
     [ids])
 
-  async function apply(f: Form = form) {
+  async function apply(f: Form = form, road: [string, string] | null = null) {
     if (busy) return
-    setBusy(true); setError(''); setResult(null)
+    setBusy(true); setError(''); setResult(null); setClosed(road)
     // ponytail: time-based id, unique per click; the engine keys replan/<event_id>/ by it
     const event: ReplanEvent = { ...f, event_id: `E-${Date.now().toString(36).toUpperCase()}` }
     try {
       const r = await api.postReplan({ run_id: runId, event })
       setResult(await waitReplan(r.run_id, r.event_id))
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      setError(e instanceof Error ? e.message : String(e)); setClosed(null)
     } finally { setBusy(false) }
   }
 
   // Break it live: a road click closes that road and replans at once; a destination click only fills the form.
-  function closeRoad(o: string, d: string) {
-    if (busy) return
+  function closeRoad(o: string, d: string, name: string) {
+    if (busy || !live) return
+    setClosedName(name)
     const f: Form = { type: 'route_delay', target: `${o}|${d}|*`, magnitude: CLOSE_H, at_h: AT_H, note: `road ${o} → ${d} closed` }
-    setForm(f); apply(f)
+    setForm(f); apply(f, [o, d])
+  }
+  // Back to the saved plan: the replan only ever wrote its own replan/<event_id>/ folder, so there is nothing to undo.
+  function reset() {
+    setResult(null); setError(''); setClosed(null); setForm(formFor('route_delay', ids))
   }
   const spikeAt = (d: string | undefined) => d && setForm(formFor('demand_spike', { ...ids, dest: d }))
   const after = result?.trips && { at_h: result.diff.at_h, routes: result.trips
@@ -104,12 +113,23 @@ export function Replan({ run, runId }: TabProps) {
       {rows.length > 0 && (
         <Stack gap={4}>
           <Text fw={700}>Break the plan and watch FreshRoute recover</Text>
-          <Text size="sm">1. Click any road on the map to close it for {CLOSE_H} h starting at hour {AT_H}. FreshRoute re-plans in a few seconds.</Text>
+          <Text size="sm">1. Click any road on the map to close it from hour {AT_H} to the end of the plan. FreshRoute re-plans in a few
+            seconds. Trucks that left before hour {AT_H} are already on the road and finish their trip.</Text>
           <Text size="sm">2. Or click a market to set up a demand spike there, or pick any event below and press “Re-plan now”.</Text>
           <Text size="sm" mb={4}>3. Below, see which shipments moved and how profit changed.</Text>
           <ShelfLifeMap scenario={run.scenario.split(/[\\/]/).pop() ?? run.scenario} runId={runId} rows={rows}
-            onPick={spikeAt} onRoute={closeRoad} after={after} />
-          {after && <Text size="xs" c="dimmed">Red dashed = roads the new plan stopped using · bold green = roads it uses now</Text>}
+            onPick={spikeAt} onRoute={live ? closeRoad : undefined} after={after} closed={closed} busy={busy} />
+          {(closed || result) && (
+            <Group justify="space-between" gap="xs">
+              <Text size="sm" fw={600} c={closed ? 'red' : undefined}>
+                {closed ? (busy ? `Closing the road ${closedName} and re-planning…`
+                  : `Road ${closedName} closed. ${result?.diff.moved_batches.length ?? 0} batches now go to a different market.`)
+                  : 'Showing the re-planned routes.'}</Text>
+              <Button size="compact-sm" variant="default" leftSection={<IconRestore size={14} />} onClick={reset} disabled={busy}>
+                Reset to the saved plan</Button>
+            </Group>
+          )}
+          {after && <Text size="xs" c="dimmed">Red ✕ = the road you closed · red dashed = roads the new plan stopped using · bold green = roads it uses now</Text>}
         </Stack>
       )}
       <Paper withBorder radius="lg" p="lg">

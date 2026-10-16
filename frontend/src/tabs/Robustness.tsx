@@ -195,7 +195,7 @@ function Bands({ s }: { s: StressResponse }) {
 
 // ---------- sensitivity ----------
 const PARAM_LABEL: Record<string, string> = {
-  q10: 'How fast heat speeds up spoilage (Q10)', elasticity_multiplier: 'How much discounts boost sales (elasticity ×)',
+  q10: 'How fast heat speeds up spoilage', elasticity_multiplier: 'How much discounts boost sales (elasticity ×)',
   overship_slack: 'Allowed overshipping', demand_multiplier: 'Demand level (×)',
 }
 const PARAM_TERM: Record<string, Term> = { q10: 'q10', elasticity_multiplier: 'elasticity' }
@@ -297,7 +297,7 @@ function Frontier({ load }: { load: Load<FrontierResponse> }) {
       <Text size="sm" c="dimmed" mb="md">
         We re-plan with a different penalty (λ) on each kg that spoils. Higher λ saves more food but gives up some profit.
         The highlighted point (λ={SHIPPED_LAMBDA}) uses the weight of the plan we ship; each point is its own time-limited solve. λ prices spoilage in rupees, so kilograms do not always move the same way.
-        {anyDominated && ' Hollow grey points lose to another point on both profit and spoilage: the time-limited solver stopped early there, so they are not a real trade-off and the line skips them.'}
+        {anyDominated && ' Hollow grey points lose to another point on both profit and spoilage: the planner ran out of time there, so they are not a real trade-off and the line skips them.'}
       </Text>
       <ResponsiveContainer width="100%" height={300}>
         <ScatterChart margin={{ top: 28, right: 32, bottom: 24, left: 16 }}>

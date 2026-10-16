@@ -4,17 +4,24 @@ import {
 import {
   IconArrowLeft, IconArrowRight, IconLeaf, IconMoon, IconSun
 } from '@tabler/icons-react'
-import { gsap } from 'gsap'
 import { lazy, Suspense, useEffect, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { CustomCursor } from './components/CustomCursor'
 import { LandingPage } from './pages/LandingPage'
 
 // Dashboard pulls recharts + all tabs; keep it off the landing page's critical path.
-const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })))
+const loadDashboard = () => import('./pages/Dashboard')
+const Dashboard = lazy(() => loadDashboard().then((m) => ({ default: m.Dashboard })))
 
-const NAV_SECTIONS = [
-  { id: 'guide', n: '01', label: 'HOW TO USE' },
-]
+// The view transition holds the old frame until `sel` renders (or `ms` passes), so the morph lands on a
+// drawn dashboard rather than a skeleton. ponytail: rAF poll; a MutationObserver is the upgrade if this ever shows in a profile.
+function waitFor(sel: string, ms: number) {
+  const end = performance.now() + ms
+  return new Promise<void>((done) => {
+    const tick = () => (document.querySelector(sel) || performance.now() > end ? done() : requestAnimationFrame(tick))
+    tick()
+  })
+}
 
 export default function App() {
   const [view, setView] = useState<'landing' | 'dashboard'>(() => {
@@ -48,21 +55,33 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
-  const switchView = (target: 'landing' | 'dashboard') => {
-    setView(target)
-    window.location.hash = target === 'dashboard' ? '/dashboard' : '/'
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
+  // warm the dashboard chunk once the landing page is idle, so the launch morph rarely waits on the network
+  useEffect(() => {
+    const t = setTimeout(() => { loadDashboard().catch(() => {}) }, 1500)
+    return () => clearTimeout(t)
+  }, [])
 
-  const scrollToAnchor = (id: string) => {
-    if (view !== 'landing') {
-      switchView('landing')
-      setTimeout(() => {
-        gsap.to(window, { duration: 1, ease: 'power3.inOut', scrollTo: { y: `#${id}`, offsetY: 70 } })
-      }, 100)
-    } else {
-      gsap.to(window, { duration: 1, ease: 'power3.inOut', scrollTo: { y: `#${id}`, offsetY: 70 } })
+  // launched from the landing page = opens on today's plan
+  const [entryTab, setEntryTab] = useState<string | undefined>(undefined)
+
+  // Landing <-> dashboard as one view transition: the clicked control grows into the dashboard header (CSS in
+  // index.css). Without support it is a plain cut.
+  const switchView = (target: 'landing' | 'dashboard', from?: HTMLElement) => {
+    const apply = () => {
+      flushSync(() => {
+        setEntryTab(target === 'dashboard' ? 'trucks' : undefined)
+        setView(target)
+      })
+      window.location.hash = target === 'dashboard' ? '/dashboard' : '/'
+      window.scrollTo(0, 0)
     }
+    if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return apply()
+    if (from) from.style.viewTransitionName = 'launch'
+    const vt = document.startViewTransition(async () => {
+      apply()
+      if (target === 'dashboard') await waitFor('.plan-map', 900)
+    })
+    vt.ready.catch(() => {}) // a skipped transition (tab hidden, clicked again) is a plain cut, not an error
   }
 
   return (
@@ -84,22 +103,7 @@ export default function App() {
               </Text>
             </Group>
 
-            {/* Landing Navigation: Section scroll links */}
-            {view === 'landing' ? (
-              <Group gap={6} visibleFrom="md" className="landing-nav-links">
-                {NAV_SECTIONS.map((sec) => (
-                  <button
-                    key={sec.id}
-                    className="landing-nav-link"
-                    onClick={() => scrollToAnchor(sec.id)}
-                    data-cursor="GO"
-                  >
-                    <span style={{ opacity: 0.65, marginRight: 4 }}>[{sec.n}]</span>
-                    {sec.label}
-                  </button>
-                ))}
-              </Group>
-            ) : (
+            {view === 'dashboard' && (
               <Group gap={8}>
                 <button
                   className="atelier-ghost"
@@ -118,7 +122,7 @@ export default function App() {
               {view === 'landing' && (
                 <button
                   className="atelier-cta"
-                  onClick={() => switchView('dashboard')}
+                  onClick={(e) => switchView('dashboard', e.currentTarget)}
                   style={{ padding: '8px 18px', fontSize: '0.85rem' }}
                   data-cursor="CONSOLE"
                 >
@@ -148,10 +152,10 @@ export default function App() {
 
         <AppShell.Main>
           {view === 'landing' ? (
-            <LandingPage onLaunch={() => switchView('dashboard')} />
+            <LandingPage onLaunch={(from) => switchView('dashboard', from)} />
           ) : (
             <Suspense fallback={<Text p="xl">Loading…</Text>}>
-              <Dashboard onBackToOverview={() => switchView('landing')} />
+              <Dashboard onBackToOverview={() => switchView('landing')} initialTab={entryTab} />
             </Suspense>
           )}
         </AppShell.Main>

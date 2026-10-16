@@ -25,16 +25,16 @@ In development, `make api` (port 8000) and `make web` (Vite on 5173, proxying `/
 
 ## What the user sees
 
-The frontend has two parts, switched by URL hash (D-32): a narrative **landing page** (Problem, How it works, Results, Trust, Who it's for; the button "Open the live demo" leads on), and an **operations dashboard** with one "Run the optimiser" button and four tabs:
+The frontend has two parts, switched by URL hash (D-32): a **landing page** (a plain-words hero beside low-poly produce, then "Plan a day in 7 steps", a sideways-scrolling guide that follows one real crate from the demo plan; "Open the live demo" sits in the hero, beside the guide heading and in the header), and an **operations dashboard** with one "Make my plan" button and four tabs:
 
 1. **Results**: baseline against ours on profit after all costs, food spoiled, orders filled, worst-served market and rule breaks, plus the profit steps ("Where the extra profit comes from", one row per waterfall step), the ladder ("Every rule vs FreshRoute") and the validator panel ("Independent check").
 2. **Today's plan**: the route board (hubs to markets, most urgent first), the truck loading list and one driver message per trip, reason cards and price cuts.
 3. **What if something breaks?**: click a road on the map (or close one from the list) to re-plan around it, or pick an event and press "Re-plan now"; then the replan diff, the stress test and the sensitivity table.
 4. **Proof & audit**: `run_manifest.json` ("Reproduce this exact result"), every `config.py` constant, and the assumptions.
 
-After "Run the optimiser" finishes, the engine also rewrites the ladder and waterfall for that scenario and seed (A-55), so the cards, the ladder table and the waterfall on Results always show the same run.
+After "Make my plan" finishes, the engine also rewrites the ladder and waterfall for that scenario and seed (A-55), so the cards, the ladder table and the waterfall on Results always show the same run.
 
-The landing page's numbers are not typed in (the re-plan figure is `REPLAN_TIME_LIMIT_S` from `GET /api/config`, labelled as a solver cap, because replan timings are not quoted): it reads them from `GET /api/ladder` and `GET /api/stress` for the demo run (`practice`, seed 42) and shows dashes if that run is not on disk. Labels are plain language; an uncommon term has a dotted underline and a hover note (`components/Explain.tsx`), and all wording lives in `lib/words.ts` (words only, no numbers).
+The landing page types in no numbers: the guide's crate is the top row of the demo run's dispatch sheet (`GET /api/runs/practice__milp__s42/dispatch-sheet`), and the crate is hidden if that run is not on disk. Labels are plain language with no algorithm names; an uncommon term has a dotted underline and a hover note (`components/Explain.tsx`), and all wording lives in `lib/words.ts` (words only, no numbers). Saved results are listed by scenario, plan type and seed, not by folder name.
 
 A synthetic-data banner is driven by `scenario.json → source` and is shown whenever the data is synthetic (Rule 7).
 

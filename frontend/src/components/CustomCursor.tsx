@@ -21,7 +21,7 @@ export function CustomCursor() {
 
     const onMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null
-      const hoverTarget = target?.closest('[data-cursor], button, a, .pick-card') as HTMLElement | null
+      const hoverTarget = target?.closest('[data-cursor], button, a') as HTMLElement | null
       if (hoverTarget) {
         setActive(true)
         const customLabel = hoverTarget.getAttribute('data-cursor')

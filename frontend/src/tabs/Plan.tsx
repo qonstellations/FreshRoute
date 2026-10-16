@@ -2,7 +2,7 @@
 // Every number is a served field (DATABASE §5.9–§5.10), only rounded for display.
 import { Alert, Paper, Skeleton, Stack, Text } from '@mantine/core'
 import { IconAlertTriangle, IconClipboardOff, IconFileUnknown } from '@tabler/icons-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../api/client'
 import { DiscountCards, cardLayoutId } from '../components/plan/DiscountCards'
 import { Dispatch, rowLayoutId } from '../components/plan/Dispatch'
@@ -20,7 +20,8 @@ function Empty({ icon: Icon, text }: { icon: typeof IconFileUnknown; text: strin
   )
 }
 
-export function Plan({ run, runId }: { run: RunDetail; runId: string }) {
+// `rev` bumps when a live solve publishes a better plan under the same run id: refetch, keep the old one on screen.
+export function Plan({ run, runId, rev }: { run: RunDetail; runId: string; rev?: number }) {
   const scenario = run.scenario.split(/[\\/]/).pop() ?? run.scenario
   const [sheet, setSheet] = useState<DispatchSheet | null | undefined>(undefined)
   const [cards, setCards] = useState<ReasonCards | undefined>(undefined)
@@ -30,14 +31,21 @@ export function Plan({ run, runId }: { run: RunDetail; runId: string }) {
   const [dest, setDest] = useState<string | undefined>(undefined) // map pick → dispatch display filter
   const [error, setError] = useState('')
   const close = useCallback(() => setOpen(undefined), [])
+  const shown = useRef(runId)
 
   useEffect(() => {
-    setSheet(undefined); setCards(undefined); setOpen(undefined); setDest(undefined); setError('')
-    const fail = (what: string) => (e: Error) => setError(`Couldn't load ${what}. Try refreshing the page. (${e.message})`)
-    api.dispatchSheet(runId).then(setSheet).catch(fail('the truck loading list'))
-    setAdvice(undefined); api.discountAdvice(runId).then(setAdvice).catch(() => setAdvice(null)) // optional extra, never an error banner
-    api.reasonCards(runId).then(setCards).catch(fail('the explanations for each shipment'))
-  }, [runId])
+    if (shown.current !== runId) {
+      shown.current = runId
+      setSheet(undefined); setCards(undefined); setOpen(undefined); setDest(undefined); setAdvice(undefined)
+    }
+    setError('')
+    let stale = false
+    const fail = (what: string) => (e: Error) => !stale && setError(`Couldn't load ${what}. Try refreshing the page. (${e.message})`)
+    api.dispatchSheet(runId).then(s => !stale && setSheet(s)).catch(fail('the truck loading list'))
+    api.discountAdvice(runId).then(a => !stale && setAdvice(a)).catch(() => !stale && setAdvice(null)) // optional extra, never an error banner
+    api.reasonCards(runId).then(c => !stale && setCards(c)).catch(fail('the explanations for each shipment'))
+    return () => { stale = true }
+  }, [runId, rev])
   useEffect(() => { // market names for the reason cards; ids stay on screen if geo.csv is missing
     api.geo(scenario).then(g => setGeoNames(Object.fromEntries(g.map(r => [String(r.node_id), String(r.name).split(',')[0]]))))
       .catch(() => setGeoNames({}))
@@ -59,7 +67,10 @@ export function Plan({ run, runId }: { run: RunDetail; runId: string }) {
         <Stack gap={8}><Skeleton h={22} w={200} />{Array.from({ length: 8 }, (_, i) => <Skeleton key={i} h={30} />)}</Stack>
       </>
         : sheet ? <>
-          <ShelfLifeMap scenario={scenario} runId={runId} rows={sheet.csv} filter={dest} onPick={setDest} />
+          {/* the landing page's hero board morphs into this one (App.tsx view transition) */}
+          <div>
+            <ShelfLifeMap scenario={scenario} runId={runId} rev={rev} rows={sheet.csv} filter={dest} onPick={setDest} />
+          </div>
           <Dispatch sheet={sheet} runId={runId} onRow={openRow} filter={dest} onClear={() => setDest(undefined)} />
         </>
         : <Empty icon={IconClipboardOff} text="No loading list was saved for this result." />}
