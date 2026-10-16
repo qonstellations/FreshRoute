@@ -24,10 +24,16 @@ def start_replan(req: ReplanRequest) -> ReplanSubmitResponse:
         ev = Event(**req.event)
     except (ValidationError, TypeError) as e:
         raise deps.BadRequest(f"invalid event: {e}") from e
+    # D-37: re-plans have their own lane, so they must not read a plan that is being rewritten
+    # ponytail: check-then-submit is not atomic across the two lanes; one lock spanning
+    # both if it ever races
+    if jobs.queue.is_live(req.run_id):
+        raise deps.Conflict(f"plan {req.run_id!r} is being re-solved right now; "
+                            "re-plan it once that finishes")
     job_id = f"{req.run_id}__replan__{deps.segment(ev.event_id)}"
     job = jobs.queue.submit_if_idle(
         deps.outputs(), job_id, lambda: replan.replan_run(run_dir, ev),
-        run_dir / "replan" / ev.event_id / "diff.json", event_id=ev.event_id)
+        run_dir / "replan" / ev.event_id / "diff.json", short=True, event_id=ev.event_id)
     return ReplanSubmitResponse(run_id=req.run_id, event_id=ev.event_id, status=job["state"])
 
 

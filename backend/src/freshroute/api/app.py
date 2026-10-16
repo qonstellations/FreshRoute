@@ -13,7 +13,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from freshroute.api.deps import ROOT, BadRequest, NotFound, Unavailable
+from freshroute.api.deps import ROOT, BadRequest, Conflict, NotFound, Unavailable
 from freshroute.api.routers import ladder, meta, replan, runs
 from freshroute.config import API_CORS_ORIGINS, API_VERSION
 
@@ -43,6 +43,11 @@ def _unavailable(_: Request, e: Unavailable) -> JSONResponse:
 @app.exception_handler(NotFound)
 def _not_found(_: Request, e: NotFound) -> JSONResponse:
     return JSONResponse({"detail": str(e)}, status_code=404)
+
+
+@app.exception_handler(Conflict)
+def _conflict(_: Request, e: Conflict) -> JSONResponse:
+    return JSONResponse({"detail": str(e)}, status_code=409)
 
 
 @app.exception_handler(BadRequest)

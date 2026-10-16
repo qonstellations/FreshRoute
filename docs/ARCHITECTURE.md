@@ -448,7 +448,7 @@ frontend/ (React, TS)  ──HTTP──►  freshroute/api/ (FastAPI)  ──in-
 
 - **The engine still decides.** The API may *trigger* an engine function and may serve files the engine wrote. It never computes, derives or aggregates a KPI (D-18). The frontend never computes a KPI either; the only arithmetic it may do is a display delta between two stored numbers, and that lives in one helper (`frontend/src/lib/delta.ts`).
 - **Read path:** every screen is a projection of a run directory under `outputs/`. Missing files are absent keys, never invented values. The synthetic-data banner is driven by `scenario.json → source` and is always shown when `source = synthetic`.
-- **Write path:** `POST /api/runs` enqueues one run and returns immediately (202). One serialized worker thread runs it so two HiGHS solves never compete for the same laptop; the status file `outputs/.api/jobs/<run_id>.json` tells the frontend whether to poll, show the result or show an error (D-21). `metrics.json` on disk is the definition of "done", so state survives an API restart.
+- **Write path:** `POST /api/runs` enqueues one run and returns immediately (202). One serialized worker thread runs long jobs (runs, stress, frontier) so two long HiGHS solves never compete for the same laptop; re-plans (2 s cap) run on a second, short lane so they never wait behind a 30 s run, and a re-plan and a re-solve of the same run are refused with 409 rather than overlapping (D-37); the status file `outputs/.api/jobs/<run_id>.json` tells the frontend whether to poll, show the result or show an error (D-21). `metrics.json` on disk is the definition of "done", so state survives an API restart.
 - **Endpoint contract:** `DATABASE.md` §11. Types on the frontend mirror it; a field added there is added to `frontend/src/types.ts` in the same change.
 - **Dev vs demo:** in development Vite proxies `/api` to `127.0.0.1:8000`; in the demo FastAPI serves `frontend/dist` from the same origin (D-20), so there is one URL, no CORS and nothing to start twice.
 - Demo runs live from local data; `outputs/demo_backup/` and the recorded video are the fallbacks.
@@ -541,6 +541,7 @@ Toolchain (D-15): uv owns Python. `uv sync` installs the project plus the dev gr
 | `API_HOST` / `API_PORT` | `127.0.0.1` / `8000` | team assumption (D-18) — loopback only; there is no auth (§21) |
 | `API_CORS_ORIGINS` | `["http://localhost:5173"]` | team assumption — dev only; the demo is same-origin (D-20) |
 | `JOB_WORKERS` | 1 | team assumption (D-21) — solves are serialized so the demo laptop never runs two HiGHS jobs at once |
+| `REPLAN_WORKERS` | 1 | team assumption (D-37) — re-plans have their own lane; at most one long and one 2 s solve overlap |
 
 ---
 

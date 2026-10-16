@@ -23,6 +23,10 @@ class Unavailable(Exception):
     """Mapped to HTTP 503 in app.py."""
 
 
+class Conflict(Exception):
+    """Mapped to HTTP 409 in app.py."""
+
+
 def live_solves() -> bool:
     """Solves need a long-lived process; serverless (Vercel) serves saved runs only."""
     return not os.getenv("VERCEL")

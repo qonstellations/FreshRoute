@@ -47,3 +47,4 @@ API_HOST = "127.0.0.1"  # [team] D-18 loopback only; no auth
 API_PORT = 8000  # [team] D-18
 API_CORS_ORIGINS = ["http://localhost:5173"]  # [team] dev only; demo is same-origin (D-20)
 JOB_WORKERS = 1  # [team] D-21 serialized solves
+REPLAN_WORKERS = 1  # [team] D-37 re-plans (2 s cap) get their own lane, never behind a 30 s run

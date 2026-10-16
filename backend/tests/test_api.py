@@ -251,6 +251,51 @@ def test_concurrent_submit_runs_once(tmp_path):
     assert len(calls) == 1
 
 
+def test_short_lane_runs_while_long_lane_is_busy(tmp_path):
+    """D-37: a re-plan never waits behind a long solve."""
+    import threading
+
+    from freshroute.api.jobs import JobQueue
+
+    q, gate, short_done = JobQueue(workers=1, short_workers=1), threading.Event(), threading.Event()
+    q.submit_if_idle(tmp_path, "long", lambda: gate.wait(5), tmp_path / "never")
+    q.submit_if_idle(tmp_path, "short", short_done.set, tmp_path / "never", short=True)
+    try:
+        assert short_done.wait(2), "short job stuck behind the long one"
+        assert q.is_live("long") and q.is_live("lon", prefix=True) and not q.is_live("lon")
+    finally:
+        gate.set()
+        q._executor.shutdown(wait=True)
+        q._short.shutdown(wait=True)
+
+
+def test_replan_and_rerun_of_same_plan_conflict(client, tmp_path):
+    """D-37: the two lanes never touch one run directory at once (409 either way)."""
+    import threading
+
+    from freshroute.api import jobs
+
+    (tmp_path / "r1").mkdir()
+    (tmp_path / "r1" / "metrics.json").write_text("{}", encoding="utf-8")
+    gate = threading.Event()
+    ev = {"event_id": "E1", "type": "route_delay", "target": "*|D1|*", "magnitude": 1, "at_h": 1}
+    jobs.queue.submit_if_idle(tmp_path, "r1", lambda: gate.wait(5), tmp_path / "never")
+    try:
+        r = client.post("/api/replan", json={"run_id": "r1", "event": ev})
+        assert r.status_code == 409 and "re-solved" in r.json()["detail"]
+    finally:
+        gate.set()
+    gate2 = threading.Event()
+    jobs.queue.submit_if_idle(tmp_path, "practice__milp__s42__replan__E1", lambda: gate2.wait(5),
+                              tmp_path / "never", short=True)
+    try:
+        r = client.post("/api/runs", json={"scenario": "data/scenarios/practice",
+                                           "policy": "milp", "seed": 42})
+        assert r.status_code == 409 and "re-planned" in r.json()["detail"]
+    finally:
+        gate2.set()
+
+
 def test_job_error_keeps_traceback(tmp_path):
     from freshroute.api import jobs
 

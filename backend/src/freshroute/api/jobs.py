@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 
-from freshroute.config import API_VERSION, JOB_WORKERS
+from freshroute.config import API_VERSION, JOB_WORKERS, REPLAN_WORKERS
 
 log = logging.getLogger(__name__)
 
@@ -41,10 +41,19 @@ def _write(outputs: Path, job: dict) -> None:
 
 
 class JobQueue:
-    def __init__(self, workers: int = JOB_WORKERS) -> None:
+    """Two lanes, one registry (D-21, D-37): long jobs (runs, stress, frontier) are serialized
+    on one worker; short jobs (re-plans) have their own so they never wait behind a long solve."""
+
+    def __init__(self, workers: int = JOB_WORKERS, short_workers: int = REPLAN_WORKERS) -> None:
         self._executor = ThreadPoolExecutor(max_workers=workers)
+        self._short = ThreadPoolExecutor(max_workers=short_workers)
         self._live: set[str] = set()  # job ids queued or running in this process
         self._lock = threading.Lock()
+
+    def is_live(self, job_id: str, prefix: bool = False) -> bool:
+        """`job_id` (or, with prefix, any id starting with it) is queued or running here."""
+        with self._lock:
+            return any(j == job_id or (prefix and j.startswith(job_id)) for j in self._live)
 
     def live_job(self, outputs: Path, job_id: str) -> dict | None:
         """The job record if it runs in this process; a "running" file left by a previous
@@ -54,9 +63,10 @@ class JobQueue:
         job = read_job(outputs, job_id) if live else None
         return job if job and job["state"] == "running" else None
 
-    def submit_if_idle(self, outputs: Path, job_id: str, fn, done_file: Path, **meta) -> dict:
+    def submit_if_idle(self, outputs: Path, job_id: str, fn, done_file: Path, short: bool = False,
+                       **meta) -> dict:
         """Atomically: return the live job for `job_id`, else write the running state and
-        enqueue `fn`. The job is done when `done_file` exists."""
+        enqueue `fn` (on the short lane when `short`). The job is done when `done_file` exists."""
         with self._lock:
             if job_id in self._live:
                 existing = read_job(outputs, job_id)
@@ -66,7 +76,8 @@ class JobQueue:
                    "started_utc": _now(), "finished_utc": None, "error": None}
             _write(outputs, job)
             self._live.add(job_id)
-            self._executor.submit(self._work, outputs, dict(job), fn, done_file)
+            lane = self._short if short else self._executor
+            lane.submit(self._work, outputs, dict(job), fn, done_file)
             return job
 
     def update(self, outputs: Path, job_id: str, **fields) -> None:

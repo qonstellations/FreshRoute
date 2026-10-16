@@ -76,6 +76,10 @@ def start_run(req: RunRequest) -> dict:
     scen, scen_name = loaded_scenario(req.scenario)
     run_id = out.name(scen_name, req.policy, req.seed, nv)  # id runner.run computes
     run_dir = deps.outputs() / run_id
+    # D-37: never rewrite a plan that a re-plan is reading
+    if jobs.queue.is_live(f"{run_id}__replan__", prefix=True):
+        raise deps.Conflict(f"plan {run_id!r} is being re-planned right now; "
+                            "run it again in a few seconds")
     job = jobs.queue.submit_if_idle(
         deps.outputs(), run_id,
         lambda: runner.run(
