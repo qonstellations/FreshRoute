@@ -505,25 +505,11 @@ th, td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; f
 }
 
 
-
 /* ==========================================================================
-   SCROLL INTRO VIDEO (enter_video.mp4) + 7-STEP GUIDE
+   7-STEP GUIDE
    ========================================================================== */
-.landing-intro { height: 100svh; position: relative; background: #000; }
-.landing-intro-sticky { position: relative; height: 100svh; overflow: hidden; }
-.landing-intro-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.landing-intro-overlay { position: absolute; inset: auto 0 0 0; display: flex; flex-direction: column;
-  align-items: center; gap: 10px; padding: 24px 16px 40px;
-  background: linear-gradient(to top, rgb(0 0 0 / .55), transparent); }
-.landing-intro-overlay .sec-tag { color: var(--cream); }
-.landing-intro-progress { width: min(320px, 60vw); height: 2px; background: rgb(255 255 255 / .25); overflow: hidden; }
-.landing-intro-progress-fill { width: 100%; height: 100%; background: var(--cream);
-  transform: scaleX(0); transform-origin: left; }
-.landing-intro-skip { color: var(--cream); border-color: rgb(255 255 255 / .5); }
-.landing-intro-skip:hover { background: var(--cream); color: #000; }
 .landing-guide-card { padding: 24px; }
 .landing-guide-cta { border-style: dashed; }
-@media (prefers-reduced-motion: reduce) { .landing-intro { display: none; } }
 
 /* ---- Mobile (phones): added for the Vercel deploy audit ---- */
 /* Pointer-friendly targets (44px) on touch screens */
