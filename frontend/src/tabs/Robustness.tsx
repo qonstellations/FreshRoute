@@ -6,6 +6,7 @@ import { m, useReducedMotion, type Variants } from 'motion/react'
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { Bar, BarChart, CartesianGrid, Cell, LabelList, ReferenceDot, ResponsiveContainer, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from 'recharts'
 import { api, notOnDisk, waitDone } from '../api/client'
+import { NO_SOLVES_HINT, useLiveSolves } from '../api/useLiveSolves'
 import { ExampleBanner } from '../components/Banners'
 import { Explain } from '../components/Explain'
 import { Odometer } from '../components/KpiTile'
@@ -70,6 +71,7 @@ function Hint({ icon, title, cmd, children }: { icon: ReactNode; title: string; 
 }
 
 function StressEmpty({ scenario, policy, seed, onDone }: { scenario: string; policy: string; seed: number; onDone: () => void }) {
+  const live = useLiveSolves()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const start = async () => {
@@ -83,7 +85,7 @@ function StressEmpty({ scenario, policy, seed, onDone }: { scenario: string; pol
   return (
     <Hint icon={<IconChartDots3 size={28} />} title="The stress test hasn’t been run for this plan yet"
       cmd={`freshroute stress --scenario ${scenarioDir(scenario)} --policy ${policy} --n ${STRESS_N} --seed ${seed}`}>
-      <Button mt="xs" radius="xl" leftSection={<IconPlayerPlayFilled size={16} />} loading={busy} onClick={start}>
+      <Button mt="xs" radius="xl" leftSection={<IconPlayerPlayFilled size={16} />} loading={busy} onClick={start} disabled={!live} title={live ? undefined : NO_SOLVES_HINT}>
         Run the stress test ({STRESS_N} futures, ~1 min)</Button>
       {error && <Text c="red" size="sm">{error}</Text>}
     </Hint>

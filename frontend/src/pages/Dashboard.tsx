@@ -1,6 +1,6 @@
 import {
   Alert, Badge, Button, Group, NumberInput, Paper,
-  Select, Stack, Switch, Tabs, Text, ThemeIcon, Title, Tooltip
+  Select, Skeleton, Stack, Switch, Tabs, Text, ThemeIcon, Title, Tooltip
 } from '@mantine/core'
 import {
   IconAlertTriangle, IconCpu, IconRoute, IconShieldCheck, IconTrendingUp, IconTruck
@@ -30,6 +30,7 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
   const [runId, setRunId] = useState<string | null>(null)
   const [run, setRun] = useState<RunDetail | null>(null)
   const [error, setError] = useState('')
+  const [runsLoaded, setRunsLoaded] = useState(false) // first run list answered (ok or not)
   const [live, setLive] = useState<Progress | null>(null) // solver still improving the shown plan
   const [reload, setReload] = useState(0) // bumped per published plan: re-fetch the same run id
   const [activeTab, setActiveTab] = useState<string>('overview')
@@ -48,6 +49,8 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
       else setRunId((v) => v ?? r.runs.find((x) => x.run_id === DEMO_RUN)?.run_id ?? null)
     } catch (e) {
       setError(`Could not load the saved results: ${e instanceof Error ? e.message : e}`)
+    } finally {
+      setRunsLoaded(true)
     }
   }, [])
 
@@ -64,19 +67,23 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
 
   useEffect(() => {
     if (!runId) return setRun(null)
+    let stale = false // a slow response must not overwrite a newer run's data
     api
       .run(runId)
       .then((r) => {
+        if (stale) return
         setRun(r)
         setError('')
       })
-      .catch((e) => setError(`Could not open this result (${runId}): ${e.message}`))
+      .catch((e) => !stale && setError(`Could not open this result (${runId}): ${e.message}`))
+    return () => { stale = true }
   }, [runId, reload])
 
   const onProgress = (id: string, p: Progress) => { setLive(p); loadRuns(id); setReload((n) => n + 1) }
   const onDone = (id: string) => { setLive(null); loadRuns(id); setReload((n) => n + 1) }
 
   const ready = run && runId
+  const loading = !ready && !error && (!runsLoaded || !!runId) // first fetch still in flight
 
   return (
     <div className="dashboard-container">
@@ -135,7 +142,8 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
           <Select
             label="Scenario"
             size="xs"
-            w={300}
+            w="100%"
+            maw={300}
             value={scenario}
             onChange={(v) => v && setScenario(v)}
             data={scenarios.map((s) => ({ value: s.name, label: `${scenarioName(s.name)} (${s.horizon_days} days)` }))}
@@ -144,7 +152,8 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
           <Select
             label="How to plan"
             size="xs"
-            w={240}
+            w="100%"
+            maw={240}
             value={policy}
             onChange={(v) => v && setPolicy(v)}
             data={[
@@ -208,7 +217,12 @@ export function Dashboard({ onBackToOverview }: DashboardProps) {
 
       {/* 3. MAIN WORKSPACE VIEWPORT */}
       <div className="dashboard-workspace">
-        {!ready ? (
+        {loading ? (
+          <Stack gap="md" my="xl" aria-busy="true">
+            <Skeleton height={120} />
+            <Skeleton height={260} />
+          </Stack>
+        ) : !ready ? (
           <Paper withBorder p="xl" ta="center" radius="xs" my="xl">
             <ThemeIcon size={64} radius="xl" color="green" variant="light" mx="auto" mb="md">
               <IconCpu size={36} />

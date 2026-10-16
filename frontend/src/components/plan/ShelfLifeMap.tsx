@@ -137,6 +137,7 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
             </Table.Tbody>
           </Table>
         ) : (
+          <div className="plan-map-scroll">
           <svg className="plan-map" viewBox={`0 0 ${W} ${H}`} role="img"
             aria-label="Route board: warehouses linked to the markets they serve, markets coloured by their least time to spare">
             <m.g variants={draw} initial="hidden" animate="show" fill="none">
@@ -215,6 +216,7 @@ export function ShelfLifeMap({ scenario, runId, rows, filter, onPick, onRoute, a
               ) : <g key={id}>{node}</g>
             })}
           </svg>
+          </div>
         )}
         {onRoute && pts.length > 0 && (
           <Group gap={6}>

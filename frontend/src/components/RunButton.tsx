@@ -3,12 +3,12 @@ import { Box, Button, Loader, Tooltip } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { IconCheck, IconPlayerPlayFilled } from '@tabler/icons-react'
 import { AnimatePresence, m } from 'motion/react'
-import { useState } from 'react'
-import { api } from '../api/client'
+import { useEffect, useRef, useState } from 'react'
+import { api, pollSleep } from '../api/client'
+import { NO_SOLVES_HINT, useLiveSolves } from '../api/useLiveSolves'
 import { spring } from '../theme'
 import type { PostRunRequest, Progress } from '../types'
 
-const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 // ponytail: decorative burst only (produce colours, fixed geometry), carries no data
 const PRODUCE = ['#e03131', '#f76707', '#fab005', '#74b816', '#2f9e44', '#ae3ec9']
 const BURST = Array.from({ length: 10 }, (_, i) => {
@@ -22,6 +22,9 @@ export function RunButton({ request, onDone, onProgress, onError }: {
   onProgress?: (runId: string, p: Progress) => void // a better plan is on disk; the run keeps improving
   onError: (msg: string) => void
 }) {
+  const live = useLiveSolves()
+  const mounted = useRef(true)
+  useEffect(() => () => { mounted.current = false }, []) // stop polling after navigating away
   const [busy, setBusy] = useState<string | null>(null)
   const [improving, setImproving] = useState(false) // a first plan is already on screen
   const [done, setDone] = useState<number | null>(null) // set per success: re-keys the burst + check
@@ -39,7 +42,8 @@ export function RunButton({ request, onDone, onProgress, onError }: {
       setBusy(run_id)
       let seen = 0
       for (;;) {
-        await sleep(1000)
+        await pollSleep(1000)
+        if (!mounted.current) return
         const s = await api.status(run_id)
         if (s.progress && s.progress.version > seen) { seen = s.progress.version; setImproving(true); onProgress?.(run_id, s.progress) }
         if (s.state === 'done') {
@@ -63,8 +67,8 @@ export function RunButton({ request, onDone, onProgress, onError }: {
   return (
     <Box pos="relative">
       <Tooltip multiline w={280} withArrow
-        label="Solves the plan with HiGHS (up to 30 s). A first plan shows in about 1 s and improves while you watch.">
-      <Button fullWidth size="md" radius="md" onClick={run} disabled={!request.scenario}
+        label={live ? 'Solves the plan with HiGHS (up to 30 s). A first plan shows in about 1 s and improves while you watch.' : NO_SOLVES_HINT}>
+      <Button fullWidth size="md" radius="md" onClick={run} disabled={!request.scenario || !live}
         aria-busy={!!busy} className="plan-btn" data-state={state}
         style={{ overflow: 'hidden', cursor: busy ? 'progress' : undefined }}>
         {busy && <span className="plan-btn-sweep" aria-hidden />}

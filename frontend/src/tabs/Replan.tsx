@@ -8,6 +8,7 @@ import { IconAlertTriangle, IconArrowRight, IconBolt, IconMessage2, IconRefresh,
 import { LayoutGroup, m } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { api, waitReplan } from '../api/client'
+import { NO_SOLVES_HINT, useLiveSolves } from '../api/useLiveSolves'
 import { ExampleBanner } from '../components/Banners'
 import { Explain } from '../components/Explain'
 import { KpiTile, toneOf } from '../components/KpiTile'
@@ -51,6 +52,7 @@ const formFor = (type: EventType, ids: Ids): Form =>
   ({ type, target: CANNED[type].target(ids), magnitude: CANNED[type].magnitude, at_h: AT_H, note: CANNED[type].note })
 
 export function Replan({ run, runId }: TabProps) {
+  const live = useLiveSolves()
   const [ids, setIds] = useState<Ids>({
     dest: run.per_destination[0]?.dest_id ?? '*', commodity: run.per_commodity[0]?.commodity ?? '*', vehicle: '',
   })
@@ -128,10 +130,10 @@ export function Replan({ run, runId }: TabProps) {
             onChange={v => setForm({ ...form, at_h: Number(v) })} />
         </SimpleGrid>
         <Group mt="md" justify="space-between" align="flex-end">
-          <TextInput label="Your note (for the record only)" value={form.note ?? ''} w={320}
+          <TextInput label="Your note (for the record only)" value={form.note ?? ''} w="100%" maw={320}
             onChange={e => setForm({ ...form, note: e.currentTarget.value })} />
-          <Button size="md" radius="xl" leftSection={<IconRefresh size={18} />} loading={busy} onClick={() => apply()}
-            disabled={!form.target.trim()}>Re-plan now</Button>
+          <Button size="md" radius="xl" leftSection={<IconRefresh size={18} />} loading={busy} onClick={() => apply()} title={live ? undefined : NO_SOLVES_HINT}
+            disabled={!live || !form.target.trim()}>Re-plan now</Button>
         </Group>
       </Paper>
       {error && <Alert color="red" icon={<IconAlertTriangle />} title="Re-plan failed">{error}</Alert>}

@@ -5,10 +5,12 @@ import {
   IconArrowLeft, IconArrowRight, IconLeaf, IconMoon, IconSun
 } from '@tabler/icons-react'
 import { gsap } from 'gsap'
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { CustomCursor } from './components/CustomCursor'
-import { Dashboard } from './pages/Dashboard'
 import { LandingPage } from './pages/LandingPage'
+
+// Dashboard pulls recharts + all tabs; keep it off the landing page's critical path.
+const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })))
 
 const NAV_SECTIONS = [
   { id: 'guide', n: '01', label: 'HOW TO USE' },
@@ -148,7 +150,9 @@ export default function App() {
           {view === 'landing' ? (
             <LandingPage onLaunch={() => switchView('dashboard')} />
           ) : (
-            <Dashboard onBackToOverview={() => switchView('landing')} />
+            <Suspense fallback={<Text p="xl">Loading…</Text>}>
+              <Dashboard onBackToOverview={() => switchView('landing')} />
+            </Suspense>
           )}
         </AppShell.Main>
       </AppShell>

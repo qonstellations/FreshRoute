@@ -33,7 +33,7 @@ button:disabled { opacity: .6; cursor: default; }
 .odo-digit { display: inline-block; height: 1.15em; line-height: 1.15em; overflow: hidden; }
 .odo-col { display: flex; flex-direction: column; }
 .odo-col > span { height: 1.15em; }
-.kpi-tile { height: 100%; will-change: transform; }
+.kpi-tile { height: 100%; }
 .kpi-paper { position: relative; overflow: hidden; transition: box-shadow .2s; }
 .kpi-tile:hover .kpi-paper { box-shadow: 0 14px 32px rgb(16 24 40 / .14); }
 .kpi-shine { position: absolute; inset: -50%; pointer-events: none; opacity: 0; transition: opacity .25s;
@@ -524,3 +524,36 @@ th, td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; f
 .landing-guide-card { padding: 24px; }
 .landing-guide-cta { border-style: dashed; }
 @media (prefers-reduced-motion: reduce) { .landing-intro { display: none; } }
+
+/* ---- Mobile (phones): added for the Vercel deploy audit ---- */
+/* Pointer-friendly targets (44px) on touch screens */
+@media (pointer: coarse) {
+  button, .mantine-Button-root, .mantine-Tabs-tab { min-height: 44px; }
+  .landing-nav-link { padding: 12px 14px; }
+}
+/* Dashboard tabs scroll sideways instead of wrapping into a pile */
+.dashboard-tabs-list { flex-wrap: nowrap !important; overflow-x: auto; scrollbar-width: none; }
+.dashboard-tabs-list::-webkit-scrollbar { display: none; }
+.dashboard-tabs-list .mantine-Tabs-tab { white-space: nowrap; flex: 0 0 auto; }
+.dashboard-container { min-height: calc(100svh - 60px); }
+/* Route map keeps readable text: scroll it sideways below 640px */
+.plan-map-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .plan-map { min-width: 640px; }
+  /* 40x12px dots overflow a 360px screen: 20 columns, dots fill the cell */
+  .futures { grid-template-columns: repeat(20, 1fr); gap: 4px; }
+  .future { width: 100%; height: auto; aspect-ratio: 1; }
+  .melt-crates { grid-template-columns: repeat(12, 1fr); height: auto; }
+  .melt-crate { aspect-ratio: 1; }
+  .atelier-cta { padding: 8px 12px !important; font-size: 0.75rem !important; }
+  .atelier-ghost { padding: 6px 10px !important; }
+}
+/* Sticky :hover on touch: only lift cards where hover exists */
+@media (hover: none) {
+  .kpi-tile:hover, .landing-persona-card:hover { transform: none; }
+}
+/* Ambient motion off on small screens (battery, jank) */
+@media (max-width: 768px) {
+  .shell-header::before, .marquee-track { animation: none !important; }
+  .atelier-header { backdrop-filter: none; }
+}

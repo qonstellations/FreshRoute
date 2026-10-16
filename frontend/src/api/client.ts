@@ -36,11 +36,24 @@ const post = (body: unknown): RequestInit => ({
   method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
 })
 
+// ponytail: scenario geo never changes within a session; share one request, retry after a failure.
+const geoCache = new Map<string, Promise<GeoRecord[]>>()
+function geoOnce(name: string): Promise<GeoRecord[]> {
+  let p = geoCache.get(name)
+  if (!p) {
+    p = req<GeoRecord[]>(`/scenarios/${e(name)}/geo`)
+    p.catch(() => geoCache.delete(name))
+    geoCache.set(name, p)
+  }
+  return p
+}
+
 export const api = {
+  capabilities: () => req<{ live_solves: boolean }>('/capabilities'),
   health: () => req<Health>('/health'),
   config: () => req<ConfigConstants>('/config'),
   scenarios: () => req<ScenarioInfo[]>('/scenarios'),
-  geo: (name: string) => req<GeoRecord[]>(`/scenarios/${e(name)}/geo`),
+  geo: (name: string) => geoOnce(name),
   runs: () => req<RunsList>('/runs'),
   run: (id: string) => req<RunDetail>(`/runs/${e(id)}`),
   table: (id: string, t: TableName) => req<Table>(`/runs/${e(id)}/tables/${t}`),
@@ -68,7 +81,9 @@ export const api = {
 /** True when the error is "no such file on disk" (a live endpoint's 404), as opposed to a transport failure. */
 export const notOnDisk = (err: unknown) => err instanceof HttpError && err.status === 404
 
-const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
+// a hidden tab polls 5x slower
+export const pollSleep = (ms: number) => new Promise(r => setTimeout(r, document.hidden ? ms * 5 : ms))
+const sleep = pollSleep
 // ponytail: fixed 1 s poll like RunButton; 10 min ceiling so a dead worker cannot spin forever
 const POLL_MS = 1000, POLL_MAX = 600
 

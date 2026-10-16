@@ -60,7 +60,7 @@ function Body({ open, names }: { open: DrawerOpen; names?: Names }) {
         </m.div>
 
         <m.div variants={item}>
-          <SimpleGrid cols={2} spacing="sm">
+          <SimpleGrid cols={{ base: 1, xs: 2 }} spacing="sm">
             <Card withBorder radius="md" padding="sm">
               <Group justify="space-between" mb={6}>
                 <Text fw={700}>FreshRoute's choice</Text><Badge color="green" variant="light" tt="none">{place(c.dest_id)}</Badge>
