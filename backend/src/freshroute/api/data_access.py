@@ -31,24 +31,33 @@ def _resolve_outputs() -> Path:
         p.mkdir(parents=True, exist_ok=True)
         return p
     p = ROOT / "outputs"
+    backup = p / "demo_backup"
     if _is_writable(p):
+        # Fresh clone: no runs yet, so serve the committed demo runs.
+        if not any(p.glob("*/metrics.json")):
+            _seed(backup, p)
         return p
 
-    # When repo outputs/ is read-only (e.g. Vercel Serverless Function / Lambda):
-    tmp_out = Path("/tmp/freshroute/outputs")
-    tmp_out.mkdir(parents=True, exist_ok=True)
-    backup = ROOT / "outputs" / "demo_backup"
-    if backup.is_dir():
-        import shutil
+    # Read-only repo (Vercel Function): serve the committed demo runs in place.
+    # ponytail: no /tmp copy; live solves are unavailable here anyway.
+    return backup if backup.is_dir() else p
 
-        for item in backup.iterdir():
-            dst = tmp_out / item.name
-            if not dst.exists():
-                if item.is_dir():
-                    shutil.copytree(item, dst)
-                elif item.is_file():
-                    shutil.copy2(item, dst)
-    return tmp_out
+
+def _seed(src: Path, dst: Path) -> None:
+    """Copy demo runs into a writable outputs dir; best-effort, never crash the import."""
+    if not src.is_dir():
+        return
+    import shutil
+
+    for item in src.iterdir():
+        target = dst / item.name
+        try:
+            if item.is_dir() and not target.exists():
+                shutil.copytree(item, target)
+            elif item.is_file() and not target.exists():
+                shutil.copy2(item, target)
+        except OSError:
+            continue
 
 
 OUTPUTS = _resolve_outputs()

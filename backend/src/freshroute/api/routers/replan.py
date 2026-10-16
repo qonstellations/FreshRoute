@@ -10,13 +10,15 @@ from freshroute.api.schemas import ReplanRequest, ReplanSubmitResponse
 from freshroute.api.services import outputs as out
 from freshroute.data.events import Event
 from freshroute.engine import narrator
-from freshroute.runs import replan
 
 router = APIRouter(prefix="/api")
 
 
 @router.post("/replan", status_code=202)
 def start_replan(req: ReplanRequest) -> ReplanSubmitResponse:
+    deps.require_live()
+    from freshroute.runs import replan  # lazy: see services/runs.py
+
     run_dir = out.run_dir(req.run_id)
     try:
         ev = Event(**req.event)

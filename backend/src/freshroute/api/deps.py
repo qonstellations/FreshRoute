@@ -1,6 +1,7 @@
 """Shared API plumbing: paths, path guards, error types (ARCHITECTURE.md section 16)."""
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path, PureWindowsPath
 
@@ -16,6 +17,21 @@ class NotFound(Exception):
 
 class BadRequest(Exception):
     """Mapped to HTTP 400 in app.py."""
+
+
+class Unavailable(Exception):
+    """Mapped to HTTP 503 in app.py."""
+
+
+def live_solves() -> bool:
+    """Solves need a long-lived process; serverless (Vercel) serves saved runs only."""
+    return not os.getenv("VERCEL")
+
+
+def require_live() -> None:
+    if not live_solves():
+        raise Unavailable("live solves are disabled on this deployment; "
+                          "run `make api` locally to start new runs")
 
 
 def outputs() -> Path:

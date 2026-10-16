@@ -8,7 +8,6 @@ from freshroute.api import deps, jobs
 from freshroute.api.schemas import StressRequest, SubmitResponse
 from freshroute.api.services import outputs as out
 from freshroute.api.services import runs as svc
-from freshroute.runs import runner, stress
 
 router = APIRouter(prefix="/api")
 
@@ -34,6 +33,9 @@ def stress_summary(scenario: str, seed: int) -> dict:
 
 @router.post("/stress", status_code=202)
 def start_stress(req: StressRequest) -> SubmitResponse:
+    deps.require_live()
+    from freshroute.runs import runner, stress  # lazy: see services/runs.py
+
     if req.policy not in runner.POLICIES:
         raise deps.BadRequest(f"policy {req.policy!r} cannot be stressed")
     scen, name = svc.loaded_scenario(req.scenario)

@@ -23,9 +23,6 @@ freshroute = "freshroute.cli:main"
 module-root = "backend/src"
 module-name = ["freshroute", "validator"]  # D-17: validator installed alongside
 
-[tool.vercel]
-entrypoint = "backend/src/freshroute/api/app.py"
-
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]
 # third-party: fastapi.testclient imports starlette's httpx client (not our code)

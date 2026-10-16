@@ -19,6 +19,12 @@ def health() -> HealthResponse:
     return HealthResponse(status="ok", schema_version=SCHEMA_VERSION, api_version=API_VERSION)
 
 
+@router.get("/capabilities")
+def capabilities() -> dict:
+    """What this deployment can do; the UI hides run/stress/replan controls when false."""
+    return {"live_solves": deps.live_solves()}
+
+
 @router.get("/config")
 def config_constants() -> dict:
     """config.py public UPPERCASE constants, verbatim (costmodel.py has none: its coefficients

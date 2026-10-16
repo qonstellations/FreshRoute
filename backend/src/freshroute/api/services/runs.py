@@ -7,7 +7,6 @@ from freshroute.api import deps, jobs
 from freshroute.api.schemas import RunRequest
 from freshroute.api.services import outputs as out
 from freshroute.data.io import load_scenario
-from freshroute.runs import runner
 
 
 def list_runs() -> dict:
@@ -63,6 +62,9 @@ def loaded_scenario(scenario: str) -> tuple[str, str]:
 
 
 def start_run(req: RunRequest) -> dict:
+    deps.require_live()
+    from freshroute.runs import runner  # lazy: keeps highspy/pulp off the GET cold start
+
     if req.policy in runner.BLOCKED_POLICIES:
         raise deps.BadRequest(runner.ORGANIZER_BASELINE_BLOCKED)
     if req.policy not in runner.POLICIES:

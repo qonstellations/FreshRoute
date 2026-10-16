@@ -1,0 +1,6 @@
+docs
+.agents
+brag-output*
+*.docx
+outputs/*
+!outputs/demo_backup

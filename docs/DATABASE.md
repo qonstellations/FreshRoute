@@ -603,6 +603,7 @@ The dashboard's only door to the engine. The API **serves run artifacts verbatim
 | Method + path | Success | Body |
 |---|---|---|
 | `GET /api/health` | 200 | `{"status": "ok", "schema_version": 2, "api_version": 1}` |
+| `GET /api/capabilities` | 200 | `{"live_solves": bool}`: `false` when the process cannot run solves (serverless: `VERCEL` env set). The three `POST` endpoints below then answer **503** `{"detail": …}` and the UI disables its Run / stress / re-plan buttons. Additive in `api_version` 1 |
 | `GET /api/config` | 200 | `{"NAME": value, …}` — every public UPPERCASE constant of `config.py` (`ARCHITECTURE.md` §19) whose value is JSON-serialisable, verbatim (tuples become lists), sorted by name. `domain/costmodel.py` has no module constants (its coefficients come from the scenario tables), so nothing else is added. Additive in `api_version` 1 |
 | `GET /api/scenarios` | 200 | `[{"name", "source", "horizon_days", "window_mode"}]` — from `data/scenarios/*/scenario.json`, sorted by `name` |
 | `GET /api/scenarios/{name}/geo` | 200 / 404 | `geo.csv` as records (§3.9), or 404 when absent (the UI uses the colour table) |
