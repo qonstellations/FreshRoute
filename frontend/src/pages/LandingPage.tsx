@@ -66,6 +66,7 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
   const guideRef = useRef<HTMLElement>(null)
   const framesRef = useRef<(HTMLImageElement | null)[]>(Array(FRAME_COUNT).fill(null))
   const progressRef = useRef(0)
+  const gsapCtx = useRef<gsap.Context | null>(null) // owns the intro's pin; must be reverted before the intro unmounts
   // Reduced-motion, phones, data-saver or broken frames skip the 17 MB scroll intro
   // and show the hero directly.
   const [introOff, setIntroOff] = useState(
@@ -139,7 +140,7 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
     }
     fitCanvas()
     window.addEventListener('resize', fitCanvas)
-    const ctx = gsap.context(() => {
+    const ctx = gsapCtx.current = gsap.context(() => {
       // Pin the fullscreen film; scroll progress scrubs the full 20 s,
       // first still to last. scrub smooths the frame walk.
       ScrollTrigger.create({
@@ -179,6 +180,11 @@ export function LandingPage({ onLaunch }: LandingPageProps) {
   }
 
   const skipIntro = () => {
+    // Unpin first: ScrollTrigger moved the intro into a pin-spacer, so letting React remove the
+    // section while pinned throws (removeChild) and blanks the whole app.
+    gsapCtx.current?.revert()
+    gsapCtx.current = null
+    window.scrollTo(0, 0)
     setIntroOff(true)
     requestAnimationFrame(() => {
       gsap.to(window, { duration: 0.8, ease: 'power3.inOut', scrollTo: { y: '.landing-hero', offsetY: 60 } })
